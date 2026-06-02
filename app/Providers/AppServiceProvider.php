@@ -19,8 +19,10 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        // Dynamic serverless fallback for Vercel when no database is connected yet
+        // Force HTTPS scheme on Vercel to prevent Mixed Content blocking
         if (env('VERCEL') || isset($_ENV['VERCEL'])) {
+            \Illuminate\Support\Facades\URL::forceScheme('https');
+            
             if (!env('POSTGRES_URL') && !env('DB_HOST')) {
                 config(['session.driver' => 'cookie']);
                 config(['cache.default' => 'file']);
