@@ -37,3 +37,22 @@ Route::prefix('api')->group(function () {
     Route::post('/properties/add', [PropertyController::class, 'apiAddProperty']);
     Route::get('/properties/owner/{userId}', [PropertyController::class, 'apiGetOwnerProperties']);
 });
+
+// Secure Online Database Migration Trigger for Vercel Serverless
+Route::get('/run-migrations-secure-nks', function () {
+    if (request()->query('secret') === 'nks_db_migrator_2026') {
+        try {
+            \Illuminate\Support\Facades\Artisan::call('migrate', ['--force' => true]);
+            return response()->json([
+                'success' => true,
+                'output' => \Illuminate\Support\Facades\Artisan::output()
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+    abort(403);
+});
