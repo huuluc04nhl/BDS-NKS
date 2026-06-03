@@ -18,7 +18,7 @@ Route::get('/profile', function () {
 })->name('profile.dashboard');
 
 // Database API Routing Endpoints
-Route::prefix('api')->group(function () {
+Route::prefix('nks-api')->group(function () {
     Route::post('/register', [PropertyController::class, 'apiRegister']);
     Route::post('/login', [PropertyController::class, 'apiLogin']);
     Route::post('/profile/update', [PropertyController::class, 'apiUpdateProfile']);

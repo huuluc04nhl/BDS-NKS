@@ -293,7 +293,7 @@
 
                 if (userId) {
                     try {
-                        await fetch('/api/favorites/toggle', {
+                        await fetch('/nks-api/favorites/toggle', {
                             method: 'POST',
                             headers: {
                                 'Content-Type': 'application/json',
@@ -344,7 +344,7 @@
                 }
 
                 try {
-                    const res = await fetch('/api/appointments/book', {
+                    const res = await fetch('/nks-api/appointments/book', {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',

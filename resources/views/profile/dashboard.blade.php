@@ -602,14 +602,14 @@
             async loadMockData() {
                 if (this.isLoggedIn && this.user && this.user.id) {
                     try {
-                        const apptsRes = await fetch(`/api/appointments/user/${this.user.id}`);
+                        const apptsRes = await fetch(`/nks-api/appointments/user/${this.user.id}`);
                         if (apptsRes.ok) {
                             const apptsData = await apptsRes.json();
                             this.appointments = apptsData.appointments || [];
                             localStorage.setItem('nks_appointments', JSON.stringify(this.appointments));
                         }
                         
-                        const favsRes = await fetch(`/api/favorites/user/${this.user.id}`);
+                        const favsRes = await fetch(`/nks-api/favorites/user/${this.user.id}`);
                         if (favsRes.ok) {
                             const favsData = await favsRes.json();
                             this.favorites = favsData.favorites || [];
@@ -617,7 +617,7 @@
                         }
                         
                         if (this.user.role === 'owner') {
-                            const propsRes = await fetch(`/api/properties/owner/${this.user.id}`);
+                            const propsRes = await fetch(`/nks-api/properties/owner/${this.user.id}`);
                             if (propsRes.ok) {
                                 const propsData = await propsRes.json();
                                 this.ownerProperties = propsData.properties || [];
@@ -650,7 +650,7 @@
                 }
 
                 try {
-                    const res = await fetch('/api/properties/add', {
+                    const res = await fetch('/nks-api/properties/add', {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',
@@ -707,7 +707,7 @@
                 }
                 
                 try {
-                    const res = await fetch('/api/login', {
+                    const res = await fetch('/nks-api/login', {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',
@@ -739,7 +739,7 @@
                 }
                 
                 try {
-                    const res = await fetch('/api/register', {
+                    const res = await fetch('/nks-api/register', {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',
@@ -771,7 +771,7 @@
                 }
                 
                 try {
-                    const res = await fetch('/api/profile/update', {
+                    const res = await fetch('/nks-api/profile/update', {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',
@@ -819,7 +819,7 @@
                 }
                 
                 try {
-                    const res = await fetch('/api/profile/upgrade-host', {
+                    const res = await fetch('/nks-api/profile/upgrade-host', {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',
@@ -855,7 +855,7 @@
             async cancelAppointment(id) {
                 if (confirm('Bạn có chắc chắn muốn hủy lịch hẹn xem nhà này?')) {
                     try {
-                        await fetch(`/api/appointments/cancel/${id}`, {
+                        await fetch(`/nks-api/appointments/cancel/${id}`, {
                             method: 'POST',
                             headers: {
                                 'Accept': 'application/json',
@@ -872,7 +872,7 @@
             async removeFavorite(id) {
                 if (this.isLoggedIn && this.user && this.user.id) {
                     try {
-                        await fetch('/api/favorites/toggle', {
+                        await fetch('/nks-api/favorites/toggle', {
                             method: 'POST',
                             headers: {
                                 'Content-Type': 'application/json',

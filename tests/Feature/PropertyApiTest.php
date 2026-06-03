@@ -60,7 +60,7 @@ class PropertyApiTest extends TestCase
     public function test_user_registration_and_login()
     {
         // 1. Register
-        $regResponse = $this->postJson('/api/register', [
+        $regResponse = $this->postJson('/nks-api/register', [
             'name' => 'Nguyen Van Owner',
             'email' => 'owner@nks.vn',
             'password' => 'password123',
@@ -83,7 +83,7 @@ class PropertyApiTest extends TestCase
         ]);
 
         // 2. Login
-        $loginResponse = $this->postJson('/api/login', [
+        $loginResponse = $this->postJson('/nks-api/login', [
             'email' => 'owner@nks.vn',
             'password' => 'password123'
         ]);
@@ -110,7 +110,7 @@ class PropertyApiTest extends TestCase
         ]);
 
         // 1. Update Profile
-        $updateResponse = $this->postJson('/api/profile/update', [
+        $updateResponse = $this->postJson('/nks-api/profile/update', [
             'email' => 'test@nks.vn',
             'name' => 'Updated Name',
             'phone' => '0987654321',
@@ -127,7 +127,7 @@ class PropertyApiTest extends TestCase
             ]);
 
         // 2. Upgrade Host
-        $upgradeResponse = $this->postJson('/api/profile/upgrade-host', [
+        $upgradeResponse = $this->postJson('/nks-api/profile/upgrade-host', [
             'email' => 'test@nks.vn',
             'name' => 'Host User',
             'phone' => '0987654321'
@@ -151,7 +151,7 @@ class PropertyApiTest extends TestCase
     {
         $user = User::factory()->create(['role' => 'owner']);
 
-        $response = $this->postJson('/api/properties/add', [
+        $response = $this->postJson('/nks-api/properties/add', [
             'user_id' => $user->id,
             'title' => 'Nha dep quan 3',
             'address' => '321 Nguyen Dinh Chieu, Q3',
@@ -179,7 +179,7 @@ class PropertyApiTest extends TestCase
         ]);
 
         // Fetch owner properties
-        $fetchResponse = $this->getJson("/api/properties/owner/{$user->id}");
+        $fetchResponse = $this->getJson("/nks-api/properties/owner/{$user->id}");
         $fetchResponse->assertStatus(200)
             ->assertJsonCount(1, 'properties');
     }
@@ -191,7 +191,7 @@ class PropertyApiTest extends TestCase
     {
         $user = User::factory()->create(['phone' => '0932030958']);
 
-        $response = $this->postJson('/api/appointments/book', [
+        $response = $this->postJson('/nks-api/appointments/book', [
             'user_id' => $user->id,
             'property_id' => '91', // Fallback property ID
             'appt_name' => 'John Doe',
@@ -213,13 +213,13 @@ class PropertyApiTest extends TestCase
         ]);
 
         // Get appointments
-        $getRes = $this->getJson("/api/appointments/user/{$user->id}");
+        $getRes = $this->getJson("/nks-api/appointments/user/{$user->id}");
         $getRes->assertStatus(200)
             ->assertJsonCount(1, 'appointments')
             ->assertJsonPath('appointments.0.property_title', 'Nhà phố nguyên căn hẻm xe hơi, Lê Văn Sỹ, Phú Nhuận');
 
         // Cancel appointment
-        $cancelRes = $this->postJson("/api/appointments/cancel/{$apptId}");
+        $cancelRes = $this->postJson("/nks-api/appointments/cancel/{$apptId}");
         $cancelRes->assertStatus(200);
 
         $this->assertDatabaseMissing('appointments', ['id' => $apptId]);
@@ -233,7 +233,7 @@ class PropertyApiTest extends TestCase
         $user = User::factory()->create();
 
         // Toggle favorite (save)
-        $saveRes = $this->postJson('/api/favorites/toggle', [
+        $saveRes = $this->postJson('/nks-api/favorites/toggle', [
             'user_id' => $user->id,
             'external_property_id' => '91'
         ]);
@@ -247,13 +247,13 @@ class PropertyApiTest extends TestCase
         ]);
 
         // Fetch favorites
-        $getRes = $this->getJson("/api/favorites/user/{$user->id}");
+        $getRes = $this->getJson("/nks-api/favorites/user/{$user->id}");
         $getRes->assertStatus(200)
             ->assertJsonCount(1, 'favorites')
             ->assertJsonPath('favorites.0.title', 'Nhà phố nguyên căn hẻm xe hơi, Lê Văn Sỹ, Phú Nhuận');
 
         // Toggle favorite again (remove)
-        $removeRes = $this->postJson('/api/favorites/toggle', [
+        $removeRes = $this->postJson('/nks-api/favorites/toggle', [
             'user_id' => $user->id,
             'external_property_id' => '91'
         ]);
@@ -274,7 +274,7 @@ class PropertyApiTest extends TestCase
     {
         $user = User::factory()->create();
 
-        $addRes = $this->postJson('/api/demands/add', [
+        $addRes = $this->postJson('/nks-api/demands/add', [
             'user_id' => $user->id,
             'title' => 'Can thue studio Q1',
             'transaction_type' => 'Thuê',
@@ -292,7 +292,7 @@ class PropertyApiTest extends TestCase
         ]);
 
         // Get demands list
-        $getRes = $this->getJson('/api/demands/list');
+        $getRes = $this->getJson('/nks-api/demands/list');
         $getRes->assertStatus(200)
             ->assertJsonCount(1, 'demands')
             ->assertJsonPath('demands.0.title', 'Can thue studio Q1');
