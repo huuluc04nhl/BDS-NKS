@@ -21,7 +21,7 @@ class PropertyController extends Controller
     {
         $cacheKey = 'nks_properties_list_' . md5($keyword ?? 'all');
 
-        return Cache::remember($cacheKey, 600, function () use ($keyword) { // Cache for 10 minutes
+        $apiItems = Cache::remember($cacheKey, 600, function () use ($keyword) { // Cache for 10 minutes
             try {
                 // SSL verification is bypassed via ->withoutVerifying() to avoid common local curl SSL certificate errors.
                 // Added a tight 4-second timeout to prevent blocking if the API is slow.
@@ -57,6 +57,55 @@ class PropertyController extends Controller
             }
             return $normalized;
         });
+
+        // Merge database properties dynamically outside cache
+        try {
+            $dbProperties = \App\Models\Property::with('owner')->get();
+            $dbNormalized = [];
+            foreach ($dbProperties as $p) {
+                $dbNormalized[] = [
+                    'id' => $p->id + 1000,
+                    'title' => $p->title,
+                    'slug' => $p->slug,
+                    'featureimg' => $p->feature_img,
+                    'gallery' => is_array($p->images) ? $p->images : (json_decode($p->images, true) ?: [$p->feature_img]),
+                    'geolocation' => $p->geolocation,
+                    'price' => $p->price,
+                    'rentprice' => $p->price,
+                    'total_area' => $p->total_area,
+                    'floors' => $p->floors,
+                    'rstype' => $p->rstype,
+                    'bed' => $p->bed,
+                    'bath' => $p->bath,
+                    'province' => 'Thành phố Hồ Chí Minh',
+                    'address' => $p->address,
+                    'phone' => $p->owner->phone ?? '0932030958',
+                    'email' => $p->owner->email ?? 'nks.diaocchinhchu@nks.vn',
+                    'sale' => [
+                        'id' => $p->user_id,
+                        'name' => $p->owner->name ?? 'Chủ nhà',
+                        'avatar' => $p->owner->avatar ?? 'https://api.dicebear.com/7.x/adventurer/svg?seed=nks',
+                        'phone' => $p->owner->phone ?? '0932030958',
+                        'email' => $p->owner->email ?? 'nks.diaocchinhchu@nks.vn'
+                    ],
+                    'formatedPrice' => $p->formated_price,
+                    'formatedSqrPrice' => $p->total_area > 0 ? (number_format($p->price / $p->total_area / 1000, 0) . 'k/m²') : '',
+                    'transaction_type' => $p->transaction_type
+                ];
+            }
+
+            if ($keyword) {
+                $dbNormalized = array_filter($dbNormalized, function ($item) use ($keyword) {
+                    return str_contains(strtolower($item['title'] ?? ''), strtolower($keyword)) ||
+                           str_contains(strtolower($item['address'] ?? ''), strtolower($keyword));
+                });
+            }
+
+            return array_merge($dbNormalized, $apiItems);
+        } catch (\Exception $e) {
+            Log::error('Failed to merge database properties: ' . $e->getMessage());
+            return $apiItems;
+        }
     }
 
     /**
@@ -413,5 +462,410 @@ class PropertyController extends Controller
             ->toArray();
 
         return view('properties.show', compact('property', 'related'));
+    }
+
+    /**
+     * API: User Registration
+     */
+    public function apiRegister(Request $request)
+    {
+        $request->validate([
+            'name' => 'required|string|max:255',
+            'email' => 'required|string|email|max:255|unique:users',
+            'password' => 'required|string|min:6',
+            'role' => 'required|string|in:renter,owner'
+        ]);
+
+        $user = \App\Models\User::create([
+            'name' => $request->name,
+            'email' => $request->email,
+            'password' => bcrypt($request->password),
+            'role' => $request->role,
+            'avatar' => 'https://api.dicebear.com/7.x/adventurer/svg?seed=' . urlencode($request->name)
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'user' => [
+                'id' => $user->id,
+                'name' => $user->name,
+                'email' => $user->email,
+                'phone' => $user->phone,
+                'role' => $user->role,
+                'avatar' => $user->avatar
+            ]
+        ]);
+    }
+
+    /**
+     * API: User Login
+     */
+    public function apiLogin(Request $request)
+    {
+        $request->validate([
+            'email' => 'required|string|email',
+            'password' => 'required|string'
+        ]);
+
+        $user = \App\Models\User::where('email', $request->email)->first();
+
+        if (!$user || !\Illuminate\Support\Facades\Hash::check($request->password, $user->password)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Email hoặc Mật khẩu không chính xác.'
+            ], 401);
+        }
+
+        return response()->json([
+            'success' => true,
+            'user' => [
+                'id' => $user->id,
+                'name' => $user->name,
+                'email' => $user->email,
+                'phone' => $user->phone,
+                'role' => $user->role,
+                'avatar' => $user->avatar
+            ]
+        ]);
+    }
+
+    /**
+     * API: Update User Profile
+     */
+    public function apiUpdateProfile(Request $request)
+    {
+        $request->validate([
+            'email' => 'required|string|email',
+            'name' => 'required|string|max:255',
+            'phone' => 'nullable|string',
+            'avatar' => 'nullable|string'
+        ]);
+
+        $user = \App\Models\User::where('email', $request->email)->first();
+        if (!$user) {
+            return response()->json(['success' => false, 'message' => 'Không tìm thấy người dùng.'], 404);
+        }
+
+        $user->update([
+            'name' => $request->name,
+            'phone' => $request->phone,
+            'avatar' => $request->avatar ?: $user->avatar
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'user' => [
+                'id' => $user->id,
+                'name' => $user->name,
+                'email' => $user->email,
+                'phone' => $user->phone,
+                'role' => $user->role,
+                'avatar' => $user->avatar
+            ]
+        ]);
+    }
+
+    /**
+     * API: Upgrade User to Host/Owner
+     */
+    public function apiUpgradeHost(Request $request)
+    {
+        $request->validate([
+            'email' => 'required|string|email',
+            'name' => 'required|string',
+            'phone' => 'required|string'
+        ]);
+
+        $user = \App\Models\User::where('email', $request->email)->first();
+        if (!$user) {
+            return response()->json(['success' => false, 'message' => 'Không tìm thấy người dùng.'], 404);
+        }
+
+        $user->update([
+            'name' => $request->name,
+            'phone' => $request->phone,
+            'role' => 'owner'
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'user' => [
+                'id' => $user->id,
+                'name' => $user->name,
+                'email' => $user->email,
+                'phone' => $user->phone,
+                'role' => $user->role,
+                'avatar' => $user->avatar
+            ]
+        ]);
+    }
+
+    /**
+     * API: Book Appointment
+     */
+    public function apiBookAppointment(Request $request)
+    {
+        $request->validate([
+            'user_id' => 'nullable|integer',
+            'property_id' => 'required|string',
+            'appt_name' => 'required|string',
+            'appt_phone' => 'required|string',
+            'appointment_date' => 'required|date',
+            'appointment_time' => 'required'
+        ]);
+
+        $appt = \App\Models\Appointment::create([
+            'user_id' => $request->user_id,
+            'property_id' => $request->property_id,
+            'appt_name' => $request->appt_name,
+            'appt_phone' => $request->appt_phone,
+            'appointment_date' => $request->appointment_date,
+            'appointment_time' => $request->appointment_time,
+            'status' => 'confirmed' // Auto-confirm for interactive feel
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'appointment' => $appt
+        ]);
+    }
+
+    /**
+     * API: Fetch User Appointments
+     */
+    public function apiGetAppointments($userId)
+    {
+        $user = \App\Models\User::find($userId);
+        $phone = $user ? $user->phone : 'invalid_phone';
+
+        $appointments = \App\Models\Appointment::where('user_id', $userId)
+            ->orWhere('appt_phone', $phone)
+            ->orderBy('id', 'desc')
+            ->get();
+
+        $items = $this->fetchAllItems();
+
+        $resolvedAppointments = $appointments->map(function ($appt) use ($items) {
+            $propId = $appt->property_id;
+            
+            $property = collect($items)->first(function ($item) use ($propId) {
+                return (string)$item['id'] === (string)$propId;
+            });
+
+            $apptData = $appt->toArray();
+            $apptData['property_title'] = $property ? $property['title'] : 'Bất động sản đã ghim';
+            $apptData['property_slug'] = $property ? $property['slug'] : '#';
+            $apptData['host_name'] = $property['sale']['name'] ?? 'Anh Minh';
+            $apptData['host_phone'] = $property['sale']['phone'] ?? '0932030958';
+            $apptData['date'] = $appt->appointment_date;
+            $apptData['time'] = $appt->appointment_time;
+
+            return $apptData;
+        });
+
+        return response()->json([
+            'success' => true,
+            'appointments' => $resolvedAppointments
+        ]);
+    }
+
+    /**
+     * API: Cancel Appointment
+     */
+    public function apiCancelAppointment($id)
+    {
+        $appt = \App\Models\Appointment::find($id);
+        if ($appt) {
+            $appt->delete();
+        }
+        return response()->json(['success' => true]);
+    }
+
+    /**
+     * API: Toggle Favorite Property
+     */
+    public function apiToggleFavorite(Request $request)
+    {
+        $request->validate([
+            'user_id' => 'required|integer',
+            'property_id' => 'nullable|integer',
+            'external_property_id' => 'nullable|string'
+        ]);
+
+        $userId = $request->user_id;
+        $propertyId = $request->property_id;
+        $externalId = $request->external_property_id;
+
+        $query = \App\Models\SavedProperty::where('user_id', $userId);
+        if ($propertyId) {
+            $realDbId = $propertyId > 1000 ? ($propertyId - 1000) : $propertyId;
+            $query->where('property_id', $realDbId);
+        } else {
+            $query->where('external_property_id', $externalId);
+        }
+
+        $fav = $query->first();
+
+        if ($fav) {
+            $fav->delete();
+            $status = 'removed';
+        } else {
+            \App\Models\SavedProperty::create([
+                'user_id' => $userId,
+                'property_id' => $propertyId > 1000 ? ($propertyId - 1000) : $propertyId,
+                'external_property_id' => $externalId
+            ]);
+            $status = 'saved';
+        }
+
+        return response()->json([
+            'success' => true,
+            'status' => $status
+        ]);
+    }
+
+    /**
+     * API: Fetch User Favorites
+     */
+    public function apiGetFavorites($userId)
+    {
+        $favs = \App\Models\SavedProperty::where('user_id', $userId)->get();
+        $items = $this->fetchAllItems();
+        
+        $resolvedFavs = $favs->map(function ($fav) use ($items) {
+            $propId = $fav->property_id ? ($fav->property_id + 1000) : $fav->external_property_id;
+            
+            $property = collect($items)->first(function ($item) use ($propId) {
+                return (string)$item['id'] === (string)$propId;
+            });
+            
+            if ($property) {
+                return [
+                    'id' => $property['id'],
+                    'title' => $property['title'],
+                    'slug' => $property['slug'],
+                    'featureimg' => $property['featureimg'],
+                    'address' => $property['address'],
+                    'rstype' => $property['rstype'],
+                    'formatedPrice' => $property['formatedPrice']
+                ];
+            }
+            return null;
+        })->filter()->values();
+
+        return response()->json([
+            'success' => true,
+            'favorites' => $resolvedFavs
+        ]);
+    }
+
+    /**
+     * API: Add Community Demand
+     */
+    public function apiAddDemand(Request $request)
+    {
+        $request->validate([
+            'user_id' => 'required|integer',
+            'title' => 'required|string',
+            'transaction_type' => 'required|string|in:Mua,Thuê',
+            'area' => 'required|string',
+            'budget' => 'required|string',
+            'content' => 'required|string'
+        ]);
+
+        $demand = \App\Models\Demand::create([
+            'user_id' => $request->user_id,
+            'title' => $request->title,
+            'transaction_type' => $request->transaction_type,
+            'area' => $request->area,
+            'budget' => $request->budget,
+            'content' => $request->content
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'demand' => $demand
+        ]);
+    }
+
+    /**
+     * API: Fetch All Community Demands
+     */
+    public function apiGetDemands()
+    {
+        $demands = \App\Models\Demand::with('user')->orderBy('id', 'desc')->get();
+        return response()->json([
+            'success' => true,
+            'demands' => $demands
+        ]);
+    }
+
+    /**
+     * API: Create Owner Property Upload
+     */
+    public function apiAddProperty(Request $request)
+    {
+        $request->validate([
+            'user_id' => 'required|integer',
+            'title' => 'required|string',
+            'address' => 'required|string',
+            'geolocation' => 'required|string',
+            'rstype' => 'required|string',
+            'transaction_type' => 'required|string|in:Bán,Cho thuê',
+            'price' => 'required|numeric',
+            'total_area' => 'required|numeric',
+            'bed' => 'required|integer',
+            'bath' => 'required|integer',
+            'floors' => 'required|integer',
+            'direction' => 'nullable|string',
+            'feature_img' => 'required|string',
+            'description' => 'nullable|string'
+        ]);
+
+        $formattedPrice = $request->price >= 1000000000 
+            ? number_format($request->price / 1000000000, 1, ',', '.') . ' tỷ'
+            : number_format($request->price / 1000000, 0, ',', '.') . ' triệu';
+
+        if ($request->transaction_type === 'Cho thuê') {
+            $formattedPrice .= '/tháng';
+        }
+
+        $property = \App\Models\Property::create([
+            'user_id' => $request->user_id,
+            'title' => $request->title,
+            'slug' => \Illuminate\Support\Str::slug($request->title) . '-' . time(),
+            'address' => $request->address,
+            'geolocation' => $request->geolocation,
+            'rstype' => $request->rstype,
+            'transaction_type' => $request->transaction_type,
+            'price' => $request->price,
+            'formated_price' => $formattedPrice,
+            'total_area' => $request->total_area,
+            'bed' => $request->bed,
+            'bath' => $request->bath,
+            'floors' => $request->floors,
+            'direction' => $request->direction,
+            'feature_img' => $request->feature_img,
+            'images' => json_encode([$request->feature_img]),
+            'description' => $request->description,
+            'is_verified' => true
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'property' => $property
+        ]);
+    }
+
+    /**
+     * API: Fetch Owner Properties
+     */
+    public function apiGetOwnerProperties($userId)
+    {
+        $properties = \App\Models\Property::where('user_id', $userId)->orderBy('id', 'desc')->get();
+        return response()->json([
+            'success' => true,
+            'properties' => $properties
+        ]);
     }
 }

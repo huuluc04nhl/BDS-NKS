@@ -16,3 +16,24 @@ Route::get('/properties/{slug}', [PropertyController::class, 'show'])->name('pro
 Route::get('/profile', function () {
     return view('profile.dashboard');
 })->name('profile.dashboard');
+
+// Database API Routing Endpoints
+Route::prefix('api')->group(function () {
+    Route::post('/register', [PropertyController::class, 'apiRegister']);
+    Route::post('/login', [PropertyController::class, 'apiLogin']);
+    Route::post('/profile/update', [PropertyController::class, 'apiUpdateProfile']);
+    Route::post('/profile/upgrade-host', [PropertyController::class, 'apiUpgradeHost']);
+    
+    Route::post('/appointments/book', [PropertyController::class, 'apiBookAppointment']);
+    Route::get('/appointments/user/{userId}', [PropertyController::class, 'apiGetAppointments']);
+    Route::post('/appointments/cancel/{id}', [PropertyController::class, 'apiCancelAppointment']);
+    
+    Route::post('/favorites/toggle', [PropertyController::class, 'apiToggleFavorite']);
+    Route::get('/favorites/user/{userId}', [PropertyController::class, 'apiGetFavorites']);
+    
+    Route::post('/demands/add', [PropertyController::class, 'apiAddDemand']);
+    Route::get('/demands/list', [PropertyController::class, 'apiGetDemands']);
+    
+    Route::post('/properties/add', [PropertyController::class, 'apiAddProperty']);
+    Route::get('/properties/owner/{userId}', [PropertyController::class, 'apiGetOwnerProperties']);
+});

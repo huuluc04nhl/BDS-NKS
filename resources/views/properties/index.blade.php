@@ -159,43 +159,72 @@
                  .addTo(this.modalMap);
          },
          
-         bookAppointment() {
+         async bookAppointment() {
              if (!this.apptDate || !this.apptTime || !this.apptName || !this.apptPhone) {
                  alert('Vui lòng điền đầy đủ thông tin đặt lịch hẹn.');
                  return;
              }
-             
-             const saved = localStorage.getItem('nks_appointments');
-             const currentAppts = saved ? JSON.parse(saved) : [];
-             
-             const newAppt = {
-                 id: Date.now(),
-                 property_title: this.selectedProperty.title,
-                 property_slug: this.selectedProperty.slug,
-                 date: this.apptDate,
-                 time: this.apptTime,
-                 name: this.apptName,
-                 phone: this.apptPhone,
-                 status: 'confirmed',
-                 host_name: this.selectedProperty.sale?.name || 'Anh Minh',
-                 host_phone: this.selectedProperty.sale?.phone || '0932030958'
-             };
-             
-             currentAppts.push(newAppt);
-             localStorage.setItem('nks_appointments', JSON.stringify(currentAppts));
-             
-             this.isApptSuccess = true;
-             
-             // Reset Form
-             this.apptDate = '';
-             this.apptTime = '';
-             
-             setTimeout(() => {
-                 this.isApptSuccess = false;
-                 this.closeModal();
-                 // Redirect to appointments dashboard
-                 window.location.href = '/profile?tab=appointments';
-             }, 2000);
+
+             let userId = null;
+             const savedUser = localStorage.getItem('nks_user');
+             if (savedUser) {
+                 const u = JSON.parse(savedUser);
+                 userId = u.id;
+             }
+
+             try {
+                 const res = await fetch('/api/appointments/book', {
+                     method: 'POST',
+                     headers: {
+                         'Content-Type': 'application/json',
+                         'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                     },
+                     body: JSON.stringify({
+                         user_id: userId,
+                         property_id: String(this.selectedProperty.id),
+                         appt_name: this.apptName,
+                         appt_phone: this.apptPhone,
+                         appointment_date: this.apptDate,
+                         appointment_time: this.apptTime
+                     })
+                 });
+
+                 if (res.ok) {
+                     const data = await res.json();
+                     const saved = localStorage.getItem('nks_appointments');
+                     const currentAppts = saved ? JSON.parse(saved) : [];
+                     
+                     const newAppt = {
+                         id: data.appointment.id,
+                         property_title: this.selectedProperty.title,
+                         property_slug: this.selectedProperty.slug,
+                         date: this.apptDate,
+                         time: this.apptTime,
+                         name: this.apptName,
+                         phone: this.apptPhone,
+                         status: 'confirmed',
+                         host_name: this.selectedProperty.sale?.name || 'Anh Minh',
+                         host_phone: this.selectedProperty.sale?.phone || '0932030958'
+                     };
+                     
+                     currentAppts.push(newAppt);
+                     localStorage.setItem('nks_appointments', JSON.stringify(currentAppts));
+                     
+                     this.isApptSuccess = true;
+                     this.apptDate = '';
+                     this.apptTime = '';
+                     
+                     setTimeout(() => {
+                         this.isApptSuccess = false;
+                         this.closeModal();
+                         window.location.href = '/profile?tab=appointments';
+                     }, 2000);
+                 } else {
+                     alert('Đặt lịch hẹn xem nhà không thành công.');
+                 }
+             } catch (e) {
+                 alert('Lỗi kết nối máy chủ CSDL.');
+             }
          },
          
          filterProperties() {
@@ -238,7 +267,31 @@
              return this.favorites.some(f => f.id === id);
          },
          
-         toggleFav(property) {
+         async toggleFav(property) {
+             let userId = null;
+             const savedUser = localStorage.getItem('nks_user');
+             if (savedUser) {
+                 const u = JSON.parse(savedUser);
+                 userId = u.id;
+             }
+
+             if (userId) {
+                 try {
+                     await fetch('/api/favorites/toggle', {
+                         method: 'POST',
+                         headers: {
+                             'Content-Type': 'application/json',
+                             'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                         },
+                         body: JSON.stringify({
+                             user_id: userId,
+                             property_id: property.id > 100 ? property.id : null,
+                             external_property_id: property.id <= 100 ? String(property.id) : null
+                         })
+                     });
+                 } catch (e) {}
+             }
+
              const index = this.favorites.findIndex(f => f.id === property.id);
              if (index > -1) {
                  this.favorites.splice(index, 1);
