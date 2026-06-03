@@ -42,9 +42,11 @@ Route::prefix('api')->group(function () {
 Route::get('/run-migrations-secure-nks', function () {
     if (request()->query('secret') === 'nks_db_migrator_2026') {
         try {
-            \Illuminate\Support\Facades\Artisan::call('migrate', ['--force' => true]);
+            $command = request()->query('fresh') === 'true' ? 'migrate:fresh' : 'migrate';
+            \Illuminate\Support\Facades\Artisan::call($command, ['--force' => true]);
             return response()->json([
                 'success' => true,
+                'command' => $command,
                 'connection' => \Illuminate\Support\Facades\DB::getDefaultConnection(),
                 'database' => \Illuminate\Support\Facades\DB::connection()->getDatabaseName(),
                 'output' => \Illuminate\Support\Facades\Artisan::output()
