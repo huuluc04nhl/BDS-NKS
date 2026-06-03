@@ -42,6 +42,12 @@ Route::prefix('api')->group(function () {
 Route::get('/run-migrations-secure-nks', function () {
     if (request()->query('secret') === 'nks_db_migrator_2026') {
         try {
+            // Dynamically force unpooled connection for migration to avoid transaction locks
+            if (env('DATABASE_URL_UNPOOLED')) {
+                config(['database.connections.pgsql.url' => env('DATABASE_URL_UNPOOLED')]);
+                \Illuminate\Support\Facades\DB::purge('pgsql');
+            }
+
             $command = request()->query('fresh') === 'true' ? 'migrate:fresh' : 'migrate';
             \Illuminate\Support\Facades\Artisan::call($command, ['--force' => true]);
             return response()->json([
