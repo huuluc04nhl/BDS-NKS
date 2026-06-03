@@ -292,68 +292,41 @@
                     </div>
                 </a>
 
-                <!-- Demand 1 -->
-                <div class="bg-white rounded-[24px] p-6 border border-slate-100 shadow-sm flex flex-col justify-between min-h-[170px] transition-custom-all hover:scale-102">
-                    <div class="space-y-3">
-                        <div class="flex justify-between items-center">
-                            <div class="w-8 h-8 rounded-full bg-primary/10 text-primary font-extrabold text-[11px] flex items-center justify-center">
-                                DP
+                @forelse($demands as $demand)
+                    @php
+                        $initials = 'NK';
+                        if (isset($demand->user->name)) {
+                            $words = explode(' ', $demand->user->name);
+                            $initials = count($words) > 1 
+                                ? mb_substr($words[0], 0, 1) . mb_substr(end($words), 0, 1)
+                                : mb_substr($demand->user->name, 0, 2);
+                        }
+                        $initials = strtoupper($initials);
+                    @endphp
+                    <div class="bg-white rounded-[24px] p-6 border border-slate-100 shadow-sm flex flex-col justify-between min-h-[170px] transition-custom-all hover:scale-102">
+                        <div class="space-y-3">
+                            <div class="flex justify-between items-center">
+                                <div class="w-8 h-8 rounded-full bg-primary/10 text-primary font-extrabold text-[11px] flex items-center justify-center">
+                                    {{ $initials }}
+                                </div>
+                                <span class="bg-blue-50 text-blue-600 text-[9px] font-black tracking-widest px-2.5 py-1 rounded-[6px] uppercase">
+                                    {{ $demand->transaction_type === 'Thuê' ? 'Cho thuê' : 'Cần mua' }}
+                                </span>
                             </div>
-                            <span class="bg-blue-50 text-blue-600 text-[9px] font-black tracking-widest px-2.5 py-1 rounded-[6px] uppercase">
-                                Cho thuê
-                            </span>
+                            <h4 class="text-xs font-bold text-slate-800 leading-snug line-clamp-3" title="{{ $demand->title }}">
+                                {{ $demand->title }}
+                            </h4>
                         </div>
-                        <h4 class="text-xs font-bold text-slate-800 leading-snug line-clamp-3">
-                            Cho thuê căn hộ chung cư Hoàng văn thụ Quận Tân...
-                        </h4>
-                    </div>
-                    <div class="flex justify-between items-center text-[10px] text-slate-400 pt-2 border-t border-slate-50 font-medium">
-                        <span>17 giờ trước</span>
-                        <span>Quận Tân Bình, Thàn...</span>
-                    </div>
-                </div>
-
-                <!-- Demand 2 -->
-                <div class="bg-white rounded-[24px] p-6 border border-slate-100 shadow-sm flex flex-col justify-between min-h-[170px] transition-custom-all hover:scale-102">
-                    <div class="space-y-3">
-                        <div class="flex justify-between items-center">
-                            <div class="w-8 h-8 rounded-full bg-primary/10 text-primary font-extrabold text-[11px] flex items-center justify-center">
-                                QA
-                            </div>
-                            <span class="bg-blue-50 text-blue-600 text-[9px] font-black tracking-widest px-2.5 py-1 rounded-[6px] uppercase">
-                                Cho thuê
-                            </span>
+                        <div class="flex justify-between items-center text-[10px] text-slate-400 pt-2 border-t border-slate-50 font-medium">
+                            <span>{{ $demand->created_at ? $demand->created_at->diffForHumans() : 'Vừa đăng' }}</span>
+                            <span class="truncate max-w-[120px]" title="{{ $demand->area }}">{{ $demand->area }}</span>
                         </div>
-                        <h4 class="text-xs font-bold text-slate-800 leading-snug line-clamp-3">
-                            Cho thuê nhà hẻm Long Thuận Quận 9, TP.HCM – 7...
-                        </h4>
                     </div>
-                    <div class="flex justify-between items-center text-[10px] text-slate-400 pt-2 border-t border-slate-50 font-medium">
-                        <span>3 ngày trước</span>
-                        <span>Quận 9, Thành phố H...</span>
+                @empty
+                    <div class="col-span-3 flex items-center justify-center bg-white rounded-[24px] min-h-[170px] shadow-sm text-slate-400 text-xs font-bold">
+                        Chưa có nhu cầu nào từ cộng đồng. Hãy đăng tin đầu tiên nhé!
                     </div>
-                </div>
-
-                <!-- Demand 3 -->
-                <div class="bg-white rounded-[24px] p-6 border border-slate-100 shadow-sm flex flex-col justify-between min-h-[170px] transition-custom-all hover:scale-102">
-                    <div class="space-y-3">
-                        <div class="flex justify-between items-center">
-                            <div class="w-8 h-8 rounded-full bg-primary/10 text-primary font-extrabold text-[11px] flex items-center justify-center">
-                                TT
-                            </div>
-                            <span class="bg-blue-50 text-blue-600 text-[9px] font-black tracking-widest px-2.5 py-1 rounded-[6px] uppercase">
-                                Cho thuê
-                            </span>
-                        </div>
-                        <h4 class="text-xs font-bold text-slate-800 leading-snug line-clamp-3">
-                            Cho thuê phòng trọ Đường Đỗ Đốc Chấn Quận Tân...
-                        </h4>
-                    </div>
-                    <div class="flex justify-between items-center text-[10px] text-slate-400 pt-2 border-t border-slate-50 font-medium">
-                        <span>3 ngày trước</span>
-                        <span>Quận Tân Phú, Thàn...</span>
-                    </div>
-                </div>
+                @endforelse
             </div>
         </div>
     </section>
@@ -374,91 +347,43 @@
         </div>
 
         <div class="grid grid-cols-2 sm:grid-cols-4 gap-6">
-            <!-- Video 1 -->
-            <div class="rounded-[24px] overflow-hidden h-[360px] relative group shadow-premium hover:shadow-xl transition-all duration-500 cursor-pointer">
-                <img src="https://images.unsplash.com/photo-1512918728675-ed5a9ecdebfd?auto=format&fit=crop&q=80&w=600" alt="Video Review" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700">
-                <div class="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-slate-950/20 to-transparent"></div>
-                <!-- Play Icon overlay -->
-                <div class="absolute inset-0 flex items-center justify-center text-white opacity-90 group-hover:opacity-100 transition-opacity">
-                    <div class="w-12 h-12 rounded-full bg-white/20 backdrop-blur-md border border-white/40 flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
-                        <svg class="w-5 h-5 fill-white" viewBox="0 0 24 24"><path d="M8 5v14l11-7z" /></svg>
+            @forelse($videos as $vid)
+                <div @click="window.open('{{ $vid->video_url }}', '_blank')" class="rounded-[24px] overflow-hidden h-[360px] relative group shadow-premium hover:shadow-xl transition-all duration-500 cursor-pointer">
+                    <img src="{{ $vid->thumbnail_img }}" alt="Video Review" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700">
+                    <div class="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-slate-950/20 to-transparent"></div>
+                    <!-- Play Icon overlay -->
+                    <div class="absolute inset-0 flex items-center justify-center text-white opacity-90 group-hover:opacity-100 transition-opacity">
+                        <div class="w-12 h-12 rounded-full bg-white/20 backdrop-blur-md border border-white/40 flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
+                            <svg class="w-5 h-5 fill-white" viewBox="0 0 24 24"><path d="M8 5v14l11-7z" /></svg>
+                        </div>
+                    </div>
+                    <div class="absolute top-4 left-4">
+                        <span class="bg-primary text-white text-[9px] font-black px-2.5 py-1 rounded-[6px] uppercase shadow-sm">
+                            {{ $vid->type === 'Cho thuê' ? 'Cho thuê' : 'Đang bán' }}
+                        </span>
+                    </div>
+                    <div class="absolute bottom-4 left-4 right-4 text-white space-y-1">
+                        <h4 class="text-xs font-extrabold line-clamp-2">{{ $vid->title }}</h4>
+                        <p class="text-[9px] text-slate-300 font-medium">{{ $vid->location }}</p>
                     </div>
                 </div>
-                <div class="absolute top-4 left-4">
-                    <span class="bg-primary text-white text-[9px] font-black px-2.5 py-1 rounded-[6px] uppercase shadow-sm">
-                        Cho thuê
-                    </span>
+            @empty
+                <div class="col-span-4 text-center py-12 text-slate-400 text-xs font-bold bg-slate-50 rounded-3xl">
+                    Chưa có video review nhà đất nào. Vui lòng quay lại sau!
                 </div>
-                <div class="absolute bottom-4 left-4 right-4 text-white space-y-1">
-                    <h4 class="text-xs font-extrabold line-clamp-2">Căn hộ Landmark 81 Full nội thất view sông</h4>
-                    <p class="text-[9px] text-slate-300 font-medium">Bình Thạnh, TPHCM</p>
-                </div>
-            </div>
-
-            <!-- Video 2 -->
-            <div class="rounded-[24px] overflow-hidden h-[360px] relative group shadow-premium hover:shadow-xl transition-all duration-500 cursor-pointer">
-                <img src="https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&q=80&w=600" alt="Video Review" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700">
-                <div class="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-slate-950/20 to-transparent"></div>
-                <div class="absolute inset-0 flex items-center justify-center text-white opacity-90 group-hover:opacity-100 transition-opacity">
-                    <div class="w-12 h-12 rounded-full bg-white/20 backdrop-blur-md border border-white/40 flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
-                        <svg class="w-5 h-5 fill-white" viewBox="0 0 24 24"><path d="M8 5v14l11-7z" /></svg>
-                    </div>
-                </div>
-                <div class="absolute top-4 left-4">
-                    <span class="bg-primary text-white text-[9px] font-black px-2.5 py-1 rounded-[6px] uppercase shadow-sm">
-                        Đang bán
-                    </span>
-                </div>
-                <div class="absolute bottom-4 left-4 right-4 text-white space-y-1">
-                    <h4 class="text-xs font-extrabold line-clamp-2">Nhà phố mặt tiền kinh doanh 222 Lê Văn Sỹ</h4>
-                    <p class="text-[9px] text-slate-300 font-medium">Phú Nhuận, TPHCM</p>
-                </div>
-            </div>
-
-            <!-- Video 3 -->
-            <div class="rounded-[24px] overflow-hidden h-[360px] relative group shadow-premium hover:shadow-xl transition-all duration-500 cursor-pointer">
-                <img src="https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?auto=format&fit=crop&q=80&w=600" alt="Video Review" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700">
-                <div class="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-slate-950/20 to-transparent"></div>
-                <div class="absolute inset-0 flex items-center justify-center text-white opacity-90 group-hover:opacity-100 transition-opacity">
-                    <div class="w-12 h-12 rounded-full bg-white/20 backdrop-blur-md border border-white/40 flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
-                        <svg class="w-5 h-5 fill-white" viewBox="0 0 24 24"><path d="M8 5v14l11-7z" /></svg>
-                    </div>
-                </div>
-                <div class="absolute top-4 left-4">
-                    <span class="bg-primary text-white text-[9px] font-black px-2.5 py-1 rounded-[6px] uppercase shadow-sm">
-                        Đang bán
-                    </span>
-                </div>
-                <div class="absolute bottom-4 left-4 right-4 text-white space-y-1">
-                    <h4 class="text-xs font-extrabold line-clamp-2">Biệt thự song lập compound Thảo Điền Quận 2</h4>
-                    <p class="text-[9px] text-slate-300 font-medium">Quận 2, TPHCM</p>
-                </div>
-            </div>
-
-            <!-- Video 4 -->
-            <div class="rounded-[24px] overflow-hidden h-[360px] relative group shadow-premium hover:shadow-xl transition-all duration-500 cursor-pointer">
-                <img src="https://images.unsplash.com/photo-1582268611958-ebfd161ef9cf?auto=format&fit=crop&q=80&w=600" alt="Video Review" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700">
-                <div class="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-slate-950/20 to-transparent"></div>
-                <div class="absolute inset-0 flex items-center justify-center text-white opacity-90 group-hover:opacity-100 transition-opacity">
-                    <div class="w-12 h-12 rounded-full bg-white/20 backdrop-blur-md border border-white/40 flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
-                        <svg class="w-5 h-5 fill-white" viewBox="0 0 24 24"><path d="M8 5v14l11-7z" /></svg>
-                    </div>
-                </div>
-                <div class="absolute top-4 left-4">
-                    <span class="bg-primary text-white text-[9px] font-black px-2.5 py-1 rounded-[6px] uppercase shadow-sm">
-                        Cho thuê
-                    </span>
-                </div>
-                <div class="absolute bottom-4 left-4 right-4 text-white space-y-1">
-                    <h4 class="text-xs font-extrabold line-clamp-2">Căn hộ Studio dịch vụ tách bếp Phú Nhuận</h4>
-                    <p class="text-[9px] text-slate-300 font-medium">Phú Nhuận, TPHCM</p>
-                </div>
-            </div>
+            @endforelse
         </div>
     </section>
 
     <!-- SECTION: TIN TỨC BẤT ĐỘNG SẢN (Exact Moso Screenshot 5 News Grid) -->
-    <section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8" x-data="{ newsTab: 'report' }">
+    <section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8" 
+             x-data="{ 
+                 newsTab: 'report',
+                 posts: @js($posts),
+                 get filteredPosts() {
+                     return this.posts.filter(p => p.category === this.newsTab);
+                 }
+             }">
         <div class="flex justify-between items-end">
             <h2 class="text-2xl font-black text-slate-900">Tin tức bất động sản</h2>
             <a href="#" class="text-xs font-bold text-slate-400 hover:text-primary flex items-center gap-1 transition-colors">
@@ -478,53 +403,21 @@
         </div>
 
         <!-- News grid -->
-        <div class="grid grid-cols-1 sm:grid-cols-4 gap-8" x-show="newsTab === 'report'" x-transition>
-            <!-- Article 1 -->
-            <div class="space-y-4 group cursor-pointer">
-                <div class="h-44 rounded-2xl overflow-hidden shadow-sm relative border border-slate-100">
-                    <img src="https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?auto=format&fit=crop&q=80&w=600" alt="News Image" class="w-full h-full object-cover group-hover:scale-102 transition-transform duration-500">
+        <div class="grid grid-cols-1 sm:grid-cols-4 gap-8" x-show="filteredPosts.length > 0" x-transition>
+            <template x-for="post in filteredPosts" :key="post.id">
+                <div class="space-y-4 group cursor-pointer">
+                    <div class="h-44 rounded-2xl overflow-hidden shadow-sm relative border border-slate-100">
+                        <img :src="post.feature_img" alt="News Image" class="w-full h-full object-cover group-hover:scale-102 transition-transform duration-500">
+                    </div>
+                    <div class="space-y-1">
+                        <h4 class="text-xs font-extrabold text-slate-800 group-hover:text-primary transition-colors leading-snug line-clamp-2" x-text="post.title"></h4>
+                        <p class="text-[10px] text-slate-400 font-medium" x-text="post.created_at ? new Date(post.created_at).toLocaleDateString('vi-VN') : 'Vừa đăng'"></p>
+                    </div>
                 </div>
-                <div class="space-y-1">
-                    <h4 class="text-xs font-extrabold text-slate-800 group-hover:text-primary transition-colors leading-snug line-clamp-2">Cách Tối Ưu Hóa Quá Trình Mua Nhà Qua Nền Tảng Online 2026</h4>
-                    <p class="text-[10px] text-slate-400 font-medium">7 giờ trước</p>
-                </div>
-            </div>
-
-            <!-- Article 2 -->
-            <div class="space-y-4 group cursor-pointer">
-                <div class="h-44 rounded-2xl overflow-hidden shadow-sm relative border border-slate-100">
-                    <img src="https://images.unsplash.com/photo-1582407947304-fd86f028f716?auto=format&fit=crop&q=80&w=600" alt="News Image" class="w-full h-full object-cover group-hover:scale-102 transition-transform duration-500">
-                </div>
-                <div class="space-y-1">
-                    <h4 class="text-xs font-extrabold text-slate-800 group-hover:text-primary transition-colors leading-snug line-clamp-2">Nhà Đầu Tư Phía Bắc Nam Tiến Thị Trường Bất Động Sản</h4>
-                    <p class="text-[10px] text-slate-400 font-medium">8 giờ trước</p>
-                </div>
-            </div>
-
-            <!-- Article 3 -->
-            <div class="space-y-4 group cursor-pointer">
-                <div class="h-44 rounded-2xl overflow-hidden shadow-sm relative border border-slate-100">
-                    <img src="https://images.unsplash.com/photo-1460317442991-0ec209397118?auto=format&fit=crop&q=80&w=600" alt="News Image" class="w-full h-full object-cover group-hover:scale-102 transition-transform duration-500">
-                </div>
-                <div class="space-y-1">
-                    <h4 class="text-xs font-extrabold text-slate-800 group-hover:text-primary transition-colors leading-snug line-clamp-2">Các Yếu Tố Ảnh Hưởng Đến Giá Trị Bất Động Sản Năm 2026</h4>
-                    <p class="text-[10px] text-slate-400 font-medium">3 ngày trước</p>
-                </div>
-            </div>
-
-            <!-- Article 4 -->
-            <div class="space-y-4 group cursor-pointer">
-                <div class="h-44 rounded-2xl overflow-hidden shadow-sm relative border border-slate-100">
-                    <img src="https://images.unsplash.com/photo-1434030216411-0b793f4b4173?auto=format&fit=crop&q=80&w=600" alt="News Image" class="w-full h-full object-cover group-hover:scale-102 transition-transform duration-500">
-                </div>
-                <div class="space-y-1">
-                    <h4 class="text-xs font-extrabold text-slate-800 group-hover:text-primary transition-colors leading-snug line-clamp-2">Hướng Dẫn Đăng Tin Nhà Đất Chuẩn SEO và AI Lên Xu hướng NKS</h4>
-                    <p class="text-[10px] text-slate-400 font-medium">3 ngày trước</p>
-                </div>
-            </div>
+            </template>
         </div>
 
-        <div class="text-center py-12 text-slate-400 text-xs font-bold bg-slate-50/50 rounded-3xl" x-show="newsTab !== 'report'" x-transition>
+        <div class="text-center py-12 text-slate-400 text-xs font-bold bg-slate-50/50 rounded-3xl" x-show="filteredPosts.length === 0" x-transition>
             Chưa có thêm bản tin trong danh mục này. Vui lòng quay lại sau!
         </div>
     </section>

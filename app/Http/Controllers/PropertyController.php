@@ -387,7 +387,12 @@ class PropertyController extends Controller
             ->values()
             ->toArray();
 
-        return view('welcome', compact('featuredRentals', 'propertyTypes'));
+        // Fetch dynamic demands, videos and posts from DB
+        $demands = \App\Models\Demand::with('user')->orderBy('id', 'desc')->take(3)->get();
+        $videos = \App\Models\Video::orderBy('id', 'desc')->take(4)->get();
+        $posts = \App\Models\Post::orderBy('id', 'desc')->get();
+
+        return view('welcome', compact('featuredRentals', 'propertyTypes', 'demands', 'videos', 'posts'));
     }
 
     /**
