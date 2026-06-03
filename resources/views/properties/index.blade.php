@@ -5,473 +5,7 @@
 @section('content')
 <!-- Full screen Split View Container -->
 <div class="h-[calc(100vh-80px)] flex flex-col md:flex-row overflow-hidden bg-slate-50 relative"
-     x-data="{
-         properties: [],
-         filteredProperties: [],
-         favorites: [],
-         
-         // Filters State
-         searchKeyword: '',
-         selectedType: '',
-         priceMax: 100, // in millions
-         bedsCount: '',
-         bathsCount: '',
-         
-         // Responsive mobile view state: 'list' or 'map'
-         mobileView: 'list',
-         
-         // Map State
-         map: null,
-         markers: [],
-         activePropertyId: null,
-
-         // Detail Modal State
-         showDetailModal: false,
-         selectedProperty: null,
-         modalActiveSlide: 0,
-         modalMap: null,
-
-         // Form State inside Modal
-         apptDate: '',
-         apptTime: '',
-         apptName: '',
-         apptPhone: '',
-         isApptSuccess: false,
-         
-         init() {
-             // Load properties from server-side json
-             this.properties = window.NKS_PROPERTIES || [];
-             this.filteredProperties = [...this.properties];
-             
-             // Parse query params if any
-             const urlParams = new URLSearchParams(window.location.search);
-             this.searchKeyword = urlParams.get('kw') || '';
-             this.selectedType = urlParams.get('rstype') || '';
-             const priceParam = urlParams.get('price_max');
-             if (priceParam) this.priceMax = parseInt(priceParam);
-             
-             // Load favorites
-             const savedFavs = localStorage.getItem('nks_favorites');
-             if (savedFavs) {
-                 this.favorites = JSON.parse(savedFavs);
-             }
-             window.addEventListener('nks-fav-change', () => {
-                 const current = localStorage.getItem('nks_favorites');
-                 this.favorites = current ? JSON.parse(current) : [];
-             });
-             
-             // Perform initial filter
-             this.filterProperties();
-             
-             // Initialize MapLibre GL
-             this.$nextTick(() => {
-                 this.initMap();
-             });
-
-             // Bind global window function for MapLibre popup links
-             window.openPropertyModal = (id) => {
-                 const p = this.properties.find(item => item.id === id);
-                 if (p) {
-                     this.openModal(p);
-                 }
-             };
-         },
-
-         openModal(p) {
-             this.selectedProperty = p;
-             this.showDetailModal = true;
-             this.modalActiveSlide = 0;
-             this.apptDate = '';
-             this.apptTime = '';
-             this.isApptSuccess = false;
-             
-             // Auto-fill logged in user info if available
-             const savedUser = localStorage.getItem('nks_user');
-             if (savedUser) {
-                 const u = JSON.parse(savedUser);
-                 this.apptName = u.name || '';
-                 this.apptPhone = u.phone || '';
-             } else {
-                 this.apptName = '';
-                 this.apptPhone = '';
-             }
-             
-             // Initialize Map inside Modal after DOM updates
-             this.$nextTick(() => {
-                 this.initModalMap(p);
-             });
-         },
-         
-         closeModal() {
-             this.showDetailModal = false;
-             this.selectedProperty = null;
-             if (this.modalMap) {
-                 this.modalMap.remove();
-                 this.modalMap = null;
-             }
-         },
-         
-         initModalMap(p) {
-             const geoString = p.geolocation;
-             if (!geoString) return;
-             
-             const [lat, lng] = geoString.split(',').map(parseFloat);
-             if (isNaN(lat) || isNaN(lng)) return;
-             
-             if (this.modalMap) {
-                 this.modalMap.remove();
-                 this.modalMap = null;
-             }
-             
-             this.modalMap = new maplibregl.Map({
-                 container: 'modal-property-map',
-                 style: {
-                     version: 8,
-                     sources: {
-                         'osm-tiles': {
-                             type: 'raster',
-                             tiles: [
-                                 'https://a.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}.png'
-                             ],
-                             tileSize: 256,
-                             attribution: '&copy; CartoDB &copy; OpenStreetMap contributors'
-                         }
-                     },
-                     layers: [
-                         {
-                             id: 'osm-layer',
-                             type: 'raster',
-                             source: 'osm-tiles',
-                             minzoom: 0,
-                             maxzoom: 19
-                         }
-                     ]
-                 },
-                 center: [lng, lat],
-                 zoom: 15
-             });
-             
-             this.modalMap.addControl(new maplibregl.NavigationControl(), 'top-right');
-             
-             // Add Marker
-             new maplibregl.Marker()
-                 .setLngLat([lng, lat])
-                 .addTo(this.modalMap);
-         },
-         
-         async bookAppointment() {
-             if (!this.apptDate || !this.apptTime || !this.apptName || !this.apptPhone) {
-                 alert('Vui lòng điền đầy đủ thông tin đặt lịch hẹn.');
-                 return;
-             }
-
-             let userId = null;
-             const savedUser = localStorage.getItem('nks_user');
-             if (savedUser) {
-                 const u = JSON.parse(savedUser);
-                 userId = u.id;
-             }
-
-             try {
-                 const res = await fetch('/api/appointments/book', {
-                     method: 'POST',
-                     headers: {
-                         'Content-Type': 'application/json',
-                         'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-                     },
-                     body: JSON.stringify({
-                         user_id: userId,
-                         property_id: String(this.selectedProperty.id),
-                         appt_name: this.apptName,
-                         appt_phone: this.apptPhone,
-                         appointment_date: this.apptDate,
-                         appointment_time: this.apptTime
-                     })
-                 });
-
-                 if (res.ok) {
-                     const data = await res.json();
-                     const saved = localStorage.getItem('nks_appointments');
-                     const currentAppts = saved ? JSON.parse(saved) : [];
-                     
-                     const newAppt = {
-                         id: data.appointment.id,
-                         property_title: this.selectedProperty.title,
-                         property_slug: this.selectedProperty.slug,
-                         date: this.apptDate,
-                         time: this.apptTime,
-                         name: this.apptName,
-                         phone: this.apptPhone,
-                         status: 'confirmed',
-                         host_name: this.selectedProperty.sale?.name || 'Anh Minh',
-                         host_phone: this.selectedProperty.sale?.phone || '0932030958'
-                     };
-                     
-                     currentAppts.push(newAppt);
-                     localStorage.setItem('nks_appointments', JSON.stringify(currentAppts));
-                     
-                     this.isApptSuccess = true;
-                     this.apptDate = '';
-                     this.apptTime = '';
-                     
-                     setTimeout(() => {
-                         this.isApptSuccess = false;
-                         this.closeModal();
-                         window.location.href = '/profile?tab=appointments';
-                     }, 2000);
-                 } else {
-                     alert('Đặt lịch hẹn xem nhà không thành công.');
-                 }
-             } catch (e) {
-                 alert('Lỗi kết nối máy chủ CSDL.');
-             }
-         },
-         
-         filterProperties() {
-             this.filteredProperties = this.properties.filter(p => {
-                 // Keyword filter
-                 const matchesKeyword = !this.searchKeyword || 
-                     (p.title && p.title.toLowerCase().includes(this.searchKeyword.toLowerCase())) ||
-                     (p.address && p.address.toLowerCase().includes(this.searchKeyword.toLowerCase()));
-                     
-                 // Type filter
-                 const matchesType = !this.selectedType || p.rstype === this.selectedType;
-                 
-                 // Price filter (convert price to millions for comparison)
-                 const priceInMillions = (p.price || p.rentprice || 0) / 1000000;
-                 const matchesPrice = parseInt(this.priceMax) >= 100 || priceInMillions <= parseInt(this.priceMax);
-                 
-                 // Beds filter
-                 const matchesBeds = !this.bedsCount || parseInt(p.bed || 0) === parseInt(this.bedsCount);
-                 
-                 // Baths filter
-                 const matchesBaths = !this.bathsCount || parseInt(p.bath || 0) === parseInt(this.bathsCount);
-                 
-                 return matchesKeyword && matchesType && matchesPrice && matchesBeds && matchesBaths;
-             });
-             
-             // Update markers on the map
-             this.updateMapMarkers();
-         },
-         
-         resetFilters() {
-             this.searchKeyword = '';
-             this.selectedType = '';
-             this.priceMax = 100;
-             this.bedsCount = '';
-             this.bathsCount = '';
-             this.filterProperties();
-         },
-         
-         isFav(id) {
-             return this.favorites.some(f => f.id === id);
-         },
-         
-         async toggleFav(property) {
-             let userId = null;
-             const savedUser = localStorage.getItem('nks_user');
-             if (savedUser) {
-                 const u = JSON.parse(savedUser);
-                 userId = u.id;
-             }
-
-             if (userId) {
-                 try {
-                     await fetch('/api/favorites/toggle', {
-                         method: 'POST',
-                         headers: {
-                             'Content-Type': 'application/json',
-                             'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-                         },
-                         body: JSON.stringify({
-                             user_id: userId,
-                             property_id: property.id > 100 ? property.id : null,
-                             external_property_id: property.id <= 100 ? String(property.id) : null
-                         })
-                     });
-                 } catch (e) {}
-             }
-
-             const index = this.favorites.findIndex(f => f.id === property.id);
-             if (index > -1) {
-                 this.favorites.splice(index, 1);
-             } else {
-                 this.favorites.push({
-                     id: property.id,
-                     title: property.title,
-                     slug: property.slug,
-                     featureimg: property.featureimg,
-                     address: property.address,
-                     rstype: property.rstype,
-                     formatedPrice: property.formatedPrice
-                 });
-             }
-             localStorage.setItem('nks_favorites', JSON.stringify(this.favorites));
-             window.dispatchEvent(new CustomEvent('nks-fav-change'));
-             window.dispatchEvent(new CustomEvent('nks-login-change'));
-         },
-         
-         // MapLibre Logic
-         initMap() {
-             // Default center in HCMC
-             const center = [106.6710, 10.7932]; 
-             
-             this.map = new maplibregl.Map({
-                 container: 'maplibre-container',
-                 style: {
-                     version: 8,
-                     sources: {
-                         'osm-tiles': {
-                             type: 'raster',
-                             tiles: [
-                                 'https://a.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}.png'
-                             ],
-                             tileSize: 256,
-                             attribution: '&copy; CartoDB &copy; OpenStreetMap contributors'
-                         }
-                     },
-                     layers: [
-                         {
-                             id: 'osm-layer',
-                             type: 'raster',
-                             source: 'osm-tiles',
-                             minzoom: 0,
-                             maxzoom: 19
-                         }
-                     ]
-                 },
-                 center: center,
-                 zoom: 13
-             });
-             
-             this.map.addControl(new maplibregl.NavigationControl(), 'top-right');
-             
-             this.map.on('load', () => {
-                 this.updateMapMarkers();
-             });
-         },
-         
-         updateMapMarkers() {
-             if (!this.map) return;
-             
-             // Clear existing markers
-             this.markers.forEach(m => m.remove());
-             this.markers = [];
-             
-             if (this.filteredProperties.length === 0) return;
-             
-             const bounds = new maplibregl.LngLatBounds();
-             let validCoords = 0;
-             
-             this.filteredProperties.forEach(p => {
-                 if (!p.geolocation) return;
-                 
-                 const [lat, lng] = p.geolocation.split(',').map(parseFloat);
-                 if (isNaN(lat) || isNaN(lng)) return;
-                 
-                 bounds.extend([lng, lat]);
-                 validCoords++;
-                 
-                 // Create custom price marker element
-                 const el = document.createElement('div');
-                 el.className = 'custom-map-marker';
-                 el.style.cursor = 'pointer';
-                 
-                 // Extract numeric price in millions for compact badge (e.g. 12tr or 25tr)
-                 const priceNum = (p.price || p.rentprice || 0) / 1000000;
-                 const priceBadge = priceNum >= 1000 ? (priceNum/1000).toFixed(1) + ' tỷ' : priceNum.toFixed(0) + ' tr';
-                 
-                 el.innerHTML = `
-                     <div class='bg-white text-primary border-2 border-primary hover:bg-primary hover:text-white font-extrabold text-[10px] px-2.5 py-1 rounded-full shadow-lg transition-all transform hover:scale-105 flex items-center gap-0.5 whitespace-nowrap'>
-                         <svg class='w-3 h-3 text-emerald-500' fill='currentColor' viewBox='0 0 20 20'><path fill-rule='evenodd' d='M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z' clip-rule='evenodd'></path></svg>
-                         ${priceBadge}
-                     </div>
-                 `;
-                 
-                 // Create popup card
-                 const popupContent = `
-                     <div class='w-56 overflow-hidden flex flex-col font-sans'>
-                         <div class='h-28 overflow-hidden relative'>
-                             <img src='${p.featureimg}' class='w-full h-full object-cover' />
-                             <span class='absolute top-2 left-2 px-2 py-0.5 rounded-md text-[8px] font-black bg-primary text-white uppercase'>${p.rstype}</span>
-                         </div>
-                         <div class='p-3 space-y-2 bg-white'>
-                             <h4 class='font-extrabold text-xs text-slate-800 line-clamp-2 hover:text-primary transition-colors'>
-                                 <a href='javascript:void(0)' onclick='window.openPropertyModal(${p.id})'>${p.title}</a>
-                             </h4>
-                             <p class='text-[10px] text-slate-400 truncate'>${p.address}</p>
-                             <div class='flex justify-between items-center pt-1 border-t border-slate-50'>
-                                 <span class='text-xs font-black text-primary'>${p.formatedPrice}</span>
-                                 <a href='javascript:void(0)' onclick='window.openPropertyModal(${p.id})' class='text-[9px] font-bold text-slate-400 hover:text-primary transition-colors'>Chi tiết &rarr;</a>
-                             </div>
-                         </div>
-                     </div>
-                 `;
-                 
-                 const popup = new maplibregl.Popup({ offset: 12 }).setHTML(popupContent);
-                 
-                 const marker = new maplibregl.Marker({ element: el })
-                     .setLngLat([lng, lat])
-                     .setPopup(popup)
-                     .addTo(this.map);
-                     
-                 // Listen for click to update active state
-                 el.addEventListener('click', () => {
-                     this.activePropertyId = p.id;
-                     
-                     // If on mobile, clicking marker triggers popup, and switch to list if they click popup details
-                     // If on desktop, scroll card into view
-                     const cardEl = document.getElementById('property-card-' + p.id);
-                     if (cardEl) {
-                         cardEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-                     }
-                 });
-                 
-                 this.markers.push(marker);
-             });
-             
-             // Fit map bounds to show all markers nicely
-             if (validCoords > 0) {
-                 this.map.fitBounds(bounds, {
-                     padding: 60,
-                     maxZoom: 15
-                 });
-             }
-         },
-         
-         focusProperty(p) {
-             this.activePropertyId = p.id;
-             if (!this.map || !p.geolocation) return;
-             
-             const [lat, lng] = p.geolocation.split(',').map(parseFloat);
-             if (isNaN(lat) || isNaN(lng)) return;
-             
-             // If on mobile, switch to map view first to show flying animation
-             if (window.innerWidth < 768) {
-                 this.mobileView = 'map';
-                 this.$nextTick(() => {
-                     this.map.resize();
-                     this.performFlyTo(lng, lat, p);
-                 });
-             } else {
-                 this.performFlyTo(lng, lat, p);
-             }
-         },
-         
-         performFlyTo(lng, lat, p) {
-             this.map.flyTo({
-                 center: [lng, lat],
-                 zoom: 14.5,
-                 speed: 1.2
-             });
-             
-             // Open corresponding marker popup
-             const index = this.filteredProperties.findIndex(item => item.id === p.id);
-             if (index > -1 && this.markers[index]) {
-                 this.markers[index].togglePopup();
-             }
-         }
-     }">
+     x-data="propertiesMap()">
      
     <!-- Left Column: Search Filters & Listing Grid -->
     <div class="w-full md:w-[48%] lg:w-[42%] flex flex-col h-full border-r border-slate-100 bg-white z-10 relative"
@@ -858,5 +392,442 @@
     function number_format(number, decimals) {
         return parseFloat(number).toFixed(decimals);
     }
+</script>
+
+<script>
+    document.addEventListener('alpine:init', () => {
+        Alpine.data('propertiesMap', () => ({
+            properties: [],
+            filteredProperties: [],
+            favorites: [],
+            
+            // Filters State
+            searchKeyword: '',
+            selectedType: '',
+            priceMax: 100,
+            bedsCount: '',
+            bathsCount: '',
+            
+            mobileView: 'list',
+            map: null,
+            markers: [],
+            activePropertyId: null,
+            showDetailModal: false,
+            selectedProperty: null,
+            modalActiveSlide: 0,
+            modalMap: null,
+            apptDate: '',
+            apptTime: '',
+            apptName: '',
+            apptPhone: '',
+            isApptSuccess: false,
+
+            init() {
+                this.properties = window.NKS_PROPERTIES || [];
+                this.filteredProperties = [...this.properties];
+                
+                const urlParams = new URLSearchParams(window.location.search);
+                this.searchKeyword = urlParams.get('kw') || '';
+                this.selectedType = urlParams.get('rstype') || '';
+                const priceParam = urlParams.get('price_max');
+                if (priceParam) this.priceMax = parseInt(priceParam);
+                
+                const savedFavs = localStorage.getItem('nks_favorites');
+                if (savedFavs) {
+                    this.favorites = JSON.parse(savedFavs);
+                }
+                window.addEventListener('nks-fav-change', () => {
+                    const current = localStorage.getItem('nks_favorites');
+                    this.favorites = current ? JSON.parse(current) : [];
+                });
+                
+                this.filterProperties();
+                
+                this.$nextTick(() => {
+                    this.initMap();
+                });
+
+                window.openPropertyModal = (id) => {
+                    const p = this.properties.find(item => item.id === id);
+                    if (p) {
+                        this.openModal(p);
+                    }
+                };
+            },
+
+            openModal(p) {
+                this.selectedProperty = p;
+                this.showDetailModal = true;
+                this.modalActiveSlide = 0;
+                this.apptDate = '';
+                this.apptTime = '';
+                this.isApptSuccess = false;
+                
+                const savedUser = localStorage.getItem('nks_user');
+                if (savedUser) {
+                    const u = JSON.parse(savedUser);
+                    this.apptName = u.name || '';
+                    this.apptPhone = u.phone || '';
+                } else {
+                    this.apptName = '';
+                    this.apptPhone = '';
+                }
+                
+                this.$nextTick(() => {
+                    this.initModalMap(p);
+                });
+            },
+            
+            closeModal() {
+                this.showDetailModal = false;
+                this.selectedProperty = null;
+                if (this.modalMap) {
+                    this.modalMap.remove();
+                    this.modalMap = null;
+                }
+            },
+            
+            initModalMap(p) {
+                const geoString = p.geolocation;
+                if (!geoString) return;
+                
+                const [lat, lng] = geoString.split(',').map(parseFloat);
+                if (isNaN(lat) || isNaN(lng)) return;
+                
+                if (this.modalMap) {
+                    this.modalMap.remove();
+                    this.modalMap = null;
+                }
+                
+                this.modalMap = new maplibregl.Map({
+                    container: 'modal-property-map',
+                    style: {
+                        version: 8,
+                        sources: {
+                            'osm-tiles': {
+                                type: 'raster',
+                                tiles: [
+                                    'https://a.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}.png'
+                                ],
+                                tileSize: 256,
+                                attribution: '&copy; CartoDB &copy; OpenStreetMap contributors'
+                            }
+                        },
+                        layers: [
+                            {
+                                id: 'osm-layer',
+                                type: 'raster',
+                                source: 'osm-tiles',
+                                minzoom: 0,
+                                maxzoom: 19
+                            }
+                        ]
+                    },
+                    center: [lng, lat],
+                    zoom: 15
+                });
+                
+                this.modalMap.addControl(new maplibregl.NavigationControl(), 'top-right');
+                
+                new maplibregl.Marker()
+                    .setLngLat([lng, lat])
+                    .addTo(this.modalMap);
+            },
+            
+            async bookAppointment() {
+                if (!this.apptDate || !this.apptTime || !this.apptName || !this.apptPhone) {
+                    alert('Vui lòng điền đầy đủ thông tin đặt lịch hẹn.');
+                    return;
+                }
+
+                let userId = null;
+                const savedUser = localStorage.getItem('nks_user');
+                if (savedUser) {
+                    const u = JSON.parse(savedUser);
+                    userId = u.id;
+                }
+
+                try {
+                    const res = await fetch('/api/appointments/book', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                        },
+                        body: JSON.stringify({
+                            user_id: userId,
+                            property_id: String(this.selectedProperty.id),
+                            appt_name: this.apptName,
+                            appt_phone: this.apptPhone,
+                            appointment_date: this.apptDate,
+                            appointment_time: this.apptTime
+                        })
+                    });
+
+                    if (res.ok) {
+                        const data = await res.json();
+                        const saved = localStorage.getItem('nks_appointments');
+                        const currentAppts = saved ? JSON.parse(saved) : [];
+                        
+                        const newAppt = {
+                            id: data.appointment.id,
+                            property_title: this.selectedProperty.title,
+                            property_slug: this.selectedProperty.slug,
+                            date: this.apptDate,
+                            time: this.apptTime,
+                            name: this.apptName,
+                            phone: this.apptPhone,
+                            status: 'confirmed',
+                            host_name: this.selectedProperty.sale?.name || 'Anh Minh',
+                            host_phone: this.selectedProperty.sale?.phone || '0932030958'
+                        };
+                        
+                        currentAppts.push(newAppt);
+                        localStorage.setItem('nks_appointments', JSON.stringify(currentAppts));
+                        
+                        this.isApptSuccess = true;
+                        this.apptDate = '';
+                        this.apptTime = '';
+                        
+                        setTimeout(() => {
+                            this.isApptSuccess = false;
+                            this.closeModal();
+                            window.location.href = '/profile?tab=appointments';
+                        }, 2000);
+                    } else {
+                        alert('Đặt lịch hẹn xem nhà không thành công.');
+                    }
+                } catch (e) {
+                    alert('Lỗi kết nối máy chủ CSDL.');
+                }
+            },
+            
+            filterProperties() {
+                this.filteredProperties = this.properties.filter(p => {
+                    const matchesKeyword = !this.searchKeyword || 
+                        (p.title && p.title.toLowerCase().includes(this.searchKeyword.toLowerCase())) ||
+                        (p.address && p.address.toLowerCase().includes(this.searchKeyword.toLowerCase()));
+                        
+                    const matchesType = !this.selectedType || p.rstype === this.selectedType;
+                    
+                    const priceInMillions = (p.price || p.rentprice || 0) / 1000000;
+                    const matchesPrice = parseInt(this.priceMax) >= 100 || priceInMillions <= parseInt(this.priceMax);
+                    
+                    const matchesBeds = !this.bedsCount || parseInt(p.bed || 0) === parseInt(this.bedsCount);
+                    
+                    const matchesBaths = !this.bathsCount || parseInt(p.bath || 0) === parseInt(this.bathsCount);
+                    
+                    return matchesKeyword && matchesType && matchesPrice && matchesBeds && matchesBaths;
+                });
+                
+                this.updateMapMarkers();
+            },
+            
+            resetFilters() {
+                this.searchKeyword = '';
+                this.selectedType = '';
+                this.priceMax = 100;
+                this.bedsCount = '';
+                this.bathsCount = '';
+                this.filterProperties();
+            },
+            
+            isFav(id) {
+                return this.favorites.some(f => f.id === id);
+            },
+            
+            async toggleFav(property) {
+                let userId = null;
+                const savedUser = localStorage.getItem('nks_user');
+                if (savedUser) {
+                    const u = JSON.parse(savedUser);
+                    userId = u.id;
+                }
+
+                if (userId) {
+                    try {
+                        await fetch('/api/favorites/toggle', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                            },
+                            body: JSON.stringify({
+                                user_id: userId,
+                                property_id: property.id > 100 ? property.id : null,
+                                external_property_id: property.id <= 100 ? String(property.id) : null
+                            })
+                        });
+                    } catch (e) {}
+                }
+
+                const index = this.favorites.findIndex(f => f.id === property.id);
+                if (index > -1) {
+                    this.favorites.splice(index, 1);
+                } else {
+                    this.favorites.push({
+                        id: property.id,
+                        title: property.title,
+                        slug: property.slug,
+                        featureimg: property.featureimg,
+                        address: property.address,
+                        rstype: property.rstype,
+                        formatedPrice: property.formatedPrice
+                    });
+                }
+                localStorage.setItem('nks_favorites', JSON.stringify(this.favorites));
+                window.dispatchEvent(new CustomEvent('nks-fav-change'));
+                window.dispatchEvent(new CustomEvent('nks-login-change'));
+            },
+            
+            initMap() {
+                const center = [106.6710, 10.7932]; 
+                
+                this.map = new maplibregl.Map({
+                    container: 'maplibre-container',
+                    style: {
+                        version: 8,
+                        sources: {
+                            'osm-tiles': {
+                                type: 'raster',
+                                tiles: [
+                                    'https://a.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}.png'
+                                ],
+                                tileSize: 256,
+                                attribution: '&copy; CartoDB &copy; OpenStreetMap contributors'
+                            }
+                        },
+                        layers: [
+                            {
+                                id: 'osm-layer',
+                                type: 'raster',
+                                source: 'osm-tiles',
+                                minzoom: 0,
+                                maxzoom: 19
+                            }
+                        ]
+                    },
+                    center: center,
+                    zoom: 13
+                });
+                
+                this.map.addControl(new maplibregl.NavigationControl(), 'top-right');
+                
+                this.map.on('load', () => {
+                    this.updateMapMarkers();
+                });
+            },
+            
+            updateMapMarkers() {
+                if (!this.map) return;
+                
+                this.markers.forEach(m => m.remove());
+                this.markers = [];
+                
+                if (this.filteredProperties.length === 0) return;
+                
+                const bounds = new maplibregl.LngLatBounds();
+                let validCoords = 0;
+                
+                this.filteredProperties.forEach(p => {
+                    if (!p.geolocation) return;
+                    
+                    const [lat, lng] = p.geolocation.split(',').map(parseFloat);
+                    if (isNaN(lat) || isNaN(lng)) return;
+                    
+                    bounds.extend([lng, lat]);
+                    validCoords++;
+                    
+                    const el = document.createElement('div');
+                    el.className = 'custom-map-marker';
+                    el.style.cursor = 'pointer';
+                    
+                    const priceNum = (p.price || p.rentprice || 0) / 1000000;
+                    const priceBadge = priceNum >= 1000 ? (priceNum/1000).toFixed(1) + ' tỷ' : priceNum.toFixed(0) + ' tr';
+                    
+                    el.innerHTML = `
+                        <div class='bg-white text-primary border-2 border-primary hover:bg-primary hover:text-white font-extrabold text-[10px] px-2.5 py-1 rounded-full shadow-lg transition-all transform hover:scale-105 flex items-center gap-0.5 whitespace-nowrap'>
+                            <svg class='w-3 h-3 text-emerald-500' fill='currentColor' viewBox='0 0 20 20'><path fill-rule='evenodd' d='M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z' clip-rule='evenodd'></path></svg>
+                            ${priceBadge}
+                        </div>
+                    `;
+                    
+                    const popupContent = `
+                        <div class='w-56 overflow-hidden flex flex-col font-sans'>
+                            <div class='h-28 overflow-hidden relative'>
+                                <img src='${p.featureimg}' class='w-full h-full object-cover' />
+                                <span class='absolute top-2 left-2 px-2 py-0.5 rounded-md text-[8px] font-black bg-primary text-white uppercase'>${p.rstype}</span>
+                            </div>
+                            <div class='p-3 space-y-2 bg-white'>
+                                <h4 class='font-extrabold text-xs text-slate-800 line-clamp-2 hover:text-primary transition-colors'>
+                                    <a href='javascript:void(0)' onclick='window.openPropertyModal(${p.id})'>${p.title}</a>
+                                </h4>
+                                <p class='text-[10px] text-slate-400 truncate'>${p.address}</p>
+                                <div class='flex justify-between items-center pt-1 border-t border-slate-50'>
+                                    <span class='text-xs font-black text-primary'>${p.formatedPrice}</span>
+                                    <a href='javascript:void(0)' onclick='window.openPropertyModal(${p.id})' class='text-[9px] font-bold text-slate-400 hover:text-primary transition-colors'>Chi tiết &rarr;</a>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                    
+                    const popup = new maplibregl.Popup({ offset: 12 }).setHTML(popupContent);
+                    
+                    const marker = new maplibregl.Marker({ element: el })
+                        .setLngLat([lng, lat])
+                        .setPopup(popup)
+                        .addTo(this.map);
+                        
+                    el.addEventListener('click', () => {
+                        this.activePropertyId = p.id;
+                        const cardEl = document.getElementById('property-card-' + p.id);
+                        if (cardEl) {
+                            cardEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                        }
+                    });
+                    
+                    this.markers.push(marker);
+                });
+                
+                if (validCoords > 0) {
+                    this.map.fitBounds(bounds, {
+                        padding: 60,
+                        maxZoom: 15
+                    });
+                }
+            },
+            
+            focusProperty(p) {
+                this.activePropertyId = p.id;
+                if (!this.map || !p.geolocation) return;
+                
+                const [lat, lng] = p.geolocation.split(',').map(parseFloat);
+                if (isNaN(lat) || isNaN(lng)) return;
+                
+                if (window.innerWidth < 768) {
+                    this.mobileView = 'map';
+                    this.$nextTick(() => {
+                        this.map.resize();
+                        this.performFlyTo(lng, lat, p);
+                    });
+                } else {
+                    this.performFlyTo(lng, lat, p);
+                }
+            },
+            
+            performFlyTo(lng, lat, p) {
+                this.map.flyTo({
+                    center: [lng, lat],
+                    zoom: 14.5,
+                    speed: 1.2
+                });
+                
+                const index = this.filteredProperties.findIndex(item => item.id === p.id);
+                if (index > -1 && this.markers[index]) {
+                    this.markers[index].togglePopup();
+                }
+            }
+        }));
+    });
 </script>
 @endsection
