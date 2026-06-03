@@ -55,7 +55,4 @@ Route::get('/run-migrations-secure-nks', function () {
         }
     }
     abort(403);
-})->withoutMiddleware([
-    \Illuminate\Session\Middleware\StartSession::class,
-    \Illuminate\View\Middleware\ShareErrorsFromSession::class,
-]);
+})->withoutMiddleware('web');
