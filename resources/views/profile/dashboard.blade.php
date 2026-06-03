@@ -4,376 +4,7 @@
 
 @section('content')
 <div class="py-12 bg-slate-50 min-h-screen"
-     x-data="{
-         activeTab: 'info',
-         isLoggedIn: false,
-         user: null,
-         appointments: [],
-         favorites: [],
-         ownerProperties: [],
-         
-         // Edit Profile State
-         nameInput: '',
-         phoneInput: '',
-         avatarInput: '',
-         passwordCurrent: '',
-         passwordNew: '',
-         
-         // Owner Register State
-         companyInput: '',
-         addressInput: '',
-         isOwnerRegSuccess: false,
-         
-         // New Property Form Modal State
-         showAddPropertyModal: false,
-         newPropTitle: '',
-         newPropAddress: '',
-         newPropGeolocation: '10.7932,106.6710',
-         newPropType: 'Căn hộ',
-         newPropTxType: 'Cho thuê',
-         newPropPrice: '',
-         newPropArea: '',
-         newPropBed: 1,
-         newPropBath: 1,
-         newPropFloors: 1,
-         newPropDirection: 'Đông',
-         newPropFeatureImg: 'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?auto=format&fit=crop&q=80&w=800',
-         newPropDesc: '',
-         
-         init() {
-             // Retrieve active tab from URL query params
-             const urlParams = new URLSearchParams(window.location.search);
-             const tabParam = urlParams.get('tab');
-             if (tabParam) {
-                 this.activeTab = tabParam;
-             }
-             
-             // Check login state
-             this.checkLogin();
-             
-             // Sync state on login change
-             window.addEventListener('nks-login-change', () => {
-                 this.checkLogin();
-             });
-             
-             // Load initial data
-             this.loadMockData();
-         },
-         
-         checkLogin() {
-             const savedUser = localStorage.getItem('nks_user');
-             if (savedUser) {
-                 this.isLoggedIn = true;
-                 this.user = JSON.parse(savedUser);
-                 this.nameInput = this.user.name;
-                 this.phoneInput = this.user.phone || '';
-                 this.avatarInput = this.user.avatar || '';
-             } else {
-                 this.isLoggedIn = false;
-                 this.user = null;
-                 // If not logged in and tab is not login/register/host, default to login
-                 if (this.activeTab !== 'login' && this.activeTab !== 'register' && this.activeTab !== 'host') {
-                     this.activeTab = 'login';
-                 }
-             }
-         },
-           async loadMockData() {
-             if (this.isLoggedIn && this.user && this.user.id) {
-                 try {
-                     // Fetch appointments from DB
-                     const apptsRes = await fetch(`/api/appointments/user/${this.user.id}`);
-                     if (apptsRes.ok) {
-                         const apptsData = await apptsRes.json();
-                         this.appointments = apptsData.appointments || [];
-                         localStorage.setItem('nks_appointments', JSON.stringify(this.appointments));
-                     }
-                     
-                     // Fetch favorites from DB
-                     const favsRes = await fetch(`/api/favorites/user/${this.user.id}`);
-                     if (favsRes.ok) {
-                         const favsData = await favsRes.json();
-                         this.favorites = favsData.favorites || [];
-                         localStorage.setItem('nks_favorites', JSON.stringify(this.favorites));
-                     }
-                     
-                     // Fetch owner properties from DB
-                     if (this.user.role === 'owner') {
-                         const propsRes = await fetch(`/api/properties/owner/${this.user.id}`);
-                         if (propsRes.ok) {
-                             const propsData = await propsRes.json();
-                             this.ownerProperties = propsData.properties || [];
-                             localStorage.setItem('nks_owner_properties', JSON.stringify(this.ownerProperties));
-                         }
-                     }
-                 } catch (e) {
-                     console.warn('Database fetch failed, fallback to local storage:', e);
-                 }
-             }
-
-             // Fallback to local storage if API fails or empty
-             if (this.appointments.length === 0) {
-                 const savedAppts = localStorage.getItem('nks_appointments');
-                 if (savedAppts) this.appointments = JSON.parse(savedAppts);
-             }
-             if (this.favorites.length === 0) {
-                 const savedFavs = localStorage.getItem('nks_favorites');
-                 if (savedFavs) this.favorites = JSON.parse(savedFavs);
-             }
-             if (this.ownerProperties.length === 0) {
-                 const savedOwnerProps = localStorage.getItem('nks_owner_properties');
-                 if (savedOwnerProps) this.ownerProperties = JSON.parse(savedOwnerProps);
-             }
-         },
-         
-         async addProperty() {
-             if (!this.newPropTitle || !this.newPropAddress || !this.newPropPrice || !this.newPropArea) {
-                 alert('Vui lòng điền đầy đủ thông tin bắt buộc.');
-                 return;
-             }
-
-             try {
-                 const res = await fetch('/api/properties/add', {
-                     method: 'POST',
-                     headers: {
-                         'Content-Type': 'application/json',
-                         'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-                     },
-                     body: JSON.stringify({
-                         user_id: this.user.id,
-                         title: this.newPropTitle,
-                         address: this.newPropAddress,
-                         geolocation: this.newPropGeolocation,
-                         rstype: this.newPropType,
-                         transaction_type: this.newPropTxType,
-                         price: parseFloat(this.newPropPrice),
-                         total_area: parseFloat(this.newPropArea),
-                         bed: parseInt(this.newPropBed),
-                         bath: parseInt(this.newPropBath),
-                         floors: parseInt(this.newPropFloors),
-                         direction: this.newPropDirection,
-                         feature_img: this.newPropFeatureImg,
-                         description: this.newPropDesc
-                     })
-                 });
-
-                 if (res.ok) {
-                     const data = await res.json();
-                     this.ownerProperties.unshift(data.property);
-                     localStorage.setItem('nks_owner_properties', JSON.stringify(this.ownerProperties));
-                     
-                     // Reset form
-                     this.newPropTitle = '';
-                     this.newPropAddress = '';
-                     this.newPropGeolocation = '10.7932,106.6710';
-                     this.newPropPrice = '';
-                     this.newPropArea = '';
-                     this.newPropBed = 1;
-                     this.newPropBath = 1;
-                     this.newPropFloors = 1;
-                     this.newPropDesc = '';
-                     
-                     this.showAddPropertyModal = false;
-                     alert('Đăng tin bất động sản thành công! Tin đăng sẽ xuất hiện ngay trên bản đồ.');
-                 } else {
-                     alert('Đăng tin không thành công.');
-                 }
-             } catch (e) {
-                 alert('Lỗi kết nối máy chủ CSDL.');
-             }
-         },      },
-         
-         // Database authentication methods
-         async login(email, password) {
-             if (!email || !password) {
-                 alert('Vui lòng điền đầy đủ Email và Mật khẩu.');
-                 return;
-             }
-             
-             try {
-                 const res = await fetch('/api/login', {
-                     method: 'POST',
-                     headers: {
-                         'Content-Type': 'application/json',
-                         'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-                     },
-                     body: JSON.stringify({ email, password })
-                 });
-
-                 if (res.ok) {
-                     const data = await res.json();
-                     localStorage.setItem('nks_user', JSON.stringify(data.user));
-                     window.dispatchEvent(new CustomEvent('nks-login-change'));
-                     this.activeTab = 'info';
-                     this.loadMockData();
-                 } else {
-                     const err = await res.json();
-                     alert(err.message || 'Đăng nhập không thành công.');
-                 }
-             } catch (e) {
-                 alert('Lỗi kết nối máy chủ CSDL.');
-             }
-         },
-         
-         async register(name, email, password, role) {
-             if (!name || !email || !password) {
-                 alert('Vui lòng điền đầy đủ thông tin.');
-                 return;
-             }
-             
-             try {
-                 const res = await fetch('/api/register', {
-                     method: 'POST',
-                     headers: {
-                         'Content-Type': 'application/json',
-                         'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-                     },
-                     body: JSON.stringify({ name, email, password, role: role || 'renter' })
-                 });
-
-                 if (res.ok) {
-                     const data = await res.json();
-                     localStorage.setItem('nks_user', JSON.stringify(data.user));
-                     window.dispatchEvent(new CustomEvent('nks-login-change'));
-                     this.activeTab = 'info';
-                     this.loadMockData();
-                 } else {
-                     const err = await res.json();
-                     alert(err.message || 'Đăng ký không thành công.');
-                 }
-             } catch (e) {
-                 alert('Lỗi kết nối máy chủ CSDL.');
-             }
-         },
-         
-         // Update Profile Info
-         async updateProfile() {
-             if (!this.nameInput) {
-                 alert('Tên hiển thị không được bỏ trống.');
-                 return;
-             }
-             
-             try {
-                 const res = await fetch('/api/profile/update', {
-                     method: 'POST',
-                     headers: {
-                         'Content-Type': 'application/json',
-                         'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-                     },
-                     body: JSON.stringify({
-                         email: this.user.email,
-                         name: this.nameInput,
-                         phone: this.phoneInput,
-                         avatar: this.avatarInput
-                     })
-                 });
-
-                 if (res.ok) {
-                     const data = await res.json();
-                     this.user = data.user;
-                     localStorage.setItem('nks_user', JSON.stringify(this.user));
-                     window.dispatchEvent(new CustomEvent('nks-login-change'));
-                     alert('Cập nhật thông tin cá nhân thành công!');
-                 } else {
-                     alert('Cập nhật thất bại.');
-                 }
-             } catch (e) {
-                 alert('Lỗi kết nối CSDL.');
-             }
-         },
-         
-         // Update Password
-         updatePassword() {
-             if (!this.passwordCurrent || !this.passwordNew) {
-                 alert('Vui lòng điền mật khẩu hiện tại và mật khẩu mới.');
-                 return;
-             }
-             
-             alert('Cập nhật mật khẩu thành công!');
-             this.passwordCurrent = '';
-             this.passwordNew = '';
-         },
-         
-         // Register as Host/Owner
-         async registerHost() {
-             if (!this.isLoggedIn) {
-                 alert('Vui lòng đăng nhập trước khi đăng ký làm chủ nhà.');
-                 this.activeTab = 'login';
-                 return;
-             }
-             
-             try {
-                 const res = await fetch('/api/profile/upgrade-host', {
-                     method: 'POST',
-                     headers: {
-                         'Content-Type': 'application/json',
-                         'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-                     },
-                     body: JSON.stringify({
-                         email: this.user.email,
-                         name: this.nameInput || this.user.name,
-                         phone: this.phoneInput
-                     })
-                 });
-
-                 if (res.ok) {
-                     const data = await res.json();
-                     this.user = data.user;
-                     localStorage.setItem('nks_user', JSON.stringify(this.user));
-                     window.dispatchEvent(new CustomEvent('nks-login-change'));
-                     this.isOwnerRegSuccess = true;
-                     setTimeout(() => {
-                         this.isOwnerRegSuccess = false;
-                         this.activeTab = 'properties';
-                         this.loadMockData();
-                     }, 2000);
-                 } else {
-                     alert('Đăng ký làm chủ nhà không thành công.');
-                 }
-             } catch (e) {
-                 alert('Lỗi kết nối CSDL.');
-             }
-         },
-         
-         // Cancel appointment
-         async cancelAppointment(id) {
-             if (confirm('Bạn có chắc chắn muốn hủy lịch hẹn xem nhà này?')) {
-                 try {
-                     await fetch(`/api/appointments/cancel/${id}`, {
-                         method: 'POST',
-                         headers: {
-                             'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-                         }
-                     });
-                 } catch (e) {}
-                 
-                 this.appointments = this.appointments.filter(a => a.id !== id);
-                 localStorage.setItem('nks_appointments', JSON.stringify(this.appointments));
-             }
-         },
-         
-         // Remove favorite
-         async removeFavorite(id) {
-             if (this.isLoggedIn && this.user && this.user.id) {
-                 try {
-                     await fetch('/api/favorites/toggle', {
-                         method: 'POST',
-                         headers: {
-                             'Content-Type': 'application/json',
-                             'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-                         },
-                         body: JSON.stringify({
-                             user_id: this.user.id,
-                             property_id: id
-                         })
-                     });
-                 } catch (e) {}
-             }
-             
-             this.favorites = this.favorites.filter(f => f.id !== id);
-             localStorage.setItem('nks_favorites', JSON.stringify(this.favorites));
-             window.dispatchEvent(new CustomEvent('nks-fav-change'));
-         }
-     }">
+     x-data="memberDashboard()">
      
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="flex flex-col lg:flex-row gap-8">
@@ -894,4 +525,366 @@
         </div>
     </div>
 </div>
+@endsection
+
+@section('scripts')
+<script>
+    document.addEventListener('alpine:init', () => {
+        Alpine.data('memberDashboard', () => ({
+            activeTab: 'info',
+            isLoggedIn: false,
+            user: null,
+            appointments: [],
+            favorites: [],
+            ownerProperties: [],
+            
+            // Edit Profile State
+            nameInput: '',
+            phoneInput: '',
+            avatarInput: '',
+            passwordCurrent: '',
+            passwordNew: '',
+            
+            // Owner Register State
+            companyInput: '',
+            addressInput: '',
+            isOwnerRegSuccess: false,
+            
+            // New Property Form Modal State
+            showAddPropertyModal: false,
+            newPropTitle: '',
+            newPropAddress: '',
+            newPropGeolocation: '10.7932,106.6710',
+            newPropType: 'Căn hộ',
+            newPropTxType: 'Cho thuê',
+            newPropPrice: '',
+            newPropArea: '',
+            newPropBed: 1,
+            newPropBath: 1,
+            newPropFloors: 1,
+            newPropDirection: 'Đông',
+            newPropFeatureImg: 'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?auto=format&fit=crop&q=80&w=800',
+            newPropDesc: '',
+            
+            init() {
+                const urlParams = new URLSearchParams(window.location.search);
+                const tabParam = urlParams.get('tab');
+                if (tabParam) {
+                    this.activeTab = tabParam;
+                }
+                
+                this.checkLogin();
+                
+                window.addEventListener('nks-login-change', () => {
+                    this.checkLogin();
+                });
+                
+                this.loadMockData();
+            },
+            
+            checkLogin() {
+                const savedUser = localStorage.getItem('nks_user');
+                if (savedUser) {
+                    this.isLoggedIn = true;
+                    this.user = JSON.parse(savedUser);
+                    this.nameInput = this.user.name;
+                    this.phoneInput = this.user.phone || '';
+                    this.avatarInput = this.user.avatar || '';
+                } else {
+                    this.isLoggedIn = false;
+                    this.user = null;
+                    if (this.activeTab !== 'login' && this.activeTab !== 'register' && this.activeTab !== 'host') {
+                        this.activeTab = 'login';
+                    }
+                }
+            },
+            
+            async loadMockData() {
+                if (this.isLoggedIn && this.user && this.user.id) {
+                    try {
+                        const apptsRes = await fetch(`/api/appointments/user/${this.user.id}`);
+                        if (apptsRes.ok) {
+                            const apptsData = await apptsRes.json();
+                            this.appointments = apptsData.appointments || [];
+                            localStorage.setItem('nks_appointments', JSON.stringify(this.appointments));
+                        }
+                        
+                        const favsRes = await fetch(`/api/favorites/user/${this.user.id}`);
+                        if (favsRes.ok) {
+                            const favsData = await favsRes.json();
+                            this.favorites = favsData.favorites || [];
+                            localStorage.setItem('nks_favorites', JSON.stringify(this.favorites));
+                        }
+                        
+                        if (this.user.role === 'owner') {
+                            const propsRes = await fetch(`/api/properties/owner/${this.user.id}`);
+                            if (propsRes.ok) {
+                                const propsData = await propsRes.json();
+                                this.ownerProperties = propsData.properties || [];
+                                localStorage.setItem('nks_owner_properties', JSON.stringify(this.ownerProperties));
+                            }
+                        }
+                    } catch (e) {
+                        console.warn('Database fetch failed, fallback to local storage:', e);
+                    }
+                }
+
+                if (this.appointments.length === 0) {
+                    const savedAppts = localStorage.getItem('nks_appointments');
+                    if (savedAppts) this.appointments = JSON.parse(savedAppts);
+                }
+                if (this.favorites.length === 0) {
+                    const savedFavs = localStorage.getItem('nks_favorites');
+                    if (savedFavs) this.favorites = JSON.parse(savedFavs);
+                }
+                if (this.ownerProperties.length === 0) {
+                    const savedOwnerProps = localStorage.getItem('nks_owner_properties');
+                    if (savedOwnerProps) this.ownerProperties = JSON.parse(savedOwnerProps);
+                }
+            },
+            
+            async addProperty() {
+                if (!this.newPropTitle || !this.newPropAddress || !this.newPropPrice || !this.newPropArea) {
+                    alert('Vui lòng điền đầy đủ thông tin bắt buộc.');
+                    return;
+                }
+
+                try {
+                    const res = await fetch('/api/properties/add', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                        },
+                        body: JSON.stringify({
+                            user_id: this.user.id,
+                            title: this.newPropTitle,
+                            address: this.newPropAddress,
+                            geolocation: this.newPropGeolocation,
+                            rstype: this.newPropType,
+                            transaction_type: this.newPropTxType,
+                            price: parseFloat(this.newPropPrice),
+                            total_area: parseFloat(this.newPropArea),
+                            bed: parseInt(this.newPropBed),
+                            bath: parseInt(this.newPropBath),
+                            floors: parseInt(this.newPropFloors),
+                            direction: this.newPropDirection,
+                            feature_img: this.newPropFeatureImg,
+                            description: this.newPropDesc
+                        })
+                    });
+
+                    if (res.ok) {
+                        const data = await res.json();
+                        this.ownerProperties.unshift(data.property);
+                        localStorage.setItem('nks_owner_properties', JSON.stringify(this.ownerProperties));
+                        
+                        this.newPropTitle = '';
+                        this.newPropAddress = '';
+                        this.newPropGeolocation = '10.7932,106.6710';
+                        this.newPropPrice = '';
+                        this.newPropArea = '';
+                        this.newPropBed = 1;
+                        this.newPropBath = 1;
+                        this.newPropFloors = 1;
+                        this.newPropDesc = '';
+                        
+                        this.showAddPropertyModal = false;
+                        alert('Đăng tin bất động sản thành công! Tin đăng sẽ xuất hiện ngay trên bản đồ.');
+                    } else {
+                        alert('Đăng tin không thành công.');
+                    }
+                } catch (e) {
+                    alert('Lỗi kết nối máy chủ CSDL.');
+                }
+            },
+            
+            async login(email, password) {
+                if (!email || !password) {
+                    alert('Vui lòng điền đầy đủ Email và Mật khẩu.');
+                    return;
+                }
+                
+                try {
+                    const res = await fetch('/api/login', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                        },
+                        body: JSON.stringify({ email, password })
+                    });
+
+                    if (res.ok) {
+                        const data = await res.json();
+                        localStorage.setItem('nks_user', JSON.stringify(data.user));
+                        window.dispatchEvent(new CustomEvent('nks-login-change'));
+                        this.activeTab = 'info';
+                        this.loadMockData();
+                    } else {
+                        const err = await res.json();
+                        alert(err.message || 'Đăng nhập không thành công.');
+                    }
+                } catch (e) {
+                    alert('Lỗi kết nối máy chủ CSDL.');
+                }
+            },
+            
+            async register(name, email, password, role) {
+                if (!name || !email || !password) {
+                    alert('Vui lòng điền đầy đủ thông tin.');
+                    return;
+                }
+                
+                try {
+                    const res = await fetch('/api/register', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                        },
+                        body: JSON.stringify({ name, email, password, role: role || 'renter' })
+                    });
+
+                    if (res.ok) {
+                        const data = await res.json();
+                        localStorage.setItem('nks_user', JSON.stringify(data.user));
+                        window.dispatchEvent(new CustomEvent('nks-login-change'));
+                        this.activeTab = 'info';
+                        this.loadMockData();
+                    } else {
+                        const err = await res.json();
+                        alert(err.message || 'Đăng ký không thành công.');
+                    }
+                } catch (e) {
+                    alert('Lỗi kết nối máy chủ CSDL.');
+                }
+            },
+            
+            async updateProfile() {
+                if (!this.nameInput) {
+                    alert('Tên hiển thị không được bỏ trống.');
+                    return;
+                }
+                
+                try {
+                    const res = await fetch('/api/profile/update', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                        },
+                        body: JSON.stringify({
+                            email: this.user.email,
+                            name: this.nameInput,
+                            phone: this.phoneInput,
+                            avatar: this.avatarInput
+                        })
+                    });
+
+                    if (res.ok) {
+                        const data = await res.json();
+                        this.user = data.user;
+                        localStorage.setItem('nks_user', JSON.stringify(this.user));
+                        window.dispatchEvent(new CustomEvent('nks-login-change'));
+                        alert('Cập nhật thông tin cá nhân thành công!');
+                    } else {
+                        alert('Cập nhật thất bại.');
+                    }
+                } catch (e) {
+                    alert('Lỗi kết nối CSDL.');
+                }
+            },
+            
+            updatePassword() {
+                if (!this.passwordCurrent || !this.passwordNew) {
+                    alert('Vui lòng điền mật khẩu hiện tại và mật khẩu mới.');
+                    return;
+                }
+                
+                alert('Cập nhật mật khẩu thành công!');
+                this.passwordCurrent = '';
+                this.passwordNew = '';
+            },
+            
+            async registerHost() {
+                if (!this.isLoggedIn) {
+                    alert('Vui lòng đăng nhập trước khi đăng ký làm chủ nhà.');
+                    this.activeTab = 'login';
+                    return;
+                }
+                
+                try {
+                    const res = await fetch('/api/profile/upgrade-host', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                        },
+                        body: JSON.stringify({
+                            email: this.user.email,
+                            name: this.nameInput || this.user.name,
+                            phone: this.phoneInput
+                        })
+                    });
+
+                    if (res.ok) {
+                        const data = await res.json();
+                        this.user = data.user;
+                        localStorage.setItem('nks_user', JSON.stringify(this.user));
+                        window.dispatchEvent(new CustomEvent('nks-login-change'));
+                        this.isOwnerRegSuccess = true;
+                        setTimeout(() => {
+                            this.isOwnerRegSuccess = false;
+                            this.activeTab = 'properties';
+                            this.loadMockData();
+                        }, 2000);
+                    } else {
+                        alert('Đăng ký làm chủ nhà không thành công.');
+                    }
+                } catch (e) {
+                    alert('Lỗi kết nối CSDL.');
+                }
+            },
+            
+            async cancelAppointment(id) {
+                if (confirm('Bạn có chắc chắn muốn hủy lịch hẹn xem nhà này?')) {
+                    try {
+                        await fetch(`/api/appointments/cancel/${id}`, {
+                            method: 'POST',
+                            headers: {
+                                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                            }
+                        });
+                    } catch (e) {}
+                    
+                    this.appointments = this.appointments.filter(a => a.id !== id);
+                    localStorage.setItem('nks_appointments', JSON.stringify(this.appointments));
+                }
+            },
+            
+            async removeFavorite(id) {
+                if (this.isLoggedIn && this.user && this.user.id) {
+                    try {
+                        await fetch('/api/favorites/toggle', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                            },
+                            body: JSON.stringify({
+                                user_id: this.user.id,
+                                property_id: id
+                            })
+                        });
+                    } catch (e) {}
+                }
+                
+                this.favorites = this.favorites.filter(f => f.id !== id);
+                localStorage.setItem('nks_favorites', JSON.stringify(this.favorites));
+                window.dispatchEvent(new CustomEvent('nks-fav-change'));
+            }
+        }));
+    });
+</script>
 @endsection
