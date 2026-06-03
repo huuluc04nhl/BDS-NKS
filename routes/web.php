@@ -45,11 +45,15 @@ Route::get('/run-migrations-secure-nks', function () {
             \Illuminate\Support\Facades\Artisan::call('migrate', ['--force' => true]);
             return response()->json([
                 'success' => true,
+                'connection' => \Illuminate\Support\Facades\DB::getDefaultConnection(),
+                'database' => \Illuminate\Support\Facades\DB::connection()->getDatabaseName(),
                 'output' => \Illuminate\Support\Facades\Artisan::output()
             ]);
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
+                'connection' => \Illuminate\Support\Facades\DB::getDefaultConnection(),
+                'database' => \Illuminate\Support\Facades\DB::connection()->getDatabaseName(),
                 'error' => $e->getMessage()
             ], 500);
         }
