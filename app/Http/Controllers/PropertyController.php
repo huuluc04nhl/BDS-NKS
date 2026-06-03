@@ -474,32 +474,44 @@ class PropertyController extends Controller
      */
     public function apiRegister(Request $request)
     {
-        $request->validate([
-            'name' => 'required|string|max:255',
-            'email' => 'required|string|email|max:255|unique:users',
-            'password' => 'required|string|min:6',
-            'role' => 'required|string|in:renter,owner'
-        ]);
+        try {
+            $request->validate([
+                'name' => 'required|string|max:255',
+                'email' => 'required|string|email|max:255|unique:users',
+                'password' => 'required|string|min:6',
+                'role' => 'required|string|in:renter,owner'
+            ]);
 
-        $user = \App\Models\User::create([
-            'name' => $request->name,
-            'email' => $request->email,
-            'password' => bcrypt($request->password),
-            'role' => $request->role,
-            'avatar' => 'https://api.dicebear.com/7.x/adventurer/svg?seed=' . urlencode($request->name)
-        ]);
+            $user = \App\Models\User::create([
+                'name' => $request->name,
+                'email' => $request->email,
+                'password' => bcrypt($request->password),
+                'role' => $request->role,
+                'avatar' => 'https://api.dicebear.com/7.x/adventurer/svg?seed=' . urlencode($request->name)
+            ]);
 
-        return response()->json([
-            'success' => true,
-            'user' => [
-                'id' => $user->id,
-                'name' => $user->name,
-                'email' => $user->email,
-                'phone' => $user->phone,
-                'role' => $user->role,
-                'avatar' => $user->avatar
-            ]
-        ]);
+            return response()->json([
+                'success' => true,
+                'user' => [
+                    'id' => $user->id,
+                    'name' => $user->name,
+                    'email' => $user->email,
+                    'phone' => $user->phone,
+                    'role' => $user->role,
+                    'avatar' => $user->avatar
+                ]
+            ]);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => implode(' ', \Illuminate\Support\Arr::flatten($e->errors()))
+            ], 422);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Lỗi CSDL: ' . $e->getMessage()
+            ], 500);
+        }
     }
 
     /**
@@ -507,31 +519,43 @@ class PropertyController extends Controller
      */
     public function apiLogin(Request $request)
     {
-        $request->validate([
-            'email' => 'required|string|email',
-            'password' => 'required|string'
-        ]);
+        try {
+            $request->validate([
+                'email' => 'required|string|email',
+                'password' => 'required|string'
+            ]);
 
-        $user = \App\Models\User::where('email', $request->email)->first();
+            $user = \App\Models\User::where('email', $request->email)->first();
 
-        if (!$user || !\Illuminate\Support\Facades\Hash::check($request->password, $user->password)) {
+            if (!$user || !\Illuminate\Support\Facades\Hash::check($request->password, $user->password)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Email hoặc Mật khẩu không chính xác.'
+                ], 401);
+            }
+
+            return response()->json([
+                'success' => true,
+                'user' => [
+                    'id' => $user->id,
+                    'name' => $user->name,
+                    'email' => $user->email,
+                    'phone' => $user->phone,
+                    'role' => $user->role,
+                    'avatar' => $user->avatar
+                ]
+            ]);
+        } catch (\Illuminate\Validation\ValidationException $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Email hoặc Mật khẩu không chính xác.'
-            ], 401);
+                'message' => implode(' ', \Illuminate\Support\Arr::flatten($e->errors()))
+            ], 422);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Lỗi CSDL: ' . $e->getMessage()
+            ], 500);
         }
-
-        return response()->json([
-            'success' => true,
-            'user' => [
-                'id' => $user->id,
-                'name' => $user->name,
-                'email' => $user->email,
-                'phone' => $user->phone,
-                'role' => $user->role,
-                'avatar' => $user->avatar
-            ]
-        ]);
     }
 
     /**
