@@ -69,27 +69,4 @@ Route::get('/run-migrations-secure-nks', function () {
     abort(403);
 })->withoutMiddleware('web');
 
-// Temporary Debugging Route to Inspect Registration Database Errors
-Route::get('/debug-register', function () {
-    try {
-        $email = 'debug_' . time() . '@example.com';
-        $user = \App\Models\User::create([
-            'name' => 'Debug User',
-            'email' => $email,
-            'password' => bcrypt('password123'),
-            'role' => 'renter',
-            'avatar' => 'https://api.dicebear.com/7.x/adventurer/svg?seed=debug'
-        ]);
-        return response()->json([
-            'success' => true,
-            'user_id' => $user->id,
-            'email' => $email
-        ]);
-    } catch (\Exception $e) {
-        return response()->json([
-            'success' => false,
-            'error' => $e->getMessage(),
-            'trace' => $e->getTraceAsString()
-        ], 500);
-    }
-})->withoutMiddleware('web');
+
