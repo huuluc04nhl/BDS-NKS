@@ -129,7 +129,7 @@
                     </div>
 
                     <!-- "Đăng tin" button (Exact orange/blue accent equivalent) -->
-                    <a href="/profile?tab=host" class="bg-primary hover:bg-primary-dark text-white text-xs font-bold px-5 py-2.5 rounded-[12px] shadow-sm hover:shadow transition-all duration-300">
+                    <a :href="isLoggedIn && user && user.role === 'owner' ? '/profile?tab=properties' : '/profile?tab=host'" class="bg-primary hover:bg-primary-dark text-white text-xs font-bold px-5 py-2.5 rounded-[12px] shadow-sm hover:shadow transition-all duration-300">
                         Đăng tin
                     </a>
 

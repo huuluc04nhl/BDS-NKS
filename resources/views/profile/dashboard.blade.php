@@ -590,6 +590,9 @@
                     this.nameInput = this.user.name;
                     this.phoneInput = this.user.phone || '';
                     this.avatarInput = this.user.avatar || '';
+                    if (this.user.role === 'owner' && this.activeTab === 'host') {
+                        this.activeTab = 'properties';
+                    }
                 } else {
                     this.isLoggedIn = false;
                     this.user = null;
