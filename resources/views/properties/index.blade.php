@@ -87,7 +87,7 @@
                 <template x-for="p in filteredProperties" :key="p.id">
                     <div :id="'property-card-' + p.id"
                          @click="focusProperty(p)"
-                         class="bg-white rounded-[24px] border border-slate-100 hover:shadow-premium shadow-sm transition-custom-all duration-300 overflow-hidden flex flex-col sm:flex-row group p-3 cursor-pointer"
+                         class="bg-white rounded-[24px] border border-slate-100 shadow-sm card-hover-premium overflow-hidden flex flex-col sm:flex-row group p-3 cursor-pointer"
                          :class="activePropertyId === p.id && 'border-primary shadow-premium ring-2 ring-primary/5'">
                         
                         <!-- Image Container with Verify Badge -->
@@ -100,8 +100,8 @@
                                 </span>
                             </div>
                             <button @click.stop="toggleFav(p)" 
-                                    class="absolute top-2.5 right-2.5 w-7.5 h-7.5 rounded-full bg-white/90 text-slate-600 hover:bg-white hover:text-red-500 flex items-center justify-center shadow-md transition-all duration-200"
-                                    :class="isFav(p.id) && 'bg-red-500 text-white'">
+                                    class="absolute top-2.5 right-2.5 w-7.5 h-7.5 rounded-full flex items-center justify-center shadow-md transition-all duration-200"
+                                    :class="isFav(p.id) ? 'bg-red-500 text-white animate-heart-pop' : 'bg-white/90 text-slate-600 hover:bg-white hover:text-red-500'">
                                 <svg class="w-3.5 h-3.5" :fill="isFav(p.id) ? 'currentColor' : 'none'" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2"><path stroke-linecap="round" stroke-linejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" /></svg>
                             </button>
                         </div>
@@ -329,11 +329,11 @@
 
                             <!-- Phone & Zalo CTAs -->
                             <div class="grid grid-cols-2 gap-3">
-                                <a :href="'tel:' + selectedProperty?.sale?.phone" class="bg-primary hover:bg-primary-dark text-white font-extrabold text-xs py-3 rounded-2xl shadow-sm hover:shadow transition-all text-center flex items-center justify-center gap-1.5">
+                                <a :href="'tel:' + selectedProperty?.sale?.phone" class="bg-primary text-white font-extrabold text-xs py-3 rounded-2xl shadow-sm btn-hover-premium text-center flex items-center justify-center gap-1.5">
                                     <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.94.725l.548 2.2a1 1 0 01-.321.988l-1.305.98a10.582 10.582 0 004.872 4.872l.98-1.305a1 1 0 01.988-.321l2.2.548a1 1 0 01.725.94V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" /></svg>
                                     Gọi điện
                                 </a>
-                                <a :href="'https://zalo.me/' + selectedProperty?.sale?.phone" target="_blank" class="bg-white border border-slate-200 text-primary hover:bg-primary/5 font-extrabold text-xs py-3 rounded-2xl shadow-xs transition-all text-center flex items-center justify-center gap-1.5">
+                                <a :href="'https://zalo.me/' + selectedProperty?.sale?.phone" target="_blank" class="bg-white border border-slate-200 text-primary font-extrabold text-xs py-3 rounded-2xl shadow-xs btn-hover-premium text-center flex items-center justify-center gap-1.5">
                                     <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" /></svg>
                                     Nhắn Zalo
                                 </a>
@@ -365,7 +365,7 @@
                                     <input type="text" x-model="apptName" placeholder="Họ và tên của bạn" required class="w-full bg-white border border-slate-200 rounded-xl px-3 py-2.5 text-xs font-semibold focus:outline-none focus:border-primary">
                                     <input type="tel" x-model="apptPhone" placeholder="Số điện thoại của bạn" required class="w-full bg-white border border-slate-200 rounded-xl px-3 py-2.5 text-xs font-semibold focus:outline-none focus:border-primary">
                                 </div>
-                                <button type="submit" class="w-full bg-primary hover:bg-primary-dark text-white font-extrabold py-3.5 rounded-2xl text-xs shadow-md shadow-primary/10 hover:shadow-lg transition-all hover:scale-[1.01] active:scale-95">
+                                <button type="submit" class="w-full bg-primary text-white font-extrabold py-3.5 rounded-2xl text-xs shadow-md btn-hover-premium">
                                     Gửi yêu cầu đặt lịch hẹn
                                 </button>
                             </form>

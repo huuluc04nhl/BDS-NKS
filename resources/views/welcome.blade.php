@@ -101,7 +101,7 @@
         <!-- 3-Column Premium Property Card Grid -->
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
             @foreach(collect($featuredRentals)->take(3) as $index => $property)
-                <div class="bg-white rounded-[24px] border border-slate-100 hover:shadow-premium shadow-sm transition-custom-all duration-500 overflow-hidden flex flex-col group p-3 pb-5">
+                <div class="bg-white rounded-[24px] border border-slate-100 shadow-sm card-hover-premium overflow-hidden flex flex-col group p-3 pb-5">
                     
                     <!-- Image frame padding exactly like Moso screenshot -->
                     <div class="h-60 rounded-[18px] overflow-hidden relative">
@@ -121,8 +121,8 @@
                         
                         <!-- Favorite Toggle -->
                         <button @click="toggleFav({{ json_encode($property) }})" 
-                                class="absolute top-3 right-3 w-8 h-8 rounded-full bg-white/90 text-slate-600 hover:bg-white hover:text-red-500 flex items-center justify-center shadow-md transition-all duration-200"
-                                :class="isFav({{ $property['id'] }}) && 'bg-red-500 text-white'">
+                                class="absolute top-3 right-3 w-8 h-8 rounded-full flex items-center justify-center shadow-md hover:scale-110 active:scale-95 transition-all duration-300"
+                                :class="isFav({{ $property['id'] }}) ? 'bg-red-500 text-white animate-heart-pop' : 'bg-white/90 text-slate-600 hover:bg-white hover:text-red-500'">
                             <svg class="w-4 h-4" :fill="isFav({{ $property['id'] }}) ? 'currentColor' : 'none'" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2"><path stroke-linecap="round" stroke-linejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" /></svg>
                         </button>
                     </div>
@@ -187,7 +187,7 @@
 
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
             @forelse($featuredRentals as $index => $property)
-                <div class="bg-white rounded-[24px] border border-slate-100 hover:shadow-premium shadow-sm transition-custom-all duration-500 overflow-hidden flex flex-col group p-3 pb-5 animate-fade-in-up"
+                <div class="bg-white rounded-[24px] border border-slate-100 shadow-sm card-hover-premium overflow-hidden flex flex-col group p-3 pb-5 animate-fade-in-up"
                      style="animation-delay: {{ $index * 0.1 }}s;">
                     
                     <!-- Image aspect video -->
@@ -207,8 +207,8 @@
                         
                         <!-- Favorite Toggle -->
                         <button @click="toggleFav({{ json_encode($property) }})" 
-                                class="absolute top-3 right-3 w-8 h-8 rounded-full bg-white/90 text-slate-600 hover:bg-white hover:text-red-500 flex items-center justify-center shadow-md transition-all duration-200"
-                                :class="isFav({{ $property['id'] }}) && 'bg-red-500 text-white'">
+                                class="absolute top-3 right-3 w-8 h-8 rounded-full flex items-center justify-center shadow-md hover:scale-110 active:scale-95 transition-all duration-300"
+                                :class="isFav({{ $property['id'] }}) ? 'bg-red-500 text-white animate-heart-pop' : 'bg-white/90 text-slate-600 hover:bg-white hover:text-red-500'">
                             <svg class="w-4 h-4" :fill="isFav({{ $property['id'] }}) ? 'currentColor' : 'none'" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2"><path stroke-linecap="round" stroke-linejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" /></svg>
                         </button>
                     </div>

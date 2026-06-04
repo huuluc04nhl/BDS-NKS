@@ -68,7 +68,14 @@
                 <div class="bg-white rounded-3xl p-8 border border-slate-100 shadow-sm min-h-[500px]">
                     
                     <!-- TAB: INFO (Profile & Password Edit) -->
-                    <div x-show="activeTab === 'info' && isLoggedIn" x-cloak class="space-y-8 animate-fade-in-up">
+                    <div x-show="activeTab === 'info' && isLoggedIn"
+                         x-transition:enter="transition ease-out duration-300 transform"
+                         x-transition:enter-start="opacity-0 translate-y-4"
+                         x-transition:enter-end="opacity-100 translate-y-0"
+                         x-transition:leave="transition ease-in duration-200 transform"
+                         x-transition:leave-start="opacity-100 translate-y-0"
+                         x-transition:leave-end="opacity-0 translate-y-4"
+                         x-cloak class="space-y-8">
                         <div>
                             <h2 class="text-2xl font-extrabold text-slate-800">Thông tin cá nhân</h2>
                             <p class="text-sm text-slate-400 mt-1">Cập nhật hồ sơ thành viên của bạn tại BDS NKS</p>
@@ -94,7 +101,7 @@
                                 </div>
                             </div>
                             
-                            <button type="submit" class="bg-primary hover:bg-primary-dark text-white font-bold px-6 py-3 rounded-full text-sm shadow-md shadow-primary/20 hover:shadow-lg transition-all duration-300">Cập nhật hồ sơ</button>
+                            <button type="submit" class="bg-primary text-white font-bold px-6 py-3 rounded-full text-sm shadow-md btn-hover-premium">Cập nhật hồ sơ</button>
                         </form>
                         
                         <hr class="border-slate-100">
@@ -116,12 +123,19 @@
                                 </div>
                             </div>
                             
-                            <button type="submit" class="bg-primary hover:bg-primary-dark text-white font-bold px-6 py-3 rounded-full text-sm shadow-md shadow-primary/20 hover:shadow-lg transition-all duration-300">Đổi mật khẩu</button>
+                            <button type="submit" class="bg-primary text-white font-bold px-6 py-3 rounded-full text-sm shadow-md btn-hover-premium">Đổi mật khẩu</button>
                         </form>
                     </div>
                     
                     <!-- TAB: FAVORITES -->
-                    <div x-show="activeTab === 'favorites' && isLoggedIn" x-cloak class="space-y-8 animate-fade-in-up">
+                    <div x-show="activeTab === 'favorites' && isLoggedIn"
+                         x-transition:enter="transition ease-out duration-300 transform"
+                         x-transition:enter-start="opacity-0 translate-y-4"
+                         x-transition:enter-end="opacity-100 translate-y-0"
+                         x-transition:leave="transition ease-in duration-200 transform"
+                         x-transition:leave-start="opacity-100 translate-y-0"
+                         x-transition:leave-end="opacity-0 translate-y-4"
+                         x-cloak class="space-y-8">
                         <div>
                             <h2 class="text-2xl font-extrabold text-slate-800">Tin đã yêu thích</h2>
                             <p class="text-sm text-slate-400 mt-1">Danh sách bất động sản bạn đã lưu quan tâm</p>
@@ -134,7 +148,7 @@
                                 </div>
                                 <h3 class="text-base font-bold text-slate-700">Chưa có tin yêu thích nào</h3>
                                 <p class="text-sm text-slate-400 max-w-xs mx-auto">Hãy quay lại trang tìm kiếm và nhấn nút thả tim tại các tin đăng để lưu lại ở đây nhé!</p>
-                                <a href="/properties" class="inline-flex bg-primary hover:bg-primary-dark text-white font-bold px-6 py-2.5 rounded-full text-sm shadow-md transition-all duration-300">Khám phá ngay</a>
+                                <a href="/properties" class="inline-flex bg-primary text-white font-bold px-6 py-2.5 rounded-full text-sm shadow-md btn-hover-premium">Khám phá ngay</a>
                             </div>
                         </template>
                         
@@ -167,7 +181,14 @@
                     </div>
                     
                     <!-- TAB: APPOINTMENTS -->
-                    <div x-show="activeTab === 'appointments' && isLoggedIn" x-cloak class="space-y-8 animate-fade-in-up">
+                    <div x-show="activeTab === 'appointments' && isLoggedIn"
+                         x-transition:enter="transition ease-out duration-300 transform"
+                         x-transition:enter-start="opacity-0 translate-y-4"
+                         x-transition:enter-end="opacity-100 translate-y-0"
+                         x-transition:leave="transition ease-in duration-200 transform"
+                         x-transition:leave-start="opacity-100 translate-y-0"
+                         x-transition:leave-end="opacity-0 translate-y-4"
+                         x-cloak class="space-y-8">
                         <div>
                             <h2 class="text-2xl font-extrabold text-slate-800">Lịch hẹn xem nhà</h2>
                             <p class="text-sm text-slate-400 mt-1">Quản lý lịch làm việc và lịch xem thực tế với chủ nhà chính chủ</p>
@@ -180,7 +201,7 @@
                                 </div>
                                 <h3 class="text-base font-bold text-slate-700">Chưa có lịch hẹn xem nhà nào</h3>
                                 <p class="text-sm text-slate-400 max-w-xs mx-auto">Vào trang chi tiết bất động sản để đặt lịch trực tuyến nhanh chóng với chủ nhà!</p>
-                                <a href="/properties" class="inline-flex bg-primary hover:bg-primary-dark text-white font-bold px-6 py-2.5 rounded-full text-sm shadow-md transition-all duration-300">Đặt lịch ngay</a>
+                                <a href="/properties" class="inline-flex bg-primary text-white font-bold px-6 py-2.5 rounded-full text-sm shadow-md btn-hover-premium">Đặt lịch ngay</a>
                             </div>
                         </template>
                         
@@ -214,7 +235,14 @@
                     </div>
                     
                     <!-- TAB: MY PROPERTIES (Owner Only) -->
-                    <div x-show="activeTab === 'properties' && isLoggedIn && user && user.role === 'owner'" x-cloak class="space-y-8 animate-fade-in-up">
+                    <div x-show="activeTab === 'properties' && isLoggedIn && user && user.role === 'owner'"
+                         x-transition:enter="transition ease-out duration-300 transform"
+                         x-transition:enter-start="opacity-0 translate-y-4"
+                         x-transition:enter-end="opacity-100 translate-y-0"
+                         x-transition:leave="transition ease-in duration-200 transform"
+                         x-transition:leave-start="opacity-100 translate-y-0"
+                         x-transition:leave-end="opacity-0 translate-y-4"
+                         x-cloak class="space-y-8">
                         <div>
                             <h2 class="text-2xl font-extrabold text-slate-800">Tin đăng chính chủ</h2>
                             <p class="text-sm text-slate-400 mt-1">Danh sách bất động sản bạn đang đăng cho thuê trực tiếp</p>
@@ -225,7 +253,7 @@
                                 <h3 class="font-bold text-primary-dark">Đăng tin cho thuê chính chủ miễn phí</h3>
                                 <p class="text-xs text-slate-500 mt-1">Chỉ mất 2 phút để tin đăng của bạn hiển thị tiếp cận hàng ngàn khách thuê có nhu cầu thực tế.</p>
                             </div>
-                            <button @click="showAddPropertyModal = true" class="bg-primary hover:bg-primary-dark text-white font-bold text-xs px-6 py-3 rounded-full shadow-md shadow-primary/20 hover:shadow-lg transition-all duration-300">Đăng tin mới +</button>
+                            <button @click="showAddPropertyModal = true" class="bg-primary text-white font-bold text-xs px-6 py-3 rounded-full shadow-md btn-hover-premium">Đăng tin mới +</button>
                         </div>
                         
                         <template x-if="ownerProperties.length === 0">
@@ -267,7 +295,14 @@
                     </div>
                     
                     <!-- TAB: REGISTER AS OWNER / HOST -->
-                    <div x-show="activeTab === 'host'" x-cloak class="space-y-8 animate-fade-in-up">
+                    <div x-show="activeTab === 'host'"
+                         x-transition:enter="transition ease-out duration-300 transform"
+                         x-transition:enter-start="opacity-0 translate-y-4"
+                         x-transition:enter-end="opacity-100 translate-y-0"
+                         x-transition:leave="transition ease-in duration-200 transform"
+                         x-transition:leave-start="opacity-100 translate-y-0"
+                         x-transition:leave-end="opacity-0 translate-y-4"
+                         x-cloak class="space-y-8">
                         <div>
                             <h2 class="text-2xl font-extrabold text-slate-800">Đăng ký làm chủ nhà</h2>
                             <p class="text-sm text-slate-400 mt-1">Đăng tin BDS chính chủ để tiếp cận hàng ngàn khách thuê, không qua môi giới</p>
@@ -299,7 +334,7 @@
                                     <p class="text-slate-600">Bằng việc gửi thông tin, bạn xác nhận mình là chủ sở hữu hoặc người quản lý trực tiếp bất động sản này. Hệ thống sẽ khóa tài khoản nếu phát hiện môi giới giả danh.</p>
                                 </div>
                                 
-                                <button type="submit" class="w-full bg-primary hover:bg-primary-dark text-white font-bold px-6 py-4 rounded-full text-sm shadow-md shadow-primary/20 hover:shadow-lg transition-all duration-300">Đăng ký làm chủ nhà ngay</button>
+                                <button type="submit" class="w-full bg-primary text-white font-bold px-6 py-4 rounded-full text-sm shadow-md btn-hover-premium">Đăng ký làm chủ nhà ngay</button>
                             </form>
                             
                             <div class="w-full md:w-1/2 space-y-6">
@@ -332,7 +367,14 @@
                     </div>
                     
                     <!-- TAB: LOGIN -->
-                    <div x-show="activeTab === 'login'" x-cloak class="space-y-8 animate-fade-in-up max-w-md mx-auto">
+                    <div x-show="activeTab === 'login'"
+                         x-transition:enter="transition ease-out duration-300 transform"
+                         x-transition:enter-start="opacity-0 translate-y-4"
+                         x-transition:enter-end="opacity-100 translate-y-0"
+                         x-transition:leave="transition ease-in duration-200 transform"
+                         x-transition:leave-start="opacity-100 translate-y-0"
+                         x-transition:leave-end="opacity-0 translate-y-4"
+                         x-cloak class="space-y-8 max-w-md mx-auto">
                         <div class="text-center">
                             <h2 class="text-2xl font-extrabold text-slate-800">Đăng nhập tài khoản</h2>
                             <p class="text-sm text-slate-400 mt-1">Đăng nhập để lưu tin yêu thích và quản lý lịch hẹn</p>
@@ -347,7 +389,7 @@
                                 <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Mật khẩu</label>
                                 <input type="password" x-ref="loginPass" required placeholder="••••••••" class="w-full bg-slate-50 border border-slate-200 rounded-2xl px-4 py-3.5 text-sm focus:outline-none focus:border-primary focus:bg-white transition-all">
                             </div>
-                            <button type="submit" class="w-full bg-primary hover:bg-primary-dark text-white font-bold py-4 rounded-full text-sm shadow-md shadow-primary/20 hover:shadow-lg transition-all duration-300">Đăng nhập</button>
+                            <button type="submit" class="w-full bg-primary text-white font-bold py-4 rounded-full text-sm shadow-md btn-hover-premium">Đăng nhập</button>
                         </form>
                         
                         <div class="text-center text-sm text-slate-400">
@@ -356,7 +398,14 @@
                     </div>
                     
                     <!-- TAB: REGISTER -->
-                    <div x-show="activeTab === 'register'" x-cloak class="space-y-8 animate-fade-in-up max-w-md mx-auto">
+                    <div x-show="activeTab === 'register'"
+                         x-transition:enter="transition ease-out duration-300 transform"
+                         x-transition:enter-start="opacity-0 translate-y-4"
+                         x-transition:enter-end="opacity-100 translate-y-0"
+                         x-transition:leave="transition ease-in duration-200 transform"
+                         x-transition:leave-start="opacity-100 translate-y-0"
+                         x-transition:leave-end="opacity-0 translate-y-4"
+                         x-cloak class="space-y-8 max-w-md mx-auto">
                         <div class="text-center">
                             <h2 class="text-2xl font-extrabold text-slate-800">Đăng ký thành viên</h2>
                             <p class="text-sm text-slate-400 mt-1">Trở thành thành viên của cộng đồng BDS NKS</p>
@@ -383,7 +432,7 @@
                                 </select>
                             </div>
                             
-                            <button type="submit" class="w-full bg-primary hover:bg-primary-dark text-white font-bold py-4 rounded-full text-sm shadow-md shadow-primary/20 hover:shadow-lg transition-all duration-300">Đăng ký thành viên</button>
+                            <button type="submit" class="w-full bg-primary text-white font-bold py-4 rounded-full text-sm shadow-md btn-hover-premium">Đăng ký thành viên</button>
                         </form>
                         
                         <div class="text-center text-sm text-slate-400">
