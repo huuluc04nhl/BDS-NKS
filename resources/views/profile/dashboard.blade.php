@@ -693,7 +693,8 @@
                         this.showAddPropertyModal = false;
                         alert('Đăng tin bất động sản thành công! Tin đăng sẽ xuất hiện ngay trên bản đồ.');
                     } else {
-                        alert('Đăng tin không thành công.');
+                        const err = await res.json();
+                        alert(err.message || 'Đăng tin không thành công.');
                     }
                 } catch (e) {
                     alert('Lỗi kết nối máy chủ CSDL.');
@@ -872,7 +873,7 @@
             async removeFavorite(id) {
                 if (this.isLoggedIn && this.user && this.user.id) {
                     try {
-                        await fetch('/nks-api/favorites/toggle', {
+                        const res = await fetch('/nks-api/favorites/toggle', {
                             method: 'POST',
                             headers: {
                                 'Content-Type': 'application/json',
@@ -881,10 +882,19 @@
                             },
                             body: JSON.stringify({
                                 user_id: this.user.id,
-                                property_id: id
+                                property_id: id > 100 ? id : null,
+                                external_property_id: id <= 100 ? String(id) : null
                             })
                         });
-                    } catch (e) {}
+                        if (!res.ok) {
+                            const err = await res.json();
+                            alert(err.message || 'Lỗi khi bỏ yêu thích.');
+                            return;
+                        }
+                    } catch (e) {
+                        alert('Lỗi kết nối máy chủ CSDL.');
+                        return;
+                    }
                 }
                 
                 this.favorites = this.favorites.filter(f => f.id !== id);

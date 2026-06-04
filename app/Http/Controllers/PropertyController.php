@@ -563,35 +563,47 @@ class PropertyController extends Controller
      */
     public function apiUpdateProfile(Request $request)
     {
-        $request->validate([
-            'email' => 'required|string|email',
-            'name' => 'required|string|max:255',
-            'phone' => 'nullable|string',
-            'avatar' => 'nullable|string'
-        ]);
+        try {
+            $request->validate([
+                'email' => 'required|string|email',
+                'name' => 'required|string|max:255',
+                'phone' => 'nullable|string',
+                'avatar' => 'nullable|string'
+            ]);
 
-        $user = \App\Models\User::where('email', $request->email)->first();
-        if (!$user) {
-            return response()->json(['success' => false, 'message' => 'Không tìm thấy người dùng.'], 404);
+            $user = \App\Models\User::where('email', $request->email)->first();
+            if (!$user) {
+                return response()->json(['success' => false, 'message' => 'Không tìm thấy người dùng.'], 404);
+            }
+
+            $user->update([
+                'name' => $request->name,
+                'phone' => $request->phone,
+                'avatar' => $request->avatar ?: $user->avatar
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'user' => [
+                    'id' => $user->id,
+                    'name' => $user->name,
+                    'email' => $user->email,
+                    'phone' => $user->phone,
+                    'role' => $user->role,
+                    'avatar' => $user->avatar
+                ]
+            ]);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => implode(' ', \Illuminate\Support\Arr::flatten($e->errors()))
+            ], 422);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Lỗi CSDL: ' . $e->getMessage()
+            ], 500);
         }
-
-        $user->update([
-            'name' => $request->name,
-            'phone' => $request->phone,
-            'avatar' => $request->avatar ?: $user->avatar
-        ]);
-
-        return response()->json([
-            'success' => true,
-            'user' => [
-                'id' => $user->id,
-                'name' => $user->name,
-                'email' => $user->email,
-                'phone' => $user->phone,
-                'role' => $user->role,
-                'avatar' => $user->avatar
-            ]
-        ]);
     }
 
     /**
@@ -599,34 +611,46 @@ class PropertyController extends Controller
      */
     public function apiUpgradeHost(Request $request)
     {
-        $request->validate([
-            'email' => 'required|string|email',
-            'name' => 'required|string',
-            'phone' => 'required|string'
-        ]);
+        try {
+            $request->validate([
+                'email' => 'required|string|email',
+                'name' => 'required|string',
+                'phone' => 'required|string'
+            ]);
 
-        $user = \App\Models\User::where('email', $request->email)->first();
-        if (!$user) {
-            return response()->json(['success' => false, 'message' => 'Không tìm thấy người dùng.'], 404);
+            $user = \App\Models\User::where('email', $request->email)->first();
+            if (!$user) {
+                return response()->json(['success' => false, 'message' => 'Không tìm thấy người dùng.'], 404);
+            }
+
+            $user->update([
+                'name' => $request->name,
+                'phone' => $request->phone,
+                'role' => 'owner'
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'user' => [
+                    'id' => $user->id,
+                    'name' => $user->name,
+                    'email' => $user->email,
+                    'phone' => $user->phone,
+                    'role' => $user->role,
+                    'avatar' => $user->avatar
+                ]
+            ]);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => implode(' ', \Illuminate\Support\Arr::flatten($e->errors()))
+            ], 422);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Lỗi CSDL: ' . $e->getMessage()
+            ], 500);
         }
-
-        $user->update([
-            'name' => $request->name,
-            'phone' => $request->phone,
-            'role' => 'owner'
-        ]);
-
-        return response()->json([
-            'success' => true,
-            'user' => [
-                'id' => $user->id,
-                'name' => $user->name,
-                'email' => $user->email,
-                'phone' => $user->phone,
-                'role' => $user->role,
-                'avatar' => $user->avatar
-            ]
-        ]);
     }
 
     /**
@@ -634,29 +658,47 @@ class PropertyController extends Controller
      */
     public function apiBookAppointment(Request $request)
     {
-        $request->validate([
-            'user_id' => 'nullable|integer',
-            'property_id' => 'required|string',
-            'appt_name' => 'required|string',
-            'appt_phone' => 'required|string',
-            'appointment_date' => 'required|date',
-            'appointment_time' => 'required'
-        ]);
+        try {
+            $request->validate([
+                'user_id' => 'nullable|integer',
+                'property_id' => 'required|string',
+                'appt_name' => 'required|string',
+                'appt_phone' => 'required|string',
+                'appointment_date' => 'required|date',
+                'appointment_time' => 'required'
+            ]);
 
-        $appt = \App\Models\Appointment::create([
-            'user_id' => $request->user_id,
-            'property_id' => $request->property_id,
-            'appt_name' => $request->appt_name,
-            'appt_phone' => $request->appt_phone,
-            'appointment_date' => $request->appointment_date,
-            'appointment_time' => $request->appointment_time,
-            'status' => 'confirmed' // Auto-confirm for interactive feel
-        ]);
+            // Ensure user exists if provided to prevent foreign key errors
+            $userId = $request->user_id;
+            if ($userId && !\App\Models\User::where('id', $userId)->exists()) {
+                $userId = null;
+            }
 
-        return response()->json([
-            'success' => true,
-            'appointment' => $appt
-        ]);
+            $appt = \App\Models\Appointment::create([
+                'user_id' => $userId,
+                'property_id' => $request->property_id,
+                'appt_name' => $request->appt_name,
+                'appt_phone' => $request->appt_phone,
+                'appointment_date' => $request->appointment_date,
+                'appointment_time' => $request->appointment_time,
+                'status' => 'confirmed' // Auto-confirm for interactive feel
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'appointment' => $appt
+            ]);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => implode(' ', \Illuminate\Support\Arr::flatten($e->errors()))
+            ], 422);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Lỗi CSDL: ' . $e->getMessage()
+            ], 500);
+        }
     }
 
     /**
@@ -664,38 +706,51 @@ class PropertyController extends Controller
      */
     public function apiGetAppointments($userId)
     {
-        $user = \App\Models\User::find($userId);
-        $phone = $user ? $user->phone : 'invalid_phone';
+        try {
+            $user = \App\Models\User::find($userId);
+            if (!$user) {
+                return response()->json([
+                    'success' => true,
+                    'appointments' => []
+                ]);
+            }
+            $phone = $user->phone ?? 'invalid_phone';
 
-        $appointments = \App\Models\Appointment::where('user_id', $userId)
-            ->orWhere('appt_phone', $phone)
-            ->orderBy('id', 'desc')
-            ->get();
+            $appointments = \App\Models\Appointment::where('user_id', $userId)
+                ->orWhere('appt_phone', $phone)
+                ->orderBy('id', 'desc')
+                ->get();
 
-        $items = $this->fetchAllItems();
+            $items = $this->fetchAllItems();
 
-        $resolvedAppointments = $appointments->map(function ($appt) use ($items) {
-            $propId = $appt->property_id;
-            
-            $property = collect($items)->first(function ($item) use ($propId) {
-                return (string)$item['id'] === (string)$propId;
+            $resolvedAppointments = $appointments->map(function ($appt) use ($items) {
+                $propId = $appt->property_id;
+                
+                $property = collect($items)->first(function ($item) use ($propId) {
+                    return (string)$item['id'] === (string)$propId;
+                });
+
+                $apptData = $appt->toArray();
+                $apptData['property_title'] = $property ? $property['title'] : 'Bất động sản đã ghim';
+                $apptData['property_slug'] = $property ? $property['slug'] : '#';
+                $apptData['host_name'] = $property['sale']['name'] ?? 'Anh Minh';
+                $apptData['host_phone'] = $property['sale']['phone'] ?? '0932030958';
+                $apptData['date'] = $appt->appointment_date;
+                $apptData['time'] = $appt->appointment_time;
+
+                return $apptData;
             });
 
-            $apptData = $appt->toArray();
-            $apptData['property_title'] = $property ? $property['title'] : 'Bất động sản đã ghim';
-            $apptData['property_slug'] = $property ? $property['slug'] : '#';
-            $apptData['host_name'] = $property['sale']['name'] ?? 'Anh Minh';
-            $apptData['host_phone'] = $property['sale']['phone'] ?? '0932030958';
-            $apptData['date'] = $appt->appointment_date;
-            $apptData['time'] = $appt->appointment_time;
-
-            return $apptData;
-        });
-
-        return response()->json([
-            'success' => true,
-            'appointments' => $resolvedAppointments
-        ]);
+            return response()->json([
+                'success' => true,
+                'appointments' => $resolvedAppointments
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Lỗi CSDL: ' . $e->getMessage()
+            ], 500);
+        }
     }
 
     /**
@@ -703,11 +758,18 @@ class PropertyController extends Controller
      */
     public function apiCancelAppointment($id)
     {
-        $appt = \App\Models\Appointment::find($id);
-        if ($appt) {
-            $appt->delete();
+        try {
+            $appt = \App\Models\Appointment::find($id);
+            if ($appt) {
+                $appt->delete();
+            }
+            return response()->json(['success' => true]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Lỗi CSDL: ' . $e->getMessage()
+            ], 500);
         }
-        return response()->json(['success' => true]);
     }
 
     /**
@@ -715,42 +777,77 @@ class PropertyController extends Controller
      */
     public function apiToggleFavorite(Request $request)
     {
-        $request->validate([
-            'user_id' => 'required|integer',
-            'property_id' => 'nullable|integer',
-            'external_property_id' => 'nullable|string'
-        ]);
-
-        $userId = $request->user_id;
-        $propertyId = $request->property_id;
-        $externalId = $request->external_property_id;
-
-        $query = \App\Models\SavedProperty::where('user_id', $userId);
-        if ($propertyId) {
-            $realDbId = $propertyId > 1000 ? ($propertyId - 1000) : $propertyId;
-            $query->where('property_id', $realDbId);
-        } else {
-            $query->where('external_property_id', $externalId);
-        }
-
-        $fav = $query->first();
-
-        if ($fav) {
-            $fav->delete();
-            $status = 'removed';
-        } else {
-            \App\Models\SavedProperty::create([
-                'user_id' => $userId,
-                'property_id' => $propertyId > 1000 ? ($propertyId - 1000) : $propertyId,
-                'external_property_id' => $externalId
+        try {
+            $request->validate([
+                'user_id' => 'required|integer',
+                'property_id' => 'nullable|integer',
+                'external_property_id' => 'nullable|string'
             ]);
-            $status = 'saved';
-        }
 
-        return response()->json([
-            'success' => true,
-            'status' => $status
-        ]);
+            $userId = $request->user_id;
+            $propertyId = $request->property_id;
+            $externalId = $request->external_property_id;
+
+            // Ensure user exists to prevent foreign key errors
+            $user = \App\Models\User::find($userId);
+            if (!$user) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Tài khoản không tồn tại hoặc phiên đăng nhập đã hết hạn. Vui lòng đăng xuất và đăng ký/đăng nhập lại.'
+                ], 401);
+            }
+
+            $query = \App\Models\SavedProperty::where('user_id', $userId);
+            if ($propertyId) {
+                $realDbId = $propertyId > 1000 ? ($propertyId - 1000) : $propertyId;
+                $query->where('property_id', $realDbId);
+            } else {
+                $query->where('external_property_id', $externalId);
+            }
+
+            $fav = $query->first();
+
+            if ($fav) {
+                $fav->delete();
+                $status = 'removed';
+            } else {
+                $dbPropId = null;
+                if ($propertyId) {
+                    $realDbId = $propertyId > 1000 ? ($propertyId - 1000) : $propertyId;
+                    // Check if internal property exists
+                    if (\App\Models\Property::where('id', $realDbId)->exists()) {
+                        $dbPropId = $realDbId;
+                    } else {
+                        return response()->json([
+                            'success' => false,
+                            'message' => 'Bất động sản không tồn tại.'
+                        ], 404);
+                    }
+                }
+
+                \App\Models\SavedProperty::create([
+                    'user_id' => $userId,
+                    'property_id' => $dbPropId,
+                    'external_property_id' => $externalId
+                ]);
+                $status = 'saved';
+            }
+
+            return response()->json([
+                'success' => true,
+                'status' => $status
+            ]);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => implode(' ', \Illuminate\Support\Arr::flatten($e->errors()))
+            ], 422);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Lỗi CSDL: ' . $e->getMessage()
+            ], 500);
+        }
     }
 
     /**
@@ -758,34 +855,49 @@ class PropertyController extends Controller
      */
     public function apiGetFavorites($userId)
     {
-        $favs = \App\Models\SavedProperty::where('user_id', $userId)->get();
-        $items = $this->fetchAllItems();
-        
-        $resolvedFavs = $favs->map(function ($fav) use ($items) {
-            $propId = $fav->property_id ? ($fav->property_id + 1000) : $fav->external_property_id;
-            
-            $property = collect($items)->first(function ($item) use ($propId) {
-                return (string)$item['id'] === (string)$propId;
-            });
-            
-            if ($property) {
-                return [
-                    'id' => $property['id'],
-                    'title' => $property['title'],
-                    'slug' => $property['slug'],
-                    'featureimg' => $property['featureimg'],
-                    'address' => $property['address'],
-                    'rstype' => $property['rstype'],
-                    'formatedPrice' => $property['formatedPrice']
-                ];
+        try {
+            // Check if user exists
+            if (!\App\Models\User::where('id', $userId)->exists()) {
+                return response()->json([
+                    'success' => true,
+                    'favorites' => []
+                ]);
             }
-            return null;
-        })->filter()->values();
 
-        return response()->json([
-            'success' => true,
-            'favorites' => $resolvedFavs
-        ]);
+            $favs = \App\Models\SavedProperty::where('user_id', $userId)->get();
+            $items = $this->fetchAllItems();
+            
+            $resolvedFavs = $favs->map(function ($fav) use ($items) {
+                $propId = $fav->property_id ? ($fav->property_id + 1000) : $fav->external_property_id;
+                
+                $property = collect($items)->first(function ($item) use ($propId) {
+                    return (string)$item['id'] === (string)$propId;
+                });
+                
+                if ($property) {
+                    return [
+                        'id' => $property['id'],
+                        'title' => $property['title'],
+                        'slug' => $property['slug'],
+                        'featureimg' => $property['featureimg'],
+                        'address' => $property['address'],
+                        'rstype' => $property['rstype'],
+                        'formatedPrice' => $property['formatedPrice']
+                    ];
+                }
+                return null;
+            })->filter()->values();
+
+            return response()->json([
+                'success' => true,
+                'favorites' => $resolvedFavs
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Lỗi CSDL: ' . $e->getMessage()
+            ], 500);
+        }
     }
 
     /**
@@ -793,28 +905,49 @@ class PropertyController extends Controller
      */
     public function apiAddDemand(Request $request)
     {
-        $request->validate([
-            'user_id' => 'required|integer',
-            'title' => 'required|string',
-            'transaction_type' => 'required|string|in:Mua,Thuê',
-            'area' => 'required|string',
-            'budget' => 'required|string',
-            'content' => 'required|string'
-        ]);
+        try {
+            $request->validate([
+                'user_id' => 'required|integer',
+                'title' => 'required|string',
+                'transaction_type' => 'required|string|in:Mua,Thuê',
+                'area' => 'required|string',
+                'budget' => 'required|string',
+                'content' => 'required|string'
+            ]);
 
-        $demand = \App\Models\Demand::create([
-            'user_id' => $request->user_id,
-            'title' => $request->title,
-            'transaction_type' => $request->transaction_type,
-            'area' => $request->area,
-            'budget' => $request->budget,
-            'content' => $request->content
-        ]);
+            // Ensure user exists
+            $user = \App\Models\User::find($request->user_id);
+            if (!$user) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Tài khoản không tồn tại hoặc phiên đăng nhập đã hết hạn. Vui lòng đăng xuất và đăng ký/đăng nhập lại.'
+                ], 401);
+            }
 
-        return response()->json([
-            'success' => true,
-            'demand' => $demand
-        ]);
+            $demand = \App\Models\Demand::create([
+                'user_id' => $request->user_id,
+                'title' => $request->title,
+                'transaction_type' => $request->transaction_type,
+                'area' => $request->area,
+                'budget' => $request->budget,
+                'content' => $request->content
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'demand' => $demand
+            ]);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => implode(' ', \Illuminate\Support\Arr::flatten($e->errors()))
+            ], 422);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Lỗi CSDL: ' . $e->getMessage()
+            ], 500);
+        }
     }
 
     /**
@@ -822,11 +955,18 @@ class PropertyController extends Controller
      */
     public function apiGetDemands()
     {
-        $demands = \App\Models\Demand::with('user')->orderBy('id', 'desc')->get();
-        return response()->json([
-            'success' => true,
-            'demands' => $demands
-        ]);
+        try {
+            $demands = \App\Models\Demand::with('user')->orderBy('id', 'desc')->get();
+            return response()->json([
+                'success' => true,
+                'demands' => $demands
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Lỗi CSDL: ' . $e->getMessage()
+            ], 500);
+        }
     }
 
     /**
@@ -834,56 +974,77 @@ class PropertyController extends Controller
      */
     public function apiAddProperty(Request $request)
     {
-        $request->validate([
-            'user_id' => 'required|integer',
-            'title' => 'required|string',
-            'address' => 'required|string',
-            'geolocation' => 'required|string',
-            'rstype' => 'required|string',
-            'transaction_type' => 'required|string|in:Bán,Cho thuê',
-            'price' => 'required|numeric',
-            'total_area' => 'required|numeric',
-            'bed' => 'required|integer',
-            'bath' => 'required|integer',
-            'floors' => 'required|integer',
-            'direction' => 'nullable|string',
-            'feature_img' => 'required|string',
-            'description' => 'nullable|string'
-        ]);
+        try {
+            $request->validate([
+                'user_id' => 'required|integer',
+                'title' => 'required|string',
+                'address' => 'required|string',
+                'geolocation' => 'required|string',
+                'rstype' => 'required|string',
+                'transaction_type' => 'required|string|in:Bán,Cho thuê',
+                'price' => 'required|numeric',
+                'total_area' => 'required|numeric',
+                'bed' => 'required|integer',
+                'bath' => 'required|integer',
+                'floors' => 'required|integer',
+                'direction' => 'nullable|string',
+                'feature_img' => 'required|string',
+                'description' => 'nullable|string'
+            ]);
 
-        $formattedPrice = $request->price >= 1000000000 
-            ? number_format($request->price / 1000000000, 1, ',', '.') . ' tỷ'
-            : number_format($request->price / 1000000, 0, ',', '.') . ' triệu';
+            // Ensure user exists
+            $user = \App\Models\User::find($request->user_id);
+            if (!$user) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Tài khoản không tồn tại hoặc phiên đăng nhập đã hết hạn. Vui lòng đăng xuất và đăng ký/đăng nhập lại.'
+                ], 401);
+            }
 
-        if ($request->transaction_type === 'Cho thuê') {
-            $formattedPrice .= '/tháng';
+            $formattedPrice = $request->price >= 1000000000 
+                ? number_format($request->price / 1000000000, 1, ',', '.') . ' tỷ'
+                : number_format($request->price / 1000000, 0, ',', '.') . ' triệu';
+
+            if ($request->transaction_type === 'Cho thuê') {
+                $formattedPrice .= '/tháng';
+            }
+
+            $property = \App\Models\Property::create([
+                'user_id' => $request->user_id,
+                'title' => $request->title,
+                'slug' => \Illuminate\Support\Str::slug($request->title) . '-' . time(),
+                'address' => $request->address,
+                'geolocation' => $request->geolocation,
+                'rstype' => $request->rstype,
+                'transaction_type' => $request->transaction_type,
+                'price' => $request->price,
+                'formated_price' => $formattedPrice,
+                'total_area' => $request->total_area,
+                'bed' => $request->bed,
+                'bath' => $request->bath,
+                'floors' => $request->floors,
+                'direction' => $request->direction,
+                'feature_img' => $request->feature_img,
+                'images' => json_encode([$request->feature_img]),
+                'description' => $request->description,
+                'is_verified' => true
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'property' => $property
+            ]);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => implode(' ', \Illuminate\Support\Arr::flatten($e->errors()))
+            ], 422);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Lỗi CSDL: ' . $e->getMessage()
+            ], 500);
         }
-
-        $property = \App\Models\Property::create([
-            'user_id' => $request->user_id,
-            'title' => $request->title,
-            'slug' => \Illuminate\Support\Str::slug($request->title) . '-' . time(),
-            'address' => $request->address,
-            'geolocation' => $request->geolocation,
-            'rstype' => $request->rstype,
-            'transaction_type' => $request->transaction_type,
-            'price' => $request->price,
-            'formated_price' => $formattedPrice,
-            'total_area' => $request->total_area,
-            'bed' => $request->bed,
-            'bath' => $request->bath,
-            'floors' => $request->floors,
-            'direction' => $request->direction,
-            'feature_img' => $request->feature_img,
-            'images' => json_encode([$request->feature_img]),
-            'description' => $request->description,
-            'is_verified' => true
-        ]);
-
-        return response()->json([
-            'success' => true,
-            'property' => $property
-        ]);
     }
 
     /**
@@ -891,10 +1052,25 @@ class PropertyController extends Controller
      */
     public function apiGetOwnerProperties($userId)
     {
-        $properties = \App\Models\Property::where('user_id', $userId)->orderBy('id', 'desc')->get();
-        return response()->json([
-            'success' => true,
-            'properties' => $properties
-        ]);
+        try {
+            // Check if user exists
+            if (!\App\Models\User::where('id', $userId)->exists()) {
+                return response()->json([
+                    'success' => true,
+                    'properties' => []
+                ]);
+            }
+
+            $properties = \App\Models\Property::where('user_id', $userId)->orderBy('id', 'desc')->get();
+            return response()->json([
+                'success' => true,
+                'properties' => $properties
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Lỗi CSDL: ' . $e->getMessage()
+            ], 500);
+        }
     }
 }
