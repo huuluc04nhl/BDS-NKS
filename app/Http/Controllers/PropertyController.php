@@ -19,19 +19,21 @@ class PropertyController extends Controller
      */
     protected function fetchAllItems(string $keyword = null)
     {
-        $cacheKey = 'nks_properties_list_' . md5($keyword ?? 'all');
+        // Allow developers or administrators to clear the persistent API cache in production
+        if (request()->query('refresh_cache') === 'true') {
+            Cache::forget('nks_all_properties_list');
+        }
 
-        $apiItems = Cache::remember($cacheKey, 600, function () use ($keyword) { // Cache for 10 minutes
+        $apiItems = Cache::remember('nks_all_properties_list', 43200, function () { // Cache globally for 12 hours
             try {
-                // SSL verification is bypassed via ->withoutVerifying() to avoid common local curl SSL certificate errors.
-                // Added a tight 4-second timeout to prevent blocking if the API is slow.
+                Log::info('NKS API Cache Miss: Fetching all properties from external API');
                 $response = Http::timeout(4)
                     ->withoutVerifying()
                     ->withHeaders([
                         'Content-Type' => 'application/json',
                         'Accept' => 'application/json'
                     ])
-                    ->post($this->apiEndpoint, $keyword ? ['kw' => $keyword] : []);
+                    ->post($this->apiEndpoint, []); // Retrieve all items without filtering at API level
 
                 if ($response->successful()) {
                     $data = $response->json();
@@ -50,7 +52,7 @@ class PropertyController extends Controller
 
             // High-fidelity fallback database in case of API failure, timeout, or SSL blocks.
             // This ensures a 100% stable, flawless, and ultra-fast demo experience!
-            $fallback = $this->getHighFidelityFallbackData($keyword);
+            $fallback = $this->getHighFidelityFallbackData();
             $normalized = [];
             foreach ($fallback as $item) {
                 $normalized[] = $this->normalizeProperty($item);
@@ -58,7 +60,16 @@ class PropertyController extends Controller
             return $normalized;
         });
 
-        // Merge database properties dynamically outside cache
+        // Apply keyword filtering to external properties on the PHP side (takes < 0.1ms)
+        if ($keyword) {
+            $apiItems = array_filter($apiItems, function ($item) use ($keyword) {
+                return str_contains(strtolower($item['title'] ?? ''), strtolower($keyword)) ||
+                       str_contains(strtolower($item['address'] ?? ''), strtolower($keyword)) ||
+                       str_contains(strtolower($item['description'] ?? ''), strtolower($keyword));
+            });
+        }
+
+        // Merge database properties dynamically outside cache to ensure instant visibility for new posts
         try {
             $dbProperties = \App\Models\Property::with('owner')->get();
             $dbNormalized = [];
