@@ -616,6 +616,21 @@
             newPropDesc: '',
             
             init() {
+                // Synchronize backend Auth session with browser localStorage on page load/refresh
+                @if (auth()->check())
+                    const dbUser = @js([
+                        'id' => auth()->id(),
+                        'name' => auth()->user()->name,
+                        'email' => auth()->user()->email,
+                        'phone' => auth()->user()->phone,
+                        'role' => auth()->user()->role,
+                        'avatar' => auth()->user()->avatar
+                    ]);
+                    localStorage.setItem('nks_user', JSON.stringify(dbUser));
+                @else
+                    localStorage.removeItem('nks_user');
+                @endif
+
                 const urlParams = new URLSearchParams(window.location.search);
                 const tabParam = urlParams.get('tab');
                 if (tabParam) {

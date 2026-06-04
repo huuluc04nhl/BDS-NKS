@@ -490,6 +490,8 @@ class PropertyController extends Controller
                 'avatar' => 'https://api.dicebear.com/7.x/adventurer/svg?seed=' . urlencode($request->name)
             ]);
 
+            auth()->login($user, true);
+
             return response()->json([
                 'success' => true,
                 'user' => [
@@ -534,6 +536,8 @@ class PropertyController extends Controller
                 ], 401);
             }
 
+            auth()->login($user, true);
+
             return response()->json([
                 'success' => true,
                 'user' => [
@@ -559,6 +563,17 @@ class PropertyController extends Controller
     }
 
     /**
+     * API: User Logout
+     */
+    public function apiLogout(Request $request)
+    {
+        \Illuminate\Support\Facades\Auth::logout();
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
+        return response()->json(['success' => true]);
+    }
+
+    /**
      * API: Update User Profile
      */
     public function apiUpdateProfile(Request $request)
@@ -571,7 +586,7 @@ class PropertyController extends Controller
                 'avatar' => 'nullable|string'
             ]);
 
-            $user = \App\Models\User::where('email', $request->email)->first();
+            $user = auth()->user() ?? \App\Models\User::where('email', $request->email)->first();
             if (!$user) {
                 return response()->json(['success' => false, 'message' => 'Không tìm thấy người dùng.'], 404);
             }
@@ -618,7 +633,7 @@ class PropertyController extends Controller
                 'phone' => 'required|string'
             ]);
 
-            $user = \App\Models\User::where('email', $request->email)->first();
+            $user = auth()->user() ?? \App\Models\User::where('email', $request->email)->first();
             if (!$user) {
                 return response()->json(['success' => false, 'message' => 'Không tìm thấy người dùng.'], 404);
             }
@@ -669,7 +684,7 @@ class PropertyController extends Controller
             ]);
 
             // Ensure user exists if provided to prevent foreign key errors
-            $userId = $request->user_id;
+            $userId = auth()->id() ?? $request->user_id;
             if ($userId && !\App\Models\User::where('id', $userId)->exists()) {
                 $userId = null;
             }
@@ -707,7 +722,8 @@ class PropertyController extends Controller
     public function apiGetAppointments($userId)
     {
         try {
-            $user = \App\Models\User::find($userId);
+            $resolvedUserId = auth()->id() ?: $userId;
+            $user = \App\Models\User::find($resolvedUserId);
             if (!$user) {
                 return response()->json([
                     'success' => false,
@@ -716,7 +732,7 @@ class PropertyController extends Controller
             }
             $phone = $user->phone ?? 'invalid_phone';
 
-            $appointments = \App\Models\Appointment::where('user_id', $userId)
+            $appointments = \App\Models\Appointment::where('user_id', $resolvedUserId)
                 ->orWhere('appt_phone', $phone)
                 ->orderBy('id', 'desc')
                 ->get();
@@ -784,7 +800,7 @@ class PropertyController extends Controller
                 'external_property_id' => 'nullable|string'
             ]);
 
-            $userId = $request->user_id;
+            $userId = auth()->id() ?? $request->user_id;
             $propertyId = $request->property_id;
             $externalId = $request->external_property_id;
 
@@ -856,15 +872,16 @@ class PropertyController extends Controller
     public function apiGetFavorites($userId)
     {
         try {
+            $resolvedUserId = auth()->id() ?: $userId;
             // Check if user exists
-            if (!\App\Models\User::where('id', $userId)->exists()) {
+            if (!\App\Models\User::where('id', $resolvedUserId)->exists()) {
                 return response()->json([
                     'success' => false,
                     'message' => 'Tài khoản không tồn tại hoặc phiên đăng nhập đã hết hạn.'
                 ], 401);
             }
 
-            $favs = \App\Models\SavedProperty::where('user_id', $userId)->get();
+            $favs = \App\Models\SavedProperty::where('user_id', $resolvedUserId)->get();
             $items = $this->fetchAllItems();
             
             $resolvedFavs = $favs->map(function ($fav) use ($items) {
@@ -915,8 +932,9 @@ class PropertyController extends Controller
                 'content' => 'required|string'
             ]);
 
+            $userId = auth()->id() ?? $request->user_id;
             // Ensure user exists
-            $user = \App\Models\User::find($request->user_id);
+            $user = \App\Models\User::find($userId);
             if (!$user) {
                 return response()->json([
                     'success' => false,
@@ -925,7 +943,7 @@ class PropertyController extends Controller
             }
 
             $demand = \App\Models\Demand::create([
-                'user_id' => $request->user_id,
+                'user_id' => $userId,
                 'title' => $request->title,
                 'transaction_type' => $request->transaction_type,
                 'area' => $request->area,
@@ -992,8 +1010,9 @@ class PropertyController extends Controller
                 'description' => 'nullable|string'
             ]);
 
+            $userId = auth()->id() ?? $request->user_id;
             // Ensure user exists
-            $user = \App\Models\User::find($request->user_id);
+            $user = \App\Models\User::find($userId);
             if (!$user) {
                 return response()->json([
                     'success' => false,
@@ -1010,7 +1029,7 @@ class PropertyController extends Controller
             }
 
             $property = \App\Models\Property::create([
-                'user_id' => $request->user_id,
+                'user_id' => $userId,
                 'title' => $request->title,
                 'slug' => \Illuminate\Support\Str::slug($request->title) . '-' . time(),
                 'address' => $request->address,
@@ -1053,15 +1072,16 @@ class PropertyController extends Controller
     public function apiGetOwnerProperties($userId)
     {
         try {
+            $resolvedUserId = auth()->id() ?: $userId;
             // Check if user exists
-            if (!\App\Models\User::where('id', $userId)->exists()) {
+            if (!\App\Models\User::where('id', $resolvedUserId)->exists()) {
                 return response()->json([
                     'success' => false,
                     'message' => 'Tài khoản không tồn tại hoặc phiên đăng nhập đã hết hạn.'
                 ], 401);
             }
 
-            $properties = \App\Models\Property::where('user_id', $userId)->orderBy('id', 'desc')->get();
+            $properties = \App\Models\Property::where('user_id', $resolvedUserId)->orderBy('id', 'desc')->get();
             return response()->json([
                 'success' => true,
                 'properties' => $properties
