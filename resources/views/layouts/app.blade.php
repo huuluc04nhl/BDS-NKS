@@ -26,53 +26,53 @@
     
     @yield('styles')
 </head>
-<body class="flex flex-col min-h-screen bg-white text-slate-800 font-sans antialiased">
+<body class="flex flex-col min-h-screen bg-white text-slate-800 font-sans antialiased"
+      x-data="{ 
+          mobileMenuOpen: false, 
+          isLoggedIn: false,
+          user: null,
+          addressToggle: false,
+          init() {
+              // Check local storage for mock user
+              const savedUser = localStorage.getItem('nks_user');
+              if (savedUser) {
+                  this.isLoggedIn = true;
+                  this.user = JSON.parse(savedUser);
+              }
+              
+              // Listen for login events
+              window.addEventListener('nks-login-change', () => {
+                  const saved = localStorage.getItem('nks_user');
+                  if (saved) {
+                      this.isLoggedIn = true;
+                      this.user = JSON.parse(saved);
+                  } else {
+                      this.isLoggedIn = false;
+                      this.user = null;
+                  }
+              });
+          },
+          logout() {
+              fetch('/nks-api/logout', {
+                  method: 'POST',
+                  headers: {
+                      'Accept': 'application/json',
+                      'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]').getAttribute('content')
+                  }
+              }).catch(e => {});
+              localStorage.removeItem('nks_user');
+              localStorage.removeItem('nks_appointments');
+              localStorage.removeItem('nks_favorites');
+              localStorage.removeItem('nks_owner_properties');
+              this.isLoggedIn = false;
+              this.user = null;
+              window.dispatchEvent(new CustomEvent('nks-login-change'));
+              window.location.href = '/';
+          }
+      }">
 
     <!-- Header Navigation (Exact Moso UX & Layout) -->
-    <header class="sticky top-0 z-50 w-full transition-all duration-300 bg-white/95 backdrop-blur-md border-b border-slate-100"
-            x-data="{ 
-                mobileMenuOpen: false, 
-                isLoggedIn: false,
-                user: null,
-                addressToggle: false,
-                init() {
-                    // Check local storage for mock user
-                    const savedUser = localStorage.getItem('nks_user');
-                    if (savedUser) {
-                        this.isLoggedIn = true;
-                        this.user = JSON.parse(savedUser);
-                    }
-                    
-                    // Listen for login events
-                    window.addEventListener('nks-login-change', () => {
-                        const saved = localStorage.getItem('nks_user');
-                        if (saved) {
-                            this.isLoggedIn = true;
-                            this.user = JSON.parse(saved);
-                        } else {
-                            this.isLoggedIn = false;
-                            this.user = null;
-                        }
-                    });
-                },
-                logout() {
-                    fetch('/nks-api/logout', {
-                        method: 'POST',
-                        headers: {
-                            'Accept': 'application/json',
-                            'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]').getAttribute('content')
-                        }
-                    }).catch(e => {});
-                    localStorage.removeItem('nks_user');
-                    localStorage.removeItem('nks_appointments');
-                    localStorage.removeItem('nks_favorites');
-                    localStorage.removeItem('nks_owner_properties');
-                    this.isLoggedIn = false;
-                    this.user = null;
-                    window.dispatchEvent(new CustomEvent('nks-login-change'));
-                    window.location.href = '/';
-                }
-            }">
+    <header class="sticky top-0 z-50 w-full transition-all duration-300 bg-white/95 backdrop-blur-md border-b border-slate-100">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex justify-between h-20 items-center">
                 
@@ -194,8 +194,9 @@
 
             </div>
         </div>
+    </header>
 
-        <!-- Mobile Menu Drawer (Slide-in from left) -->
+    <!-- Mobile Menu Drawer (Slide-in from left) -->
         <div x-show="mobileMenuOpen" 
              class="fixed inset-0 z-[60] lg:hidden" 
              style="display: none;"
@@ -300,7 +301,6 @@
                  </div>
             </div>
         </div>
-    </header>
 
     <!-- Main Content Area -->
     <main class="flex-grow">
