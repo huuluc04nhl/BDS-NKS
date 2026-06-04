@@ -710,9 +710,9 @@ class PropertyController extends Controller
             $user = \App\Models\User::find($userId);
             if (!$user) {
                 return response()->json([
-                    'success' => true,
-                    'appointments' => []
-                ]);
+                    'success' => false,
+                    'message' => 'Tài khoản không tồn tại hoặc phiên đăng nhập đã hết hạn.'
+                ], 401);
             }
             $phone = $user->phone ?? 'invalid_phone';
 
@@ -859,9 +859,9 @@ class PropertyController extends Controller
             // Check if user exists
             if (!\App\Models\User::where('id', $userId)->exists()) {
                 return response()->json([
-                    'success' => true,
-                    'favorites' => []
-                ]);
+                    'success' => false,
+                    'message' => 'Tài khoản không tồn tại hoặc phiên đăng nhập đã hết hạn.'
+                ], 401);
             }
 
             $favs = \App\Models\SavedProperty::where('user_id', $userId)->get();
@@ -1056,9 +1056,9 @@ class PropertyController extends Controller
             // Check if user exists
             if (!\App\Models\User::where('id', $userId)->exists()) {
                 return response()->json([
-                    'success' => true,
-                    'properties' => []
-                ]);
+                    'success' => false,
+                    'message' => 'Tài khoản không tồn tại hoặc phiên đăng nhập đã hết hạn.'
+                ], 401);
             }
 
             $properties = \App\Models\Property::where('user_id', $userId)->orderBy('id', 'desc')->get();

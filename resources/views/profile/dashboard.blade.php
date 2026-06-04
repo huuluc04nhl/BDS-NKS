@@ -603,6 +603,10 @@
                 if (this.isLoggedIn && this.user && this.user.id) {
                     try {
                         const apptsRes = await fetch(`/nks-api/appointments/user/${this.user.id}`);
+                        if (apptsRes.status === 401) {
+                            this.handleStaleSession();
+                            return;
+                        }
                         if (apptsRes.ok) {
                             const apptsData = await apptsRes.json();
                             this.appointments = apptsData.appointments || [];
@@ -610,6 +614,10 @@
                         }
                         
                         const favsRes = await fetch(`/nks-api/favorites/user/${this.user.id}`);
+                        if (favsRes.status === 401) {
+                            this.handleStaleSession();
+                            return;
+                        }
                         if (favsRes.ok) {
                             const favsData = await favsRes.json();
                             this.favorites = favsData.favorites || [];
@@ -618,6 +626,10 @@
                         
                         if (this.user.role === 'owner') {
                             const propsRes = await fetch(`/nks-api/properties/owner/${this.user.id}`);
+                            if (propsRes.status === 401) {
+                                this.handleStaleSession();
+                                return;
+                            }
                             if (propsRes.ok) {
                                 const propsData = await propsRes.json();
                                 this.ownerProperties = propsData.properties || [];
@@ -641,6 +653,18 @@
                     const savedOwnerProps = localStorage.getItem('nks_owner_properties');
                     if (savedOwnerProps) this.ownerProperties = JSON.parse(savedOwnerProps);
                 }
+            },
+            
+            handleStaleSession() {
+                localStorage.removeItem('nks_user');
+                localStorage.removeItem('nks_appointments');
+                localStorage.removeItem('nks_favorites');
+                localStorage.removeItem('nks_owner_properties');
+                this.isLoggedIn = false;
+                this.user = null;
+                window.dispatchEvent(new CustomEvent('nks-login-change'));
+                this.activeTab = 'login';
+                alert('Phiên đăng nhập đã hết hạn hoặc tài khoản không tồn tại. Vui lòng đăng nhập lại.');
             },
             
             async addProperty() {
