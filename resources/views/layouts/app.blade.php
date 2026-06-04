@@ -26,7 +26,7 @@
     
     @yield('styles')
 </head>
-<body class="flex flex-col h-full bg-white text-slate-800 font-sans antialiased">
+<body class="flex flex-col min-h-screen bg-white text-slate-800 font-sans antialiased">
 
     <!-- Header Navigation (Exact Moso UX & Layout) -->
     <header class="sticky top-0 z-50 w-full transition-all duration-300 bg-white/95 backdrop-blur-md border-b border-slate-100"
@@ -76,6 +76,17 @@
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex justify-between h-20 items-center">
                 
+                <!-- Mobile Hamburger Button (Left on mobile, hidden on desktop) -->
+                <div class="flex lg:hidden items-center">
+                    <button @click="mobileMenuOpen = !mobileMenuOpen" 
+                            class="text-slate-600 hover:text-primary focus:outline-none p-2 rounded-xl hover:bg-slate-50 transition-colors">
+                        <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path x-show="!mobileMenuOpen" stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16" />
+                            <path x-show="mobileMenuOpen" stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" style="display: none;"/>
+                        </svg>
+                    </button>
+                </div>
+
                 <!-- Left Menu: Mua, Thuê, Kho dự án, Vay thế chấp, Đối tác -->
                 <div class="hidden lg:flex items-center space-x-6">
                     <div class="relative" x-data="{ open: false }" @click.away="open = false">
@@ -181,6 +192,112 @@
                     </div>
                 </div>
 
+            </div>
+        </div>
+
+        <!-- Mobile Menu Drawer (Slide-in from left) -->
+        <div x-show="mobileMenuOpen" 
+             class="fixed inset-0 z-[60] lg:hidden" 
+             style="display: none;"
+             x-cloak>
+            <!-- Backdrop -->
+            <div class="absolute inset-0 bg-slate-900/60 backdrop-blur-xs transition-opacity duration-300"
+                 x-show="mobileMenuOpen"
+                 x-transition:enter="ease-out duration-300"
+                 x-transition:enter-start="opacity-0"
+                 x-transition:enter-end="opacity-100"
+                 x-transition:leave="ease-in duration-200"
+                 x-transition:leave-start="opacity-100"
+                 x-transition:leave-end="opacity-0"
+                 @click="mobileMenuOpen = false"></div>
+
+            <!-- Drawer Body -->
+            <div class="absolute inset-y-0 left-0 max-w-xs w-full bg-white shadow-2xl flex flex-col z-10 transition-transform duration-300"
+                 x-show="mobileMenuOpen"
+                 x-transition:enter="transform ease-out duration-300"
+                 x-transition:enter-start="-translate-x-full"
+                 x-transition:enter-end="translate-x-0"
+                 x-transition:leave="transform ease-in duration-200"
+                 x-transition:leave-start="translate-x-0"
+                 x-transition:leave-end="-translate-x-full">
+                 
+                 <!-- Drawer Header -->
+                 <div class="flex items-center justify-between h-20 px-6 border-b border-slate-100 flex-shrink-0">
+                     <!-- Logo -->
+                     <a href="/" class="flex items-center gap-1 group" @click="mobileMenuOpen = false">
+                         <span class="text-xl font-black tracking-tight text-slate-900 leading-none">N</span>
+                         <div class="w-4 h-4 rounded-full border-4 border-primary flex items-center justify-center -mt-0.5"></div>
+                         <span class="text-xl font-black tracking-tight text-slate-900 leading-none">S</span>
+                     </a>
+                     <!-- Close Button -->
+                     <button @click="mobileMenuOpen = false" 
+                             class="w-9 h-9 rounded-full bg-slate-50 text-slate-400 hover:bg-slate-100 hover:text-slate-700 flex items-center justify-center transition-colors">
+                         <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                             <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                         </svg>
+                     </button>
+                 </div>
+
+                 <!-- Drawer Links (Scrollable) -->
+                 <div class="flex-grow overflow-y-auto py-6 px-6 space-y-6">
+                     
+                     <!-- Category: Mua -->
+                     <div class="space-y-3" x-data="{ open: false }">
+                         <button @click="open = !open" class="w-full flex items-center justify-between text-sm font-black text-slate-800 focus:outline-none">
+                             Mua Bất Động Sản
+                             <svg class="w-4 h-4 text-slate-400 transition-transform duration-200" :class="open ? 'rotate-180' : ''" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" /></svg>
+                         </button>
+                         <div x-show="open" x-transition class="pl-4 space-y-2 border-l border-slate-100">
+                             <a href="/properties?action=buy" @click="mobileMenuOpen = false" class="block py-1 text-xs font-bold text-slate-500 hover:text-primary">Nhà mặt tiền</a>
+                             <a href="/properties?action=buy" @click="mobileMenuOpen = false" class="block py-1 text-xs font-bold text-slate-500 hover:text-primary">Căn hộ chung cư</a>
+                         </div>
+                     </div>
+
+                     <!-- Category: Thuê -->
+                     <div class="space-y-3" x-data="{ open: false }">
+                         <button @click="open = !open" class="w-full flex items-center justify-between text-sm font-black text-slate-800 focus:outline-none">
+                             Thuê Bất Động Sản
+                             <svg class="w-4 h-4 text-slate-400 transition-transform duration-200" :class="open ? 'rotate-180' : ''" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" /></svg>
+                         </button>
+                         <div x-show="open" x-transition class="pl-4 space-y-2 border-l border-slate-100">
+                             <a href="/properties?action=rent" @click="mobileMenuOpen = false" class="block py-1 text-xs font-bold text-slate-500 hover:text-primary">Thuê căn hộ</a>
+                             <a href="/properties?action=rent" @click="mobileMenuOpen = false" class="block py-1 text-xs font-bold text-slate-500 hover:text-primary">Thuê nhà nguyên căn</a>
+                         </div>
+                     </div>
+
+                     <!-- Direct Links -->
+                     <div class="space-y-4">
+                         <a href="/properties" @click="mobileMenuOpen = false" class="block text-sm font-black text-slate-800 hover:text-primary transition-colors">Kho dự án</a>
+                         <a href="#" @click="mobileMenuOpen = false" class="block text-sm font-black text-slate-800 hover:text-primary transition-colors">Vay thế chấp</a>
+                     </div>
+
+                     <!-- Category: Đối tác -->
+                     <div class="space-y-3" x-data="{ open: false }">
+                         <button @click="open = !open" class="w-full flex items-center justify-between text-sm font-black text-slate-800 focus:outline-none">
+                             Đối tác
+                             <svg class="w-4 h-4 text-slate-400 transition-transform duration-200" :class="open ? 'rotate-180' : ''" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" /></svg>
+                         </button>
+                         <div x-show="open" x-transition class="pl-4 space-y-2 border-l border-slate-100">
+                             <a href="/profile?tab=host" @click="mobileMenuOpen = false" class="block py-1 text-xs font-bold text-slate-500 hover:text-primary">Chủ sở hữu</a>
+                             <a href="#" @click="mobileMenuOpen = false" class="block py-1 text-xs font-bold text-slate-500 hover:text-primary">Nhà môi giới</a>
+                         </div>
+                     </div>
+
+                 </div>
+
+                 <!-- Drawer Footer -->
+                 <div class="p-6 border-t border-slate-100 space-y-4 bg-slate-50">
+                     <!-- "Địa chỉ mới" toggle for mobile -->
+                     <div class="flex items-center justify-between">
+                         <span class="text-xs font-bold text-slate-500">Địa chỉ mới</span>
+                         <button @click="addressToggle = !addressToggle" 
+                                 class="w-10 h-5.5 rounded-full p-0.5 transition-colors duration-200 focus:outline-none relative"
+                                 :class="addressToggle ? 'bg-primary' : 'bg-slate-200'">
+                             <div class="w-4.5 h-4.5 rounded-full bg-white shadow-sm transition-transform duration-200"
+                                  :class="addressToggle ? 'translate-x-4.5' : 'translate-x-0'"></div>
+                         </button>
+                     </div>
+                 </div>
             </div>
         </div>
     </header>

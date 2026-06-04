@@ -4,7 +4,7 @@
 
 @section('content')
 <!-- Full screen Split View Container -->
-<div class="h-[calc(100vh-80px)] flex flex-col md:flex-row overflow-hidden bg-slate-50 relative"
+<div class="h-[calc(100vh-80px)] h-[calc(100dvh-80px)] flex flex-col md:flex-row overflow-hidden bg-slate-50 relative"
      x-data="propertiesMap()">
      
     <!-- Left Column: Search Filters & Listing Grid -->
