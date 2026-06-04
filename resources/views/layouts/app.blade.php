@@ -65,6 +65,16 @@
             }">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex justify-between h-20 items-center">
+                <!-- Hamburger Mobile Menu Button (lg:hidden) -->
+                <div class="flex lg:hidden items-center">
+                    <button @click="mobileMenuOpen = !mobileMenuOpen" 
+                            class="text-slate-600 hover:text-primary focus:outline-none p-2 rounded-xl hover:bg-slate-50 transition-colors"
+                            aria-label="Toggle Menu">
+                        <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16" />
+                        </svg>
+                    </button>
+                </div>
                 
                 <!-- Left Menu: Mua, Thuê, Kho dự án, Vay thế chấp, Đối tác -->
                 <div class="hidden lg:flex items-center space-x-6">
@@ -129,7 +139,7 @@
                     </div>
 
                     <!-- "Đăng tin" button (Exact orange/blue accent equivalent) -->
-                    <a :href="isLoggedIn && user && user.role === 'owner' ? '/profile?tab=properties' : '/profile?tab=host'" class="bg-primary hover:bg-primary-dark text-white text-xs font-bold px-5 py-2.5 rounded-[12px] shadow-sm hover:shadow transition-all duration-300">
+                    <a :href="isLoggedIn && user && user.role === 'owner' ? '/profile?tab=properties' : '/profile?tab=host'" class="bg-primary hover:bg-primary-dark text-white text-[10px] sm:text-xs font-bold px-3 sm:px-5 py-2 sm:py-2.5 rounded-[10px] sm:rounded-[12px] shadow-sm hover:shadow transition-all duration-300">
                         Đăng tin
                     </a>
 
@@ -171,6 +181,108 @@
                     </div>
                 </div>
 
+            </div>
+        </div>
+
+        <!-- Mobile Menu Drawer (Slide-over from left) -->
+        <div x-show="mobileMenuOpen" 
+             class="fixed inset-0 z-[100] lg:hidden" 
+             style="display: none;"
+             x-cloak>
+            <!-- Backdrop -->
+            <div class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm transition-opacity duration-300"
+                 @click="mobileMenuOpen = false"
+                 x-show="mobileMenuOpen"
+                 x-transition:enter="ease-out duration-300"
+                 x-transition:enter-start="opacity-0"
+                 x-transition:enter-end="opacity-100"
+                 x-transition:leave="ease-in duration-200"
+                 x-transition:leave-start="opacity-100"
+                 x-transition:leave-end="opacity-0"></div>
+
+            <!-- Drawer Content -->
+            <div class="fixed inset-y-0 left-0 w-80 max-w-full bg-white shadow-2xl flex flex-col z-50 transform transition-transform duration-300"
+                 x-show="mobileMenuOpen"
+                 x-transition:enter="transform transition ease-in-out duration-300"
+                 x-transition:enter-start="-translate-x-full"
+                 x-transition:enter-end="translate-x-0"
+                 x-transition:leave="transform transition ease-in-out duration-300"
+                 x-transition:leave-start="translate-x-0"
+                 x-transition:leave-end="-translate-x-full">
+                
+                <!-- Drawer Header -->
+                <div class="h-20 px-6 border-b border-slate-100 flex items-center justify-between flex-shrink-0">
+                    <a href="/" @click="mobileMenuOpen = false" class="flex items-center gap-1 group">
+                        <span class="text-xl font-black text-slate-900">N</span>
+                        <div class="w-4 h-4 rounded-full border-4 border-primary -mt-0.5"></div>
+                        <span class="text-xl font-black text-slate-900">S</span>
+                    </a>
+                    <button @click="mobileMenuOpen = false" class="w-9 h-9 rounded-full bg-slate-50 hover:bg-slate-100 text-slate-500 hover:text-slate-800 flex items-center justify-center transition-colors">
+                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+                    </button>
+                </div>
+
+                <!-- Drawer Body (Navigation Links) -->
+                <div class="flex-grow overflow-y-auto py-6 px-6 space-y-6">
+                    <!-- Navigation list -->
+                    <div class="space-y-4">
+                        <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Danh mục</p>
+                        <div class="grid grid-cols-1 gap-2">
+                            <a href="/properties?action=buy" @click="mobileMenuOpen = false" class="flex items-center justify-between p-3 rounded-2xl bg-slate-50 text-sm font-bold text-slate-700 hover:bg-primary/5 hover:text-primary transition-colors">
+                                <span>Mua Nhà Đất</span>
+                                <svg class="w-4 h-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" /></svg>
+                            </a>
+                            <a href="/properties?action=rent" @click="mobileMenuOpen = false" class="flex items-center justify-between p-3 rounded-2xl bg-slate-50 text-sm font-bold text-slate-700 hover:bg-primary/5 hover:text-primary transition-colors">
+                                <span>Thuê Nhà Đất</span>
+                                <svg class="w-4 h-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" /></svg>
+                            </a>
+                            <a href="/properties" @click="mobileMenuOpen = false" class="flex items-center justify-between p-3 rounded-2xl bg-slate-50 text-sm font-bold text-slate-700 hover:bg-primary/5 hover:text-primary transition-colors">
+                                <span>Kho Dự Án</span>
+                                <svg class="w-4 h-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" /></svg>
+                            </a>
+                            <a href="#" @click="mobileMenuOpen = false" class="flex items-center justify-between p-3 rounded-2xl bg-slate-50 text-sm font-bold text-slate-700 hover:bg-primary/5 hover:text-primary transition-colors">
+                                <span>Vay Thế Chấp</span>
+                                <svg class="w-4 h-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" /></svg>
+                            </a>
+                        </div>
+                    </div>
+
+                    <!-- Account & Partners -->
+                    <div class="space-y-4 pt-4 border-t border-slate-100">
+                        <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Dành cho chủ nhà</p>
+                        <a :href="isLoggedIn && user && user.role === 'owner' ? '/profile?tab=properties' : '/profile?tab=host'" @click="mobileMenuOpen = false" class="flex items-center gap-3 p-3 rounded-2xl bg-primary/5 text-primary text-sm font-bold hover:bg-primary/10 transition-colors">
+                            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 4h2a2 2 0 012 2v5a2 2 0 01-2 2h-2m-2-7a2 2 0 11-4 0 2 2 0 014 0z" /></svg>
+                            <span>Đăng tin chính chủ</span>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Drawer Footer (Auth & Logout) -->
+                <div class="p-6 border-t border-slate-100 bg-slate-50 flex-shrink-0">
+                    <template x-if="!isLoggedIn">
+                        <div class="grid grid-cols-2 gap-3">
+                            <a href="/profile?tab=login" @click="mobileMenuOpen = false" class="text-center bg-white border border-slate-200 text-slate-700 font-bold py-3 rounded-xl text-xs hover:bg-slate-100 transition-colors shadow-sm">Đăng nhập</a>
+                            <a href="/profile?tab=register" @click="mobileMenuOpen = false" class="text-center bg-primary text-white font-bold py-3 rounded-xl text-xs hover:bg-primary-dark transition-colors shadow-md shadow-primary/10">Đăng ký</a>
+                        </div>
+                    </template>
+                    <template x-if="isLoggedIn">
+                        <div class="space-y-4">
+                            <div class="flex items-center gap-3">
+                                <div class="w-10 h-10 rounded-full overflow-hidden border border-slate-200 bg-white flex-shrink-0">
+                                    <img :src="user && user.avatar ? user.avatar : 'https://api.dicebear.com/7.x/adventurer/svg?seed=nks'" class="w-full h-full object-cover">
+                                </div>
+                                <div class="overflow-hidden">
+                                    <p class="text-xs font-bold text-slate-800 truncate" x-text="user ? user.name : ''"></p>
+                                    <p class="text-[10px] text-slate-400 truncate" x-text="user ? user.email : ''"></p>
+                                </div>
+                            </div>
+                            <div class="grid grid-cols-2 gap-2 text-center text-xs font-bold text-slate-600">
+                                <a href="/profile?tab=info" @click="mobileMenuOpen = false" class="py-2.5 bg-white border border-slate-200 rounded-xl hover:bg-slate-100 transition-colors">Hồ sơ</a>
+                                <button @click="logout(); mobileMenuOpen = false" class="py-2.5 bg-red-50 text-red-600 rounded-xl hover:bg-red-100 transition-colors">Đăng xuất</button>
+                            </div>
+                        </div>
+                    </template>
+                </div>
             </div>
         </div>
     </header>
