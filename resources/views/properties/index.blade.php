@@ -99,6 +99,13 @@
                                     3 Thật
                                 </span>
                             </div>
+                            <!-- Share Button -->
+                            <button @click.stop="openShare('{{ url('/properties') }}/' + p.slug, p.title)" 
+                                    class="absolute top-2.5 right-11.5 w-7.5 h-7.5 rounded-full bg-white/90 text-slate-600 hover:bg-white hover:text-primary shadow-md flex items-center justify-center transition-all duration-200 active:scale-95">
+                                <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M8.684 10.742l4.622-2.311m0 0a3 3 0 10-2.667-1.772a3 3 0 002.667 1.772zm0 6.518l-4.623-2.311a3 3 0 11-2.667-1.772a3 3 0 012.667 1.772zm1.144 0a3 3 0 112.667 1.772a3 3 0 01-2.667-1.772z" />
+                                </svg>
+                            </button>
                             <button @click.stop="toggleFav(p)" 
                                     class="absolute top-2.5 right-2.5 w-7.5 h-7.5 rounded-full flex items-center justify-center shadow-md transition-all duration-200"
                                     :class="isFav(p.id) ? 'bg-red-500 text-white animate-heart-pop' : 'bg-white/90 text-slate-600 hover:bg-white hover:text-red-500'">
@@ -314,7 +321,24 @@
                         
                         <!-- Contact Host info -->
                         <div class="space-y-4">
-                            <h3 class="text-xs font-black text-slate-800 uppercase tracking-wider pb-2.5 border-b border-slate-200/40">Thông tin liên hệ</h3>
+                            <div class="flex justify-between items-center pb-2.5 border-b border-slate-200/40">
+                                <h3 class="text-xs font-black text-slate-800 uppercase tracking-wider">Thông tin liên hệ</h3>
+                                <div class="flex gap-2">
+                                    <!-- Share Button -->
+                                    <button @click.stop="openShare('{{ url('/properties') }}/' + selectedProperty.slug, selectedProperty.title)" 
+                                            class="w-7.5 h-7.5 rounded-full bg-white text-slate-500 hover:bg-slate-100 hover:text-primary flex items-center justify-center shadow-xs border border-slate-200/40 transition-all duration-200 active:scale-95">
+                                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M8.684 10.742l4.622-2.311m0 0a3 3 0 10-2.667-1.772a3 3 0 002.667 1.772zm0 6.518l-4.623-2.311a3 3 0 11-2.667-1.772a3 3 0 012.667 1.772zm1.144 0a3 3 0 112.667 1.772a3 3 0 01-2.667-1.772z" />
+                                        </svg>
+                                    </button>
+                                    <!-- Favorite Button -->
+                                    <button @click.stop="toggleFav(selectedProperty)" 
+                                            class="w-7.5 h-7.5 rounded-full flex items-center justify-center shadow-xs border border-slate-200/40 transition-all duration-200 active:scale-95"
+                                            :class="isFav(selectedProperty.id) ? 'bg-red-500 text-white border-transparent animate-heart-pop' : 'bg-white text-slate-500 hover:bg-slate-100 hover:text-red-500'">
+                                        <svg class="w-4.5 h-4.5" :fill="isFav(selectedProperty.id) ? 'currentColor' : 'none'" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2"><path stroke-linecap="round" stroke-linejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" /></svg>
+                                    </button>
+                                </div>
+                            </div>
                             
                             <!-- Host details -->
                             <div class="flex items-center gap-3.5 bg-white p-3 rounded-2xl border border-slate-200/40 shadow-sm">

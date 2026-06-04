@@ -119,6 +119,13 @@
                             </span>
                         </div>
                         
+                        <!-- Share Button -->
+                        <button @click.stop="openShare('{{ url('/properties') }}/{{ $property['slug'] }}', {{ json_encode($property['title']) }})" 
+                                class="absolute top-3 right-12 w-8 h-8 rounded-full bg-white/90 text-slate-600 hover:bg-white hover:text-primary shadow-md hover:scale-110 active:scale-95 flex items-center justify-center transition-all duration-300">
+                            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M8.684 10.742l4.622-2.311m0 0a3 3 0 10-2.667-1.772a3 3 0 002.667 1.772zm0 6.518l-4.623-2.311a3 3 0 11-2.667-1.772a3 3 0 012.667 1.772zm1.144 0a3 3 0 112.667 1.772a3 3 0 01-2.667-1.772z" />
+                            </svg>
+                        </button>
                         <!-- Favorite Toggle -->
                         <button @click="toggleFav({{ json_encode($property) }})" 
                                 class="absolute top-3 right-3 w-8 h-8 rounded-full flex items-center justify-center shadow-md hover:scale-110 active:scale-95 transition-all duration-300"
@@ -205,6 +212,13 @@
                             </span>
                         </div>
                         
+                        <!-- Share Button -->
+                        <button @click.stop="openShare('{{ url('/properties') }}/{{ $property['slug'] }}', {{ json_encode($property['title']) }})" 
+                                class="absolute top-3 right-12 w-8 h-8 rounded-full bg-white/90 text-slate-600 hover:bg-white hover:text-primary shadow-md hover:scale-110 active:scale-95 flex items-center justify-center transition-all duration-300">
+                            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M8.684 10.742l4.622-2.311m0 0a3 3 0 10-2.667-1.772a3 3 0 002.667 1.772zm0 6.518l-4.623-2.311a3 3 0 11-2.667-1.772a3 3 0 012.667 1.772zm1.144 0a3 3 0 112.667 1.772a3 3 0 01-2.667-1.772z" />
+                            </svg>
+                        </button>
                         <!-- Favorite Toggle -->
                         <button @click="toggleFav({{ json_encode($property) }})" 
                                 class="absolute top-3 right-3 w-8 h-8 rounded-full flex items-center justify-center shadow-md hover:scale-110 active:scale-95 transition-all duration-300"

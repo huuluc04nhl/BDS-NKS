@@ -252,6 +252,175 @@
         </div>
     </footer>
 
+    <!-- GLOBAL TOAST NOTIFICATION -->
+    <div x-data="{
+        show: false,
+        message: '',
+        type: 'success',
+        init() {
+            window.addEventListener('nks-toast', (e) => {
+                this.message = e.detail.message;
+                this.type = e.detail.type || 'success';
+                this.show = true;
+                setTimeout(() => this.show = false, 3000);
+            });
+        }
+    }"
+    x-show="show"
+    x-transition:enter="transition ease-out duration-300 transform"
+    x-transition:enter-start="-translate-y-12 opacity-0"
+    x-transition:enter-end="translate-y-0 opacity-100"
+    x-transition:leave="transition ease-in duration-200 transform"
+    x-transition:leave-start="translate-y-0 opacity-100"
+    x-transition:leave-end="-translate-y-12 opacity-0"
+    class="fixed top-6 left-1/2 transform -translate-x-1/2 z-[110] max-w-sm w-full px-4"
+    style="display: none;"
+    x-cloak>
+        <div class="bg-slate-900/95 backdrop-blur-md text-white rounded-2xl px-5 py-3.5 shadow-2xl border border-slate-800 flex items-center gap-3">
+            <template x-if="type === 'success'">
+                <div class="w-6 h-6 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center flex-shrink-0">
+                    <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" /></svg>
+                </div>
+            </template>
+            <template x-if="type === 'info'">
+                <div class="w-6 h-6 rounded-full bg-primary/20 text-primary flex items-center justify-center flex-shrink-0">
+                    <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                </div>
+            </template>
+            <p class="text-xs font-semibold tracking-wide" x-text="message"></p>
+        </div>
+    </div>
+
+    <!-- GLOBAL SHARE MODAL -->
+    <div x-data="{
+        open: false,
+        url: '',
+        title: '',
+        copied: false,
+        init() {
+            window.addEventListener('open-share-modal', (e) => {
+                this.url = e.detail.url;
+                this.title = e.detail.title;
+                this.open = true;
+                this.copied = false;
+            });
+        },
+        copyToClipboard() {
+            navigator.clipboard.writeText(this.url).then(() => {
+                this.copied = true;
+                window.dispatchEvent(new CustomEvent('nks-toast', { 
+                    detail: { message: 'Đã sao chép liên kết thành công!', type: 'success' } 
+                }));
+                setTimeout(() => this.copied = false, 2000);
+            }).catch(err => {
+                console.error('Copy failed', err);
+            });
+        }
+    }"
+    x-show="open"
+    class="fixed inset-0 z-[100] flex items-center justify-center p-4"
+    style="display: none;"
+    x-cloak>
+        <!-- Backdrop -->
+        <div class="absolute inset-0 bg-slate-900/60 backdrop-blur-sm"
+             x-show="open"
+             x-transition:enter="transition ease-out duration-300"
+             x-transition:enter-start="opacity-0"
+             x-transition:enter-end="opacity-100"
+             x-transition:leave="transition ease-in duration-200"
+             x-transition:leave-start="opacity-100"
+             x-transition:leave-end="opacity-0"
+             @click="open = false"></div>
+
+        <!-- Modal Container -->
+        <div class="bg-white rounded-[32px] shadow-2xl max-w-md w-full overflow-hidden border border-slate-100 relative z-10 p-6 sm:p-8"
+             x-show="open"
+             x-transition:enter="transition ease-out duration-300 transform"
+             x-transition:enter-start="opacity-0 scale-95 translate-y-4"
+             x-transition:enter-end="opacity-100 scale-100 translate-y-0"
+             x-transition:leave="transition ease-in duration-200 transform"
+             x-transition:leave-start="opacity-100 scale-100 translate-y-0"
+             x-transition:leave-end="-translate-y-4 opacity-0 scale-95">
+             
+             <!-- Close Button -->
+             <button @click="open = false" 
+                     class="absolute top-4 right-4 w-9 h-9 rounded-full bg-slate-50 hover:bg-slate-100 text-slate-400 hover:text-slate-700 flex items-center justify-center transition-colors">
+                 <svg class="w-4.5 h-4.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                     <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                 </svg>
+             </button>
+
+             <!-- Title -->
+             <div class="text-center space-y-2 mb-6">
+                 <div class="w-12 h-12 rounded-2xl bg-primary/10 text-primary flex items-center justify-center mx-auto">
+                     <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2">
+                         <path stroke-linecap="round" stroke-linejoin="round" d="M8.684 10.742l4.622-2.311m0 0a3 3 0 10-2.667-1.772a3 3 0 002.667 1.772zm0 6.518l-4.623-2.311a3 3 0 11-2.667-1.772a3 3 0 012.667 1.772zm1.144 0a3 3 0 112.667 1.772a3 3 0 01-2.667-1.772z" />
+                     </svg>
+                 </div>
+                 <h3 class="text-lg font-black text-slate-800 tracking-tight">Chia sẻ tin đăng</h3>
+                 <p class="text-xs text-slate-400 font-bold px-4 truncate" x-text="title"></p>
+             </div>
+
+             <!-- Share Buttons Grid -->
+             <div class="grid grid-cols-3 gap-4 mb-6">
+                 <!-- Facebook -->
+                 <a :href="'https://www.facebook.com/sharer/sharer.php?u=' + encodeURIComponent(url)" 
+                    target="_blank"
+                    class="flex flex-col items-center gap-2 p-3 rounded-2xl border border-slate-100 hover:border-blue-100 hover:bg-blue-50/30 transition-all duration-300 group">
+                     <div class="w-10 h-10 rounded-full bg-[#1877F2]/10 text-[#1877F2] flex items-center justify-center group-hover:scale-110 transition-transform">
+                         <svg class="w-5 h-5 fill-currentColor" viewBox="0 0 24 24">
+                             <path d="M22 12c0-5.52-4.48-10-10-10S2 6.48 2 12c0 4.84 3.44 8.87 8 9.8V15H8v-3h2V9.5C10 7.57 11.57 6 13.5 6H16v3h-2c-.55 0-1 .45-1 1v2h3v3h-3v6.95c4.56-.93 8-4.96 8-9.75z"/>
+                         </svg>
+                     </div>
+                     <span class="text-[10px] font-bold text-slate-600">Facebook</span>
+                 </a>
+
+                 <!-- Zalo -->
+                 <a :href="'https://sp.zalo.me/share_to_zalo?url=' + encodeURIComponent(url)" 
+                    target="_blank"
+                    class="flex flex-col items-center gap-2 p-3 rounded-2xl border border-slate-100 hover:border-sky-100 hover:bg-sky-50/30 transition-all duration-300 group">
+                     <div class="w-10 h-10 rounded-full bg-[#0068FF]/10 text-[#0068FF] flex items-center justify-center group-hover:scale-110 transition-transform font-black text-sm">
+                         Zalo
+                     </div>
+                     <span class="text-[10px] font-bold text-slate-600">Zalo</span>
+                 </a>
+
+                 <!-- Telegram -->
+                 <a :href="'https://t.me/share/url?url=' + encodeURIComponent(url) + '&text=' + encodeURIComponent(title)" 
+                    target="_blank"
+                    class="flex flex-col items-center gap-2 p-3 rounded-2xl border border-slate-100 hover:border-cyan-100 hover:bg-cyan-50/30 transition-all duration-300 group">
+                     <div class="w-10 h-10 rounded-full bg-[#229ED9]/10 text-[#229ED9] flex items-center justify-center group-hover:scale-110 transition-transform">
+                         <svg class="w-5 h-5 fill-currentColor" viewBox="0 0 24 24">
+                             <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm4.64 6.8c-.15 1.58-.8 5.42-1.13 7.19-.14.75-.42 1-.68 1.03-.58.05-1.02-.38-1.58-.75-.88-.58-1.38-.94-2.23-1.5-.99-.65-.35-1.01.22-1.59.15-.15 2.71-2.48 2.76-2.69.01-.03.01-.14-.07-.2-.08-.06-.19-.04-.27-.02-.12.02-1.96 1.24-5.54 3.65-.52.36-.99.53-1.4.52-.46-.01-1.34-.26-2-.47-.8-.26-1.43-.4-1.38-.85.03-.23.35-.47.96-.71 3.76-1.64 6.27-2.72 7.53-3.25 3.58-1.5 4.32-1.76 4.81-1.77.11 0 .35.03.5.15.13.1.17.24.18.33-.02.09 0 .19-.01.26z"/>
+                         </svg>
+                     </div>
+                     <span class="text-[10px] font-bold text-slate-600">Telegram</span>
+                 </a>
+             </div>
+
+             <!-- Copy link text container -->
+             <div class="space-y-2">
+                 <label class="block text-[10px] font-black text-slate-400 uppercase tracking-wider">Đường dẫn liên kết</label>
+                 <div class="flex items-center gap-2 p-1.5 bg-slate-50 rounded-2xl border border-slate-100">
+                     <input type="text" 
+                            readonly 
+                            :value="url" 
+                            class="bg-transparent border-none text-xs font-bold text-slate-500 flex-grow pl-3 focus:outline-none select-all truncate">
+                     <button @click="copyToClipboard()" 
+                             class="bg-primary hover:bg-primary-dark text-white font-extrabold text-xs px-4 py-2.5 rounded-xl shadow-xs transition-all active:scale-95 flex items-center gap-1.5">
+                         <span x-text="copied ? 'Đã sao chép' : 'Sao chép'"></span>
+                     </button>
+                 </div>
+             </div>
+        </div>
+    </div>
+
+    <script>
+        window.openShare = function(url, title) {
+            window.dispatchEvent(new CustomEvent('open-share-modal', { detail: { url: url, title: title } }));
+        };
+    </script>
+
     @yield('scripts')
 </body>
 </html>
