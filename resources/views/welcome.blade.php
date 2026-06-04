@@ -20,32 +20,7 @@
          isFav(id) {
              return this.favorites.some(f => f.id === id);
          },
-         async toggleFav(property) {
-             let userId = null;
-             const savedUser = localStorage.getItem('nks_user');
-             if (savedUser) {
-                 const u = JSON.parse(savedUser);
-                 userId = u.id;
-             }
-
-             if (userId) {
-                 try {
-                     await fetch('/nks-api/favorites/toggle', {
-                         method: 'POST',
-                         headers: {
-                             'Content-Type': 'application/json',
-                             'Accept': 'application/json',
-                             'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]').getAttribute('content')
-                         },
-                         body: JSON.stringify({
-                             user_id: userId,
-                             property_id: property.id > 100 ? property.id : null,
-                             external_property_id: property.id <= 100 ? String(property.id) : null
-                         })
-                     });
-                 } catch (e) {}
-             }
-
+         toggleFav(property) {
              const index = this.favorites.findIndex(f => f.id === property.id);
              if (index > -1) {
                  this.favorites.splice(index, 1);

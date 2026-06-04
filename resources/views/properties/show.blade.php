@@ -293,7 +293,7 @@
 
                 if (userId) {
                     try {
-                        await fetch('/nks-api/favorites/toggle', {
+                        const res = await fetch('/nks-api/favorites/toggle', {
                             method: 'POST',
                             headers: {
                                 'Content-Type': 'application/json',
@@ -306,7 +306,20 @@
                                 external_property_id: this.property.id <= 100 ? String(this.property.id) : null
                             })
                         });
-                    } catch (e) {}
+                        
+                        if (!res.ok) {
+                            const err = await res.json();
+                            alert(err.message || 'Lỗi khi lưu tin yêu thích.');
+                            return;
+                        }
+                    } catch (e) {
+                        alert('Lỗi kết nối máy chủ CSDL.');
+                        return;
+                    }
+                } else {
+                    alert('Vui lòng đăng nhập để lưu tin yêu thích.');
+                    window.location.href = '/profile?tab=login';
+                    return;
                 }
 
                 const index = this.favorites.findIndex(f => f.id === this.property.id);
