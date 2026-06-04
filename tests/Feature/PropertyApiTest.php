@@ -297,4 +297,86 @@ class PropertyApiTest extends TestCase
             ->assertJsonCount(1, 'demands')
             ->assertJsonPath('demands.0.title', 'Can thue studio Q1');
     }
+
+    /**
+     * Test session sync and automatic self-healing restore
+     */
+    public function test_session_sync_self_healing()
+    {
+        // 1. Send sync request for a non-existing user with local backup data
+        $response = $this->postJson('/nks-api/session/sync', [
+            'user' => [
+                'name' => 'Self Healing User',
+                'email' => 'healed@nks.vn',
+                'phone' => '0999888777',
+                'role' => 'owner',
+                'avatar' => 'https://api.dicebear.com/7.x/adventurer/svg?seed=healed'
+            ],
+            'favorites' => [
+                [
+                    'id' => 91, // external property ID
+                    'title' => 'External Prop',
+                    'slug' => 'external-prop-91',
+                    'featureimg' => '',
+                    'address' => '',
+                    'rstype' => 'Nhà phố',
+                    'formatedPrice' => ''
+                ]
+            ],
+            'appointments' => [
+                [
+                    'property_id' => '91',
+                    'date' => '2026-06-15',
+                    'time' => '10:00',
+                    'name' => 'Self Healing User',
+                    'phone' => '0999888777'
+                ]
+            ],
+            'properties' => [
+                [
+                    'id' => 2001, // local property old ID
+                    'title' => 'My Restored Property',
+                    'slug' => 'my-restored-property',
+                    'address' => 'District 1',
+                    'price' => 15000000,
+                    'total_area' => 50
+                ]
+            ]
+        ]);
+
+        $response->assertStatus(200)
+            ->assertJson([
+                'success' => true,
+                'recreated' => true,
+                'user' => [
+                    'email' => 'healed@nks.vn',
+                    'role' => 'owner'
+                ]
+            ]);
+
+        // 2. Assert database user got recreated
+        $this->assertDatabaseHas('users', [
+            'email' => 'healed@nks.vn',
+            'role' => 'owner'
+        ]);
+
+        // 3. Assert properties, favorites, and appointments got restored
+        $user = User::where('email', 'healed@nks.vn')->first();
+        
+        $this->assertDatabaseHas('properties', [
+            'user_id' => $user->id,
+            'title' => 'My Restored Property'
+        ]);
+
+        $this->assertDatabaseHas('saved_properties', [
+            'user_id' => $user->id,
+            'external_property_id' => '91'
+        ]);
+
+        $this->assertDatabaseHas('appointments', [
+            'user_id' => $user->id,
+            'property_id' => '91',
+            'appointment_date' => '2026-06-15 00:00:00'
+        ]);
+    }
 }

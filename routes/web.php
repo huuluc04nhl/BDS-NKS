@@ -22,6 +22,7 @@ Route::prefix('nks-api')->group(function () {
     Route::post('/register', [PropertyController::class, 'apiRegister']);
     Route::post('/login', [PropertyController::class, 'apiLogin']);
     Route::post('/logout', [PropertyController::class, 'apiLogout']);
+    Route::post('/session/sync', [PropertyController::class, 'apiSessionSync']);
     Route::post('/profile/update', [PropertyController::class, 'apiUpdateProfile']);
     Route::post('/profile/upgrade-host', [PropertyController::class, 'apiUpgradeHost']);
     

@@ -616,21 +616,6 @@
             newPropDesc: '',
             
             init() {
-                // Synchronize backend Auth session with browser localStorage on page load/refresh
-                @if (auth()->check())
-                    const dbUser = @js([
-                        'id' => auth()->id(),
-                        'name' => auth()->user()->name,
-                        'email' => auth()->user()->email,
-                        'phone' => auth()->user()->phone,
-                        'role' => auth()->user()->role,
-                        'avatar' => auth()->user()->avatar
-                    ]);
-                    localStorage.setItem('nks_user', JSON.stringify(dbUser));
-                @else
-                    localStorage.removeItem('nks_user');
-                @endif
-
                 const urlParams = new URLSearchParams(window.location.search);
                 const tabParam = urlParams.get('tab');
                 if (tabParam) {
@@ -664,59 +649,64 @@
             },
             
             async loadMockData() {
-                if (this.isLoggedIn && this.user && this.user.id) {
+                if (this.isLoggedIn && this.user && this.user.email) {
+                    const savedAppts = localStorage.getItem('nks_appointments');
+                    const savedFavs = localStorage.getItem('nks_favorites');
+                    const savedProps = localStorage.getItem('nks_owner_properties');
+
                     try {
-                        const apptsRes = await fetch(`/nks-api/appointments/user/${this.user.id}`);
-                        if (apptsRes.status === 401) {
-                            this.handleStaleSession();
-                            return;
-                        }
-                        if (apptsRes.ok) {
-                            const apptsData = await apptsRes.json();
-                            this.appointments = apptsData.appointments || [];
+                        const res = await fetch('/nks-api/session/sync', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'Accept': 'application/json',
+                                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                            },
+                            body: JSON.stringify({
+                                user: this.user,
+                                favorites: savedFavs ? JSON.parse(savedFavs) : [],
+                                appointments: savedAppts ? JSON.parse(savedAppts) : [],
+                                properties: savedProps ? JSON.parse(savedProps) : []
+                            })
+                        });
+
+                        if (res.ok) {
+                            const data = await res.json();
+                            this.user = data.user;
+                            localStorage.setItem('nks_user', JSON.stringify(this.user));
+                            
+                            this.appointments = data.appointments || [];
                             localStorage.setItem('nks_appointments', JSON.stringify(this.appointments));
-                        }
-                        
-                        const favsRes = await fetch(`/nks-api/favorites/user/${this.user.id}`);
-                        if (favsRes.status === 401) {
+
+                            this.favorites = data.favorites || [];
+                            localStorage.setItem('nks_favorites', JSON.stringify(this.favorites));
+
+                            this.ownerProperties = data.properties || [];
+                            localStorage.setItem('nks_owner_properties', JSON.stringify(this.ownerProperties));
+
+                            this.nameInput = this.user.name;
+                            this.phoneInput = this.user.phone || '';
+                            this.avatarInput = this.user.avatar || '';
+
+                            window.dispatchEvent(new CustomEvent('nks-login-change'));
+                        } else if (res.status === 401) {
                             this.handleStaleSession();
                             return;
-                        }
-                        if (favsRes.ok) {
-                            const favsData = await favsRes.json();
-                            this.favorites = favsData.favorites || [];
-                            localStorage.setItem('nks_favorites', JSON.stringify(this.favorites));
-                        }
-                        
-                        if (this.user.role === 'owner') {
-                            const propsRes = await fetch(`/nks-api/properties/owner/${this.user.id}`);
-                            if (propsRes.status === 401) {
-                                this.handleStaleSession();
-                                return;
-                            }
-                            if (propsRes.ok) {
-                                const propsData = await propsRes.json();
-                                this.ownerProperties = propsData.properties || [];
-                                localStorage.setItem('nks_owner_properties', JSON.stringify(this.ownerProperties));
-                            }
                         }
                     } catch (e) {
-                        console.warn('Database fetch failed, fallback to local storage:', e);
+                        console.warn('Database sync failed, fallback to local storage:', e);
                     }
                 }
 
-                if (this.appointments.length === 0) {
-                    const savedAppts = localStorage.getItem('nks_appointments');
-                    if (savedAppts) this.appointments = JSON.parse(savedAppts);
-                }
-                if (this.favorites.length === 0) {
-                    const savedFavs = localStorage.getItem('nks_favorites');
-                    if (savedFavs) this.favorites = JSON.parse(savedFavs);
-                }
-                if (this.ownerProperties.length === 0) {
-                    const savedOwnerProps = localStorage.getItem('nks_owner_properties');
-                    if (savedOwnerProps) this.ownerProperties = JSON.parse(savedOwnerProps);
-                }
+                // Fallback to local storage state if offline or request failed
+                const savedAppts = localStorage.getItem('nks_appointments');
+                if (savedAppts) this.appointments = JSON.parse(savedAppts);
+                
+                const savedFavs = localStorage.getItem('nks_favorites');
+                if (savedFavs) this.favorites = JSON.parse(savedFavs);
+                
+                const savedOwnerProps = localStorage.getItem('nks_owner_properties');
+                if (savedOwnerProps) this.ownerProperties = JSON.parse(savedOwnerProps);
             },
             
             handleStaleSession() {

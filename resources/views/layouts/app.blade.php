@@ -27,21 +27,6 @@
     @yield('styles')
 </head>
 <body class="flex flex-col h-full bg-white text-slate-800 font-sans antialiased">
-    <script>
-        // Synchronize backend Auth session with browser localStorage before Alpine compiles
-        @if (auth()->check())
-            localStorage.setItem('nks_user', JSON.stringify(@js([
-                'id' => auth()->id(),
-                'name' => auth()->user()->name,
-                'email' => auth()->user()->email,
-                'phone' => auth()->user()->phone,
-                'role' => auth()->user()->role,
-                'avatar' => auth()->user()->avatar
-            ])));
-        @else
-            localStorage.removeItem('nks_user');
-        @endif
-    </script>
 
     <!-- Header Navigation (Exact Moso UX & Layout) -->
     <header class="sticky top-0 z-50 w-full transition-all duration-300 bg-white/95 backdrop-blur-md border-b border-slate-100"
@@ -51,21 +36,6 @@
                 user: null,
                 addressToggle: false,
                 init() {
-                    // Synchronize backend Auth session with browser localStorage on page load/refresh
-                    @if (auth()->check())
-                        const dbUser = @js([
-                            'id' => auth()->id(),
-                            'name' => auth()->user()->name,
-                            'email' => auth()->user()->email,
-                            'phone' => auth()->user()->phone,
-                            'role' => auth()->user()->role,
-                            'avatar' => auth()->user()->avatar
-                        ]);
-                        localStorage.setItem('nks_user', JSON.stringify(dbUser));
-                    @else
-                        localStorage.removeItem('nks_user');
-                    @endif
-
                     // Check local storage for mock user
                     const savedUser = localStorage.getItem('nks_user');
                     if (savedUser) {
@@ -85,15 +55,14 @@
                         }
                     });
                 },
-                async logout() {
-                    try {
-                        await fetch('/nks-api/logout', {
-                            method: 'POST',
-                            headers: {
-                                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-                            }
-                        });
-                    } catch (e) {}
+                logout() {
+                    fetch('/nks-api/logout', {
+                        method: 'POST',
+                        headers: {
+                            'Accept': 'application/json',
+                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                        }
+                    }).catch(e => {});
                     localStorage.removeItem('nks_user');
                     localStorage.removeItem('nks_appointments');
                     localStorage.removeItem('nks_favorites');

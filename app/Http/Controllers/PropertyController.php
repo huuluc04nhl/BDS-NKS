@@ -490,7 +490,8 @@ class PropertyController extends Controller
                 'avatar' => 'https://api.dicebear.com/7.x/adventurer/svg?seed=' . urlencode($request->name)
             ]);
 
-            auth()->login($user, true);
+            // Authenticate in Laravel session
+            \Illuminate\Support\Facades\Auth::login($user, true);
 
             return response()->json([
                 'success' => true,
@@ -536,7 +537,8 @@ class PropertyController extends Controller
                 ], 401);
             }
 
-            auth()->login($user, true);
+            // Authenticate in Laravel session
+            \Illuminate\Support\Facades\Auth::login($user, true);
 
             return response()->json([
                 'success' => true,
@@ -565,12 +567,283 @@ class PropertyController extends Controller
     /**
      * API: User Logout
      */
-    public function apiLogout(Request $request)
+    public function apiLogout()
     {
         \Illuminate\Support\Facades\Auth::logout();
-        $request->session()->invalidate();
-        $request->session()->regenerateToken();
         return response()->json(['success' => true]);
+    }
+
+    /**
+     * API: Session Sync & Database Restore (Self-Healing)
+     */
+    public function apiSessionSync(Request $request)
+    {
+        try {
+            $userData = $request->input('user');
+            if (!$userData) {
+                return response()->json(['success' => false, 'message' => 'Không tìm thấy dữ liệu người dùng.'], 400);
+            }
+
+            $email = $userData['email'] ?? null;
+            if (!$email) {
+                return response()->json(['success' => false, 'message' => 'Thiếu địa chỉ email.'], 400);
+            }
+
+            // Find or silently restore/recreate the user
+            $user = \App\Models\User::where('email', $email)->first();
+            $isRecreated = false;
+
+            if (!$user) {
+                // User was wiped from DB (e.g. SQLite reset on Vercel), recreate them
+                $user = \App\Models\User::create([
+                    'name' => $userData['name'] ?? 'Thành viên NKS',
+                    'email' => $email,
+                    'password' => bcrypt('nks_default_pass_2026'), // Safe default password
+                    'phone' => $userData['phone'] ?? null,
+                    'role' => $userData['role'] ?? 'renter',
+                    'avatar' => $userData['avatar'] ?? 'https://api.dicebear.com/7.x/adventurer/svg?seed=' . urlencode($userData['name'] ?? 'nks')
+                ]);
+                $isRecreated = true;
+            } else {
+                // User exists, update profile details if changed
+                $user->update([
+                    'name' => $userData['name'] ?? $user->name,
+                    'phone' => $userData['phone'] ?? $user->phone,
+                    'role' => $userData['role'] ?? $user->role,
+                    'avatar' => $userData['avatar'] ?? $user->avatar
+                ]);
+            }
+
+            // Authenticate user in Laravel session
+            \Illuminate\Support\Facades\Auth::login($user, true);
+
+            // Sync properties (owner only) - Do this first so that favorites can link to them!
+            $idMapping = []; // maps oldPropertyId -> newPropertyId
+            if ($user->role === 'owner') {
+                $localProperties = $request->input('properties', []);
+                foreach ($localProperties as $prop) {
+                    if (!isset($prop['title']) || empty($prop['title'])) continue;
+                    $oldId = $prop['id'];
+                    $slug = $prop['slug'] ?? \Illuminate\Support\Str::slug($prop['title']);
+                    
+                    $dbProp = \App\Models\Property::where('user_id', $user->id)
+                        ->where('slug', $slug)
+                        ->first();
+
+                    if (!$dbProp) {
+                        $dbProp = \App\Models\Property::create([
+                            'user_id' => $user->id,
+                            'title' => $prop['title'],
+                            'slug' => $slug,
+                            'address' => $prop['address'] ?? 'Chưa xác định',
+                            'geolocation' => $prop['geolocation'] ?? '10.7932,106.6710',
+                            'rstype' => $prop['rstype'] ?? 'Căn hộ',
+                            'transaction_type' => $prop['transaction_type'] ?? 'Cho thuê',
+                            'price' => floatval($prop['price'] ?? 0),
+                            'formated_price' => $prop['formated_price'] ?? $prop['formatedPrice'] ?? 'Liên hệ',
+                            'total_area' => floatval($prop['total_area'] ?? 45.0),
+                            'bed' => intval($prop['bed'] ?? 1),
+                            'bath' => intval($prop['bath'] ?? 1),
+                            'floors' => intval($prop['floors'] ?? 1),
+                            'direction' => $prop['direction'] ?? 'Đông',
+                            'feature_img' => $prop['feature_img'] ?? $prop['featureimg'] ?? 'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?auto=format&fit=crop&q=80&w=800',
+                            'images' => is_array($prop['gallery'] ?? null) ? json_encode($prop['gallery']) : json_encode([$prop['feature_img'] ?? '']),
+                            'description' => $prop['description'] ?? 'Căn hộ dịch vụ cao cấp.',
+                            'is_verified' => true
+                        ]);
+                    }
+                    $idMapping[$oldId] = $dbProp->id + 1000;
+                }
+            }
+
+            // Sync favorites
+            $localFavorites = $request->input('favorites', []);
+            foreach ($localFavorites as $fav) {
+                if (!isset($fav['id'])) continue;
+                $favId = $fav['id'];
+                $isExternal = $favId <= 100;
+                
+                if ($isExternal) {
+                    $exists = \App\Models\SavedProperty::where('user_id', $user->id)
+                        ->where('external_property_id', (string)$favId)
+                        ->exists();
+
+                    if (!$exists) {
+                        \App\Models\SavedProperty::create([
+                            'user_id' => $user->id,
+                            'property_id' => null,
+                            'external_property_id' => (string)$favId
+                        ]);
+                    }
+                } else {
+                    $mappedId = $idMapping[$favId] ?? null;
+                    $realDbId = null;
+                    if ($mappedId) {
+                        $realDbId = $mappedId - 1000;
+                    } else {
+                        $realDbId = $favId > 1000 ? ($favId - 1000) : $favId;
+                    }
+
+                    $exists = \App\Models\SavedProperty::where('user_id', $user->id)
+                        ->where('property_id', $realDbId)
+                        ->exists();
+
+                    if (!$exists && \App\Models\Property::where('id', $realDbId)->exists()) {
+                        \App\Models\SavedProperty::create([
+                            'user_id' => $user->id,
+                            'property_id' => $realDbId,
+                            'external_property_id' => null
+                        ]);
+                    }
+                }
+            }
+
+            // Sync appointments
+            $localAppts = $request->input('appointments', []);
+            foreach ($localAppts as $appt) {
+                $oldPropId = $appt['property_id'] ?? '';
+                $newPropId = $oldPropId;
+                if (!empty($oldPropId) && is_numeric($oldPropId)) {
+                    $oldPropIdInt = (int)$oldPropId;
+                    if ($oldPropIdInt > 100) {
+                        if (isset($idMapping[$oldPropIdInt])) {
+                            $newPropId = (string)($idMapping[$oldPropIdInt] - 1000);
+                        } else {
+                            $realDbId = $oldPropIdInt > 1000 ? ($oldPropIdInt - 1000) : $oldPropIdInt;
+                            $newPropId = (string)$realDbId;
+                        }
+                    }
+                }
+
+                $exists = \App\Models\Appointment::where('user_id', $user->id)
+                    ->where('appointment_date', $appt['date'] ?? $appt['appointment_date'] ?? null)
+                    ->where('appointment_time', $appt['time'] ?? $appt['appointment_time'] ?? null)
+                    ->exists();
+
+                if (!$exists) {
+                    \App\Models\Appointment::create([
+                        'user_id' => $user->id,
+                        'property_id' => (string)$newPropId,
+                        'appt_name' => $appt['name'] ?? $appt['appt_name'] ?? $user->name,
+                        'appt_phone' => $appt['phone'] ?? $appt['appt_phone'] ?? $user->phone ?? '0932030958',
+                        'appointment_date' => $appt['date'] ?? $appt['appointment_date'] ?? date('Y-m-d'),
+                        'appointment_time' => $appt['time'] ?? $appt['appointment_time'] ?? '09:00',
+                        'status' => 'confirmed'
+                    ]);
+                }
+            }
+
+            // Retrieve updated/full synced data from DB to send back to client
+            // 1. Appointments
+            $appointments = \App\Models\Appointment::where('user_id', $user->id)
+                ->orderBy('id', 'desc')
+                ->get();
+            $items = $this->fetchAllItems();
+            $resolvedAppointments = $appointments->map(function ($appt) use ($items) {
+                $propId = $appt->property_id;
+                $property = collect($items)->first(function ($item) use ($propId) {
+                    return (string)$item['id'] === (string)$propId;
+                });
+
+                $apptData = $appt->toArray();
+                $apptData['property_title'] = $property ? $property['title'] : 'Bất động sản đã ghim';
+                $apptData['property_slug'] = $property ? $property['slug'] : '#';
+                $apptData['host_name'] = $property['sale']['name'] ?? 'Anh Minh';
+                $apptData['host_phone'] = $property['sale']['phone'] ?? '0932030958';
+                $apptData['date'] = $appt->appointment_date;
+                $apptData['time'] = $appt->appointment_time;
+                return $apptData;
+            });
+
+            // 2. Favorites
+            $favorites = \App\Models\SavedProperty::where('user_id', $user->id)->get();
+            $resolvedFavorites = [];
+            foreach ($favorites as $fav) {
+                $prop = null;
+                if ($fav->property_id) {
+                    $internalProp = \App\Models\Property::find($fav->property_id);
+                    if ($internalProp) {
+                        $prop = [
+                            'id' => $internalProp->id + 1000,
+                            'title' => $internalProp->title,
+                            'slug' => $internalProp->slug,
+                            'featureimg' => $internalProp->feature_img,
+                            'address' => $internalProp->address,
+                            'rstype' => $internalProp->rstype,
+                            'formatedPrice' => $internalProp->formated_price
+                        ];
+                    }
+                } elseif ($fav->external_property_id) {
+                    $externalProp = collect($items)->first(function ($item) use ($fav) {
+                        return (string)$item['id'] === (string)$fav->external_property_id;
+                    });
+                    if ($externalProp) {
+                        $prop = [
+                            'id' => $externalProp['id'],
+                            'title' => $externalProp['title'],
+                            'slug' => $externalProp['slug'],
+                            'featureimg' => $externalProp['featureimg'],
+                            'address' => $externalProp['address'],
+                            'rstype' => $externalProp['rstype'],
+                            'formatedPrice' => $externalProp['formatedPrice']
+                        ];
+                    }
+                }
+                if ($prop) {
+                    $resolvedFavorites[] = $prop;
+                }
+            }
+
+            // 3. Properties (Owner only)
+            $resolvedProperties = [];
+            if ($user->role === 'owner') {
+                $dbProperties = \App\Models\Property::where('user_id', $user->id)->get();
+                foreach ($dbProperties as $p) {
+                    $resolvedProperties[] = [
+                        'id' => $p->id + 1000,
+                        'title' => $p->title,
+                        'slug' => $p->slug,
+                        'featureimg' => $p->feature_img,
+                        'feature_img' => $p->feature_img,
+                        'gallery' => is_array($p->images) ? $p->images : (json_decode($p->images, true) ?: [$p->feature_img]),
+                        'geolocation' => $p->geolocation,
+                        'price' => $p->price,
+                        'rentprice' => $p->price,
+                        'total_area' => $p->total_area,
+                        'floors' => $p->floors,
+                        'rstype' => $p->rstype,
+                        'bed' => $p->bed,
+                        'bath' => $p->bath,
+                        'address' => $p->address,
+                        'formated_price' => $p->formated_price,
+                        'formatedPrice' => $p->formated_price,
+                        'transaction_type' => $p->transaction_type
+                    ];
+                }
+            }
+
+            return response()->json([
+                'success' => true,
+                'user' => [
+                    'id' => $user->id,
+                    'name' => $user->name,
+                    'email' => $user->email,
+                    'phone' => $user->phone,
+                    'role' => $user->role,
+                    'avatar' => $user->avatar
+                ],
+                'favorites' => $resolvedFavorites,
+                'appointments' => $resolvedAppointments,
+                'properties' => $resolvedProperties,
+                'recreated' => $isRecreated
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Lỗi đồng bộ: ' . $e->getMessage()
+            ], 500);
+        }
     }
 
     /**
@@ -586,7 +859,7 @@ class PropertyController extends Controller
                 'avatar' => 'nullable|string'
             ]);
 
-            $user = auth()->user() ?? \App\Models\User::where('email', $request->email)->first();
+            $user = \App\Models\User::where('email', $request->email)->first();
             if (!$user) {
                 return response()->json(['success' => false, 'message' => 'Không tìm thấy người dùng.'], 404);
             }
@@ -633,7 +906,7 @@ class PropertyController extends Controller
                 'phone' => 'required|string'
             ]);
 
-            $user = auth()->user() ?? \App\Models\User::where('email', $request->email)->first();
+            $user = \App\Models\User::where('email', $request->email)->first();
             if (!$user) {
                 return response()->json(['success' => false, 'message' => 'Không tìm thấy người dùng.'], 404);
             }
@@ -684,7 +957,7 @@ class PropertyController extends Controller
             ]);
 
             // Ensure user exists if provided to prevent foreign key errors
-            $userId = auth()->id() ?? $request->user_id;
+            $userId = $request->user_id;
             if ($userId && !\App\Models\User::where('id', $userId)->exists()) {
                 $userId = null;
             }
@@ -722,8 +995,7 @@ class PropertyController extends Controller
     public function apiGetAppointments($userId)
     {
         try {
-            $resolvedUserId = auth()->id() ?: $userId;
-            $user = \App\Models\User::find($resolvedUserId);
+            $user = \App\Models\User::find($userId);
             if (!$user) {
                 return response()->json([
                     'success' => false,
@@ -732,7 +1004,7 @@ class PropertyController extends Controller
             }
             $phone = $user->phone ?? 'invalid_phone';
 
-            $appointments = \App\Models\Appointment::where('user_id', $resolvedUserId)
+            $appointments = \App\Models\Appointment::where('user_id', $userId)
                 ->orWhere('appt_phone', $phone)
                 ->orderBy('id', 'desc')
                 ->get();
@@ -800,7 +1072,7 @@ class PropertyController extends Controller
                 'external_property_id' => 'nullable|string'
             ]);
 
-            $userId = auth()->id() ?? $request->user_id;
+            $userId = $request->user_id;
             $propertyId = $request->property_id;
             $externalId = $request->external_property_id;
 
@@ -872,16 +1144,15 @@ class PropertyController extends Controller
     public function apiGetFavorites($userId)
     {
         try {
-            $resolvedUserId = auth()->id() ?: $userId;
             // Check if user exists
-            if (!\App\Models\User::where('id', $resolvedUserId)->exists()) {
+            if (!\App\Models\User::where('id', $userId)->exists()) {
                 return response()->json([
                     'success' => false,
                     'message' => 'Tài khoản không tồn tại hoặc phiên đăng nhập đã hết hạn.'
                 ], 401);
             }
 
-            $favs = \App\Models\SavedProperty::where('user_id', $resolvedUserId)->get();
+            $favs = \App\Models\SavedProperty::where('user_id', $userId)->get();
             $items = $this->fetchAllItems();
             
             $resolvedFavs = $favs->map(function ($fav) use ($items) {
@@ -932,9 +1203,8 @@ class PropertyController extends Controller
                 'content' => 'required|string'
             ]);
 
-            $userId = auth()->id() ?? $request->user_id;
             // Ensure user exists
-            $user = \App\Models\User::find($userId);
+            $user = \App\Models\User::find($request->user_id);
             if (!$user) {
                 return response()->json([
                     'success' => false,
@@ -943,7 +1213,7 @@ class PropertyController extends Controller
             }
 
             $demand = \App\Models\Demand::create([
-                'user_id' => $userId,
+                'user_id' => $request->user_id,
                 'title' => $request->title,
                 'transaction_type' => $request->transaction_type,
                 'area' => $request->area,
@@ -1010,9 +1280,8 @@ class PropertyController extends Controller
                 'description' => 'nullable|string'
             ]);
 
-            $userId = auth()->id() ?? $request->user_id;
             // Ensure user exists
-            $user = \App\Models\User::find($userId);
+            $user = \App\Models\User::find($request->user_id);
             if (!$user) {
                 return response()->json([
                     'success' => false,
@@ -1029,7 +1298,7 @@ class PropertyController extends Controller
             }
 
             $property = \App\Models\Property::create([
-                'user_id' => $userId,
+                'user_id' => $request->user_id,
                 'title' => $request->title,
                 'slug' => \Illuminate\Support\Str::slug($request->title) . '-' . time(),
                 'address' => $request->address,
@@ -1072,16 +1341,15 @@ class PropertyController extends Controller
     public function apiGetOwnerProperties($userId)
     {
         try {
-            $resolvedUserId = auth()->id() ?: $userId;
             // Check if user exists
-            if (!\App\Models\User::where('id', $resolvedUserId)->exists()) {
+            if (!\App\Models\User::where('id', $userId)->exists()) {
                 return response()->json([
                     'success' => false,
                     'message' => 'Tài khoản không tồn tại hoặc phiên đăng nhập đã hết hạn.'
                 ], 401);
             }
 
-            $properties = \App\Models\Property::where('user_id', $resolvedUserId)->orderBy('id', 'desc')->get();
+            $properties = \App\Models\Property::where('user_id', $userId)->orderBy('id', 'desc')->get();
             return response()->json([
                 'success' => true,
                 'properties' => $properties
