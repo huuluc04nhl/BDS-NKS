@@ -994,6 +994,7 @@
                         const idx = this.ownerProperties.findIndex(item => item.id === this.editPropId);
                         if (idx > -1) {
                             this.ownerProperties[idx] = data.property;
+                            this.ownerProperties = [...this.ownerProperties];
                         }
                         localStorage.setItem('nks_owner_properties', JSON.stringify(this.ownerProperties));
                         this.showEditPropertyModal = false;
