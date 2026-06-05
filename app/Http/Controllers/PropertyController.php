@@ -1318,9 +1318,12 @@ class PropertyController extends Controller
                 'is_verified' => true
             ]);
 
+            $propertyArray = $property->toArray();
+            $propertyArray['id'] = $property->id + 1000;
+
             return response()->json([
                 'success' => true,
-                'property' => $property
+                'property' => $propertyArray
             ]);
         } catch (\Illuminate\Validation\ValidationException $e) {
             return response()->json([
@@ -1385,8 +1388,11 @@ class PropertyController extends Controller
                 'description' => 'nullable|string'
             ]);
 
+            // Map the ID back to real DB ID if it is offset by 1000
+            $realDbId = $id > 1000 ? ($id - 1000) : $id;
+
             // Find property
-            $property = \App\Models\Property::find($id);
+            $property = \App\Models\Property::find($realDbId);
             if (!$property) {
                 return response()->json([
                     'success' => false,
@@ -1428,9 +1434,12 @@ class PropertyController extends Controller
                 'description' => $request->description
             ]);
 
+            $propertyArray = $property->toArray();
+            $propertyArray['id'] = $property->id + 1000;
+
             return response()->json([
                 'success' => true,
-                'property' => $property
+                'property' => $propertyArray
             ]);
         } catch (\Illuminate\Validation\ValidationException $e) {
             return response()->json([
@@ -1459,7 +1468,10 @@ class PropertyController extends Controller
                 ], 400);
             }
 
-            $property = \App\Models\Property::find($id);
+            // Map the ID back to real DB ID if it is offset by 1000
+            $realDbId = $id > 1000 ? ($id - 1000) : $id;
+
+            $property = \App\Models\Property::find($realDbId);
             if (!$property) {
                 return response()->json([
                     'success' => false,
