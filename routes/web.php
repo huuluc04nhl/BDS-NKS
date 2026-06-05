@@ -38,6 +38,8 @@ Route::prefix('nks-api')->group(function () {
     
     Route::post('/properties/add', [PropertyController::class, 'apiAddProperty']);
     Route::get('/properties/owner/{userId}', [PropertyController::class, 'apiGetOwnerProperties']);
+    Route::post('/properties/update/{id}', [PropertyController::class, 'apiUpdateProperty']);
+    Route::delete('/properties/delete/{id}', [PropertyController::class, 'apiDeleteProperty']);
 });
 
 // Secure Online Database Migration Trigger for Vercel Serverless

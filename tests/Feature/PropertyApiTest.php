@@ -379,4 +379,73 @@ class PropertyApiTest extends TestCase
             'appointment_date' => '2026-06-15 00:00:00'
         ]);
     }
+
+    /**
+     * Test updating and deleting a property
+     */
+    public function test_property_update_and_delete()
+    {
+        $user = User::factory()->create(['role' => 'owner']);
+        $property = Property::create([
+            'user_id' => $user->id,
+            'title' => 'Original Title',
+            'slug' => 'original-title-123',
+            'address' => '123 Go Vap',
+            'geolocation' => '10.8,106.6',
+            'rstype' => 'Căn hộ',
+            'transaction_type' => 'Cho thuê',
+            'price' => 10000000,
+            'formated_price' => '10 triệu/tháng',
+            'total_area' => 45,
+            'bed' => 1,
+            'bath' => 1,
+            'floors' => 1,
+            'feature_img' => 'http://img.jpg',
+            'is_verified' => true
+        ]);
+
+        // 1. Update property
+        $updateResponse = $this->postJson("/nks-api/properties/update/{$property->id}", [
+            'user_id' => $user->id,
+            'title' => 'Updated Title',
+            'address' => '123 Binh Thanh',
+            'geolocation' => '10.8,106.6',
+            'rstype' => 'Căn hộ',
+            'transaction_type' => 'Cho thuê',
+            'price' => 12000000,
+            'total_area' => 45,
+            'bed' => 1,
+            'bath' => 1,
+            'floors' => 1,
+            'feature_img' => 'http://img.jpg',
+            'description' => 'Updated description'
+        ]);
+
+        $updateResponse->assertStatus(200)
+            ->assertJson([
+                'success' => true,
+                'property' => [
+                    'title' => 'Updated Title',
+                    'address' => '123 Binh Thanh',
+                    'price' => 12000000
+                ]
+            ]);
+
+        $this->assertDatabaseHas('properties', [
+            'id' => $property->id,
+            'title' => 'Updated Title'
+        ]);
+
+        // 2. Delete property
+        $deleteResponse = $this->deleteJson("/nks-api/properties/delete/{$property->id}?user_id={$user->id}");
+
+        $deleteResponse->assertStatus(200)
+            ->assertJson([
+                'success' => true
+            ]);
+
+        $this->assertDatabaseMissing('properties', [
+            'id' => $property->id
+        ]);
+    }
 }

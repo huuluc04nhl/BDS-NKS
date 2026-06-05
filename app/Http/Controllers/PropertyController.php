@@ -1361,4 +1361,130 @@ class PropertyController extends Controller
             ], 500);
         }
     }
+
+    /**
+     * API: Update Owner Property
+     */
+    public function apiUpdateProperty(Request $request, $id)
+    {
+        try {
+            $request->validate([
+                'user_id' => 'required|integer',
+                'title' => 'required|string',
+                'address' => 'required|string',
+                'geolocation' => 'required|string',
+                'rstype' => 'required|string',
+                'transaction_type' => 'required|string|in:Bán,Cho thuê',
+                'price' => 'required|numeric',
+                'total_area' => 'required|numeric',
+                'bed' => 'required|integer',
+                'bath' => 'required|integer',
+                'floors' => 'required|integer',
+                'direction' => 'nullable|string',
+                'feature_img' => 'required|string',
+                'description' => 'nullable|string'
+            ]);
+
+            // Find property
+            $property = \App\Models\Property::find($id);
+            if (!$property) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Không tìm thấy tin đăng.'
+                ], 404);
+            }
+
+            // Ensure the user owns the property
+            if ((int)$property->user_id !== (int)$request->user_id) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Bạn không có quyền sửa tin đăng này.'
+                ], 403);
+            }
+
+            $formattedPrice = $request->price >= 1000000000 
+                ? number_format($request->price / 1000000000, 1, ',', '.') . ' tỷ'
+                : number_format($request->price / 1000000, 0, ',', '.') . ' triệu';
+
+            if ($request->transaction_type === 'Cho thuê') {
+                $formattedPrice .= '/tháng';
+            }
+
+            $property->update([
+                'title' => $request->title,
+                'address' => $request->address,
+                'geolocation' => $request->geolocation,
+                'rstype' => $request->rstype,
+                'transaction_type' => $request->transaction_type,
+                'price' => $request->price,
+                'formated_price' => $formattedPrice,
+                'total_area' => $request->total_area,
+                'bed' => $request->bed,
+                'bath' => $request->bath,
+                'floors' => $request->floors,
+                'direction' => $request->direction,
+                'feature_img' => $request->feature_img,
+                'images' => json_encode([$request->feature_img]),
+                'description' => $request->description
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'property' => $property
+            ]);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => implode(' ', \Illuminate\Support\Arr::flatten($e->errors()))
+            ], 422);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Lỗi CSDL: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * API: Delete Owner Property
+     */
+    public function apiDeleteProperty(Request $request, $id)
+    {
+        try {
+            $userId = $request->query('user_id') ?: $request->input('user_id');
+            if (!$userId) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Thiếu thông tin người dùng.'
+                ], 400);
+            }
+
+            $property = \App\Models\Property::find($id);
+            if (!$property) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Không tìm thấy tin đăng.'
+                ], 404);
+            }
+
+            if ((int)$property->user_id !== (int)$userId) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Bạn không có quyền xóa tin đăng này.'
+                ], 403);
+            }
+
+            $property->delete();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Đã xóa tin đăng thành công.'
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Lỗi CSDL: ' . $e->getMessage()
+            ], 500);
+        }
+    }
 }

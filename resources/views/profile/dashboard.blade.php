@@ -285,7 +285,21 @@
                                             </div>
                                             <div class="flex justify-between items-center border-t border-slate-200/50 mt-4 pt-3">
                                                 <p class="text-base font-extrabold text-primary" x-text="item.formated_price || item.formatedPrice"></p>
-                                                <a :href="'/properties/' + item.slug" class="text-xs font-bold text-slate-500 hover:text-primary transition-colors">Xem chi tiết &rarr;</a>
+                                                <div class="flex items-center gap-2">
+                                                    <a :href="'/properties/' + item.slug" class="text-xs font-bold text-slate-500 hover:text-primary transition-colors mr-1">Chi tiết</a>
+                                                    <!-- Edit Button -->
+                                                    <button @click="openEditModal(item)" class="w-7.5 h-7.5 rounded-full bg-white text-slate-500 hover:bg-blue-50 hover:text-blue-600 flex items-center justify-center border border-slate-200/60 shadow-xs transition-all duration-200 active:scale-95" title="Sửa tin đăng">
+                                                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                                        </svg>
+                                                    </button>
+                                                    <!-- Delete Button -->
+                                                    <button @click="deleteProperty(item.id)" class="w-7.5 h-7.5 rounded-full bg-white text-slate-500 hover:bg-red-50 hover:text-red-600 flex items-center justify-center border border-slate-200/60 shadow-xs transition-all duration-200 active:scale-95" title="Xóa tin đăng">
+                                                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                                        </svg>
+                                                    </button>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
@@ -567,7 +581,136 @@
                     </div>
 
                     <button type="submit" class="w-full bg-primary hover:bg-primary-dark text-white font-extrabold py-4 rounded-xl shadow-md shadow-primary/20 hover:shadow-lg transition-all hover:scale-[1.01] active:scale-95 text-xs uppercase tracking-wider">
-                        Đăng tin ngay
+                                                        Đăng tin ngay
+                                                    </button>
+                                                </form>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+    <!-- EDIT PROPERTY MODAL OVERLAY -->
+    <div x-show="showEditPropertyModal" 
+         x-transition:enter="transition ease-out duration-300"
+         x-transition:enter-start="opacity-0"
+         x-transition:enter-end="opacity-100"
+         x-transition:leave="transition ease-in duration-200"
+         x-transition:leave-start="opacity-100"
+         x-transition:leave-end="opacity-0"
+         class="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm"
+         style="display: none;"
+         x-cloak>
+        
+        <div @click.away="showEditPropertyModal = false" 
+             x-show="showEditPropertyModal"
+             x-transition:enter="transition ease-out duration-300 transform"
+             x-transition:enter-start="opacity-0 scale-95 translate-y-4"
+             x-transition:enter-end="opacity-100 scale-100 translate-y-0"
+             x-transition:leave="transition ease-in duration-200 transform"
+             x-transition:leave-start="opacity-100 scale-100 translate-y-0"
+             x-transition:leave-end="opacity-0 scale-95 translate-y-4"
+             class="bg-white rounded-[32px] shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-hidden border border-slate-100 flex flex-col relative">
+            
+            <button @click="showEditPropertyModal = false" class="absolute top-4 right-4 z-50 w-9 h-9 rounded-full bg-white/95 hover:bg-white text-slate-500 hover:text-slate-800 shadow-md flex items-center justify-center transition-all active:scale-95 border border-slate-100">
+                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+            </button>
+
+            <div class="p-6 sm:p-8 overflow-y-auto space-y-6">
+                <div>
+                    <h2 class="text-xl font-black text-slate-900 leading-snug">Chỉnh sửa tin đăng</h2>
+                    <p class="text-xs text-slate-400">Cập nhật thông số chính xác để xác thực 3 Thật và lưu trực tuyến.</p>
+                </div>
+
+                <form @submit.prevent="updateProperty()" class="space-y-4">
+                    <!-- Title -->
+                    <div>
+                        <label class="block text-[10px] font-black text-slate-400 uppercase tracking-wider mb-1.5">Tiêu đề tin đăng *</label>
+                        <input type="text" x-model="editPropTitle" required placeholder="Ví dụ: Căn hộ Studio view sông..." class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-3 text-xs font-semibold focus:outline-none focus:border-primary focus:bg-white transition-all text-slate-700">
+                    </div>
+
+                    <!-- Address & GPS -->
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-[10px] font-black text-slate-400 uppercase tracking-wider mb-1.5">Địa chỉ chi tiết *</label>
+                            <input type="text" x-model="editPropAddress" required placeholder="Ví dụ: 123 Nguyễn Huệ..." class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-3 text-xs font-semibold focus:outline-none focus:border-primary focus:bg-white transition-all text-slate-700">
+                        </div>
+                        <div>
+                            <label class="block text-[10px] font-black text-slate-400 uppercase tracking-wider mb-1.5">Tọa độ GPS (Lat, Lng) *</label>
+                            <input type="text" x-model="editPropGeolocation" required placeholder="10.7932,106.6710" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-3 text-xs font-semibold focus:outline-none focus:border-primary focus:bg-white transition-all text-slate-700">
+                        </div>
+                    </div>
+
+                    <!-- Type, TxType, Price, Area -->
+                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                        <div>
+                            <label class="block text-[10px] font-black text-slate-400 uppercase tracking-wider mb-1.5">Loại hình</label>
+                            <select x-model="editPropType" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-3 text-xs font-semibold focus:outline-none focus:border-primary focus:bg-white text-slate-700">
+                                <option value="Căn hộ">Căn hộ</option>
+                                <option value="Nhà phố">Nhà phố</option>
+                                <option value="Biệt thự">Biệt thự</option>
+                                <option value="Phòng trọ">Phòng trọ</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-[10px] font-black text-slate-400 uppercase tracking-wider mb-1.5">Loại tin</label>
+                            <select x-model="editPropTxType" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-3 text-xs font-semibold focus:outline-none focus:border-primary focus:bg-white text-slate-700">
+                                <option value="Cho thuê">Cho thuê</option>
+                                <option value="Bán">Bán</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-[10px] font-black text-slate-400 uppercase tracking-wider mb-1.5">Giá (VND) *</label>
+                            <input type="number" x-model="editPropPrice" required placeholder="Ví dụ: 12000000" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-3 text-xs font-semibold focus:outline-none focus:border-primary focus:bg-white transition-all text-slate-700">
+                        </div>
+                        <div>
+                            <label class="block text-[10px] font-black text-slate-400 uppercase tracking-wider mb-1.5">Diện tích (m²) *</label>
+                            <input type="number" step="0.1" x-model="editPropArea" required placeholder="45.0" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-3 text-xs font-semibold focus:outline-none focus:border-primary focus:bg-white transition-all text-slate-700">
+                        </div>
+                    </div>
+
+                    <!-- Bed, Bath, Floors, Direction -->
+                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                        <div>
+                            <label class="block text-[10px] font-black text-slate-400 uppercase tracking-wider mb-1.5">Phòng ngủ</label>
+                            <input type="number" x-model="editPropBed" required class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-3 text-xs font-semibold focus:outline-none focus:border-primary focus:bg-white text-slate-700">
+                        </div>
+                        <div>
+                            <label class="block text-[10px] font-black text-slate-400 uppercase tracking-wider mb-1.5">Phòng tắm</label>
+                            <input type="number" x-model="editPropBath" required class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-3 text-xs font-semibold focus:outline-none focus:border-primary focus:bg-white text-slate-700">
+                        </div>
+                        <div>
+                            <label class="block text-[10px] font-black text-slate-400 uppercase tracking-wider mb-1.5">Số tầng</label>
+                            <input type="number" x-model="editPropFloors" required class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-3 text-xs font-semibold focus:outline-none focus:border-primary focus:bg-white text-slate-700">
+                        </div>
+                        <div>
+                            <label class="block text-[10px] font-black text-slate-400 uppercase tracking-wider mb-1.5">Hướng nhà</label>
+                            <select x-model="editPropDirection" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-3 text-xs font-semibold focus:outline-none focus:border-primary focus:bg-white text-slate-700">
+                                <option value="Đông">Đông</option>
+                                <option value="Tây">Tây</option>
+                                <option value="Nam">Nam</option>
+                                <option value="Bắc">Bắc</option>
+                                <option value="Đông Bắc">Đông Bắc</option>
+                                <option value="Đông Nam">Đông Nam</option>
+                                <option value="Tây Bắc">Tây Bắc</option>
+                                <option value="Tây Nam">Tây Nam</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Feature Image Link -->
+                    <div>
+                        <label class="block text-[10px] font-black text-slate-400 uppercase tracking-wider mb-1.5">Ảnh đại diện (Link ảnh) *</label>
+                        <input type="url" x-model="editPropFeatureImg" required class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-3 text-xs font-semibold focus:outline-none focus:border-primary focus:bg-white transition-all text-slate-700">
+                    </div>
+
+                    <!-- Description -->
+                    <div>
+                        <label class="block text-[10px] font-black text-slate-400 uppercase tracking-wider mb-1.5">Mô tả bất động sản</label>
+                        <textarea rows="3" x-model="editPropDesc" placeholder="Mô tả các tiện ích đi kèm, khu vực lân cận..." class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-3 text-xs font-semibold focus:outline-none focus:border-primary focus:bg-white transition-all text-slate-700"></textarea>
+                    </div>
+
+                    <button type="submit" class="w-full bg-primary hover:bg-primary-dark text-white font-extrabold py-4 rounded-xl shadow-md shadow-primary/20 hover:shadow-lg transition-all hover:scale-[1.01] active:scale-95 text-xs uppercase tracking-wider">
+                        Lưu thay đổi
                     </button>
                 </form>
             </div>
@@ -614,6 +757,23 @@
             newPropDirection: 'Đông',
             newPropFeatureImg: 'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?auto=format&fit=crop&q=80&w=800',
             newPropDesc: '',
+            
+            // Edit Property Form Modal State
+            showEditPropertyModal: false,
+            editPropId: null,
+            editPropTitle: '',
+            editPropAddress: '',
+            editPropGeolocation: '',
+            editPropType: 'Căn hộ',
+            editPropTxType: 'Cho thuê',
+            editPropPrice: '',
+            editPropArea: '',
+            editPropBed: 1,
+            editPropBath: 1,
+            editPropFloors: 1,
+            editPropDirection: 'Đông',
+            editPropFeatureImg: '',
+            editPropDesc: '',
             
             init() {
                 const urlParams = new URLSearchParams(window.location.search);
@@ -773,6 +933,102 @@
                     } else {
                         const err = await res.json();
                         alert(err.message || 'Đăng tin không thành công.');
+                    }
+                } catch (e) {
+                    alert('Lỗi kết nối máy chủ CSDL.');
+                }
+            },
+
+            openEditModal(item) {
+                this.editPropId = item.id;
+                this.editPropTitle = item.title;
+                this.editPropAddress = item.address;
+                this.editPropGeolocation = item.geolocation;
+                this.editPropType = item.rstype;
+                this.editPropTxType = item.transaction_type;
+                this.editPropPrice = item.price;
+                this.editPropArea = item.total_area;
+                this.editPropBed = item.bed;
+                this.editPropBath = item.bath;
+                this.editPropFloors = item.floors;
+                this.editPropDirection = item.direction || 'Đông';
+                this.editPropFeatureImg = item.feature_img || item.featureimg;
+                this.editPropDesc = item.description || '';
+                this.showEditPropertyModal = true;
+            },
+
+            async updateProperty() {
+                if (!this.editPropTitle || !this.editPropAddress || !this.editPropPrice || !this.editPropArea) {
+                    alert('Vui lòng điền đầy đủ thông tin bắt buộc.');
+                    return;
+                }
+
+                try {
+                    const res = await fetch(`/nks-api/properties/update/${this.editPropId}`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Accept': 'application/json',
+                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                        },
+                        body: JSON.stringify({
+                            user_id: this.user.id,
+                            title: this.editPropTitle,
+                            address: this.editPropAddress,
+                            geolocation: this.editPropGeolocation,
+                            rstype: this.editPropType,
+                            transaction_type: this.editPropTxType,
+                            price: parseFloat(this.editPropPrice),
+                            total_area: parseFloat(this.editPropArea),
+                            bed: parseInt(this.editPropBed),
+                            bath: parseInt(this.editPropBath),
+                            floors: parseInt(this.editPropFloors),
+                            direction: this.editPropDirection,
+                            feature_img: this.editPropFeatureImg,
+                            description: this.editPropDesc
+                        })
+                    });
+
+                    if (res.ok) {
+                        const data = await res.json();
+                        const idx = this.ownerProperties.findIndex(item => item.id === this.editPropId);
+                        if (idx > -1) {
+                            this.ownerProperties[idx] = data.property;
+                        }
+                        localStorage.setItem('nks_owner_properties', JSON.stringify(this.ownerProperties));
+                        this.showEditPropertyModal = false;
+                        alert('Cập nhật tin đăng thành công! Các thay đổi đã được áp dụng.');
+                    } else {
+                        const err = await res.json();
+                        alert(err.message || 'Cập nhật tin đăng không thành công.');
+                    }
+                } catch (e) {
+                    alert('Lỗi kết nối máy chủ CSDL.');
+                }
+            },
+
+            async deleteProperty(id) {
+                if (!confirm('Bạn có chắc chắn muốn xóa tin đăng này? Thao tác này không thể hoàn tác.')) {
+                    return;
+                }
+
+                try {
+                    const res = await fetch(`/nks-api/properties/delete/${id}?user_id=${this.user.id}`, {
+                        method: 'DELETE',
+                        headers: {
+                            'Accept': 'application/json',
+                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                        }
+                    });
+
+                    if (res.ok) {
+                        const data = await res.json();
+                        this.ownerProperties = this.ownerProperties.filter(item => item.id !== id);
+                        localStorage.setItem('nks_owner_properties', JSON.stringify(this.ownerProperties));
+                        alert('Xóa tin đăng thành công!');
+                    } else {
+                        const err = await res.json();
+                        alert(err.message || 'Xóa tin đăng không thành công.');
                     }
                 } catch (e) {
                     alert('Lỗi kết nối máy chủ CSDL.');
