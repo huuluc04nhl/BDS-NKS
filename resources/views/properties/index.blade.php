@@ -317,82 +317,87 @@
                     </div>
 
                     <!-- Right Section: Host & Booking Form (lg:col-span-5) -->
-                    <div class="lg:col-span-5 p-6 sm:p-8 bg-slate-50/40 space-y-6 flex flex-col justify-between">
-                        
-                        <!-- Contact Host info -->
-                        <div class="space-y-4">
-                            <div class="flex justify-between items-center pb-2.5 border-b border-slate-200/40">
-                                <h3 class="text-xs font-black text-slate-800 uppercase tracking-wider">Thông tin liên hệ</h3>
-                                <div class="flex gap-2">
-                                    <!-- Share Button -->
-                                    <button @click.stop="openShare('{{ url('/properties') }}/' + selectedProperty.slug, selectedProperty.title)" 
-                                            class="w-7.5 h-7.5 rounded-full bg-white text-slate-500 hover:bg-slate-100 hover:text-primary flex items-center justify-center shadow-xs border border-slate-200/40 transition-all duration-200 active:scale-95">
-                                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2">
-                                            <path stroke-linecap="round" stroke-linejoin="round" d="M8.684 10.742l4.622-2.311m0 0a3 3 0 10-2.667-1.772a3 3 0 002.667 1.772zm0 6.518l-4.623-2.311a3 3 0 11-2.667-1.772a3 3 0 012.667 1.772zm1.144 0a3 3 0 112.667 1.772a3 3 0 01-2.667-1.772z" />
-                                        </svg>
-                                    </button>
-                                    <!-- Favorite Button -->
-                                    <button @click.stop="toggleFav(selectedProperty)" 
-                                            class="w-7.5 h-7.5 rounded-full flex items-center justify-center shadow-xs border border-slate-200/40 transition-all duration-200 active:scale-95"
-                                            :class="isFav(selectedProperty.id) ? 'bg-red-500 text-white border-transparent animate-heart-pop' : 'bg-white text-slate-500 hover:bg-slate-100 hover:text-red-500'">
-                                        <svg class="w-4.5 h-4.5" :fill="isFav(selectedProperty.id) ? 'currentColor' : 'none'" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2"><path stroke-linecap="round" stroke-linejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" /></svg>
-                                    </button>
-                                </div>
-                            </div>
+                    <div class="lg:col-span-5 p-6 sm:p-8 bg-slate-50/40 relative">
+                        <div class="bg-white rounded-3xl p-6 border border-slate-100 shadow-sm space-y-6 lg:sticky lg:top-6 h-fit">
                             
-                            <!-- Host details -->
-                            <div class="flex items-center gap-3.5 bg-white p-3 rounded-2xl border border-slate-200/40 shadow-sm">
-                                <div class="w-11 h-11 rounded-full border border-slate-100 overflow-hidden bg-slate-50 flex-shrink-0">
-                                    <img :src="selectedProperty?.sale?.avatar" alt="Host Avatar" class="w-full h-full object-cover">
+                            <!-- Contact Host info -->
+                            <div class="space-y-4">
+                                <div class="flex justify-between items-center pb-2.5 border-b border-slate-100">
+                                    <h3 class="text-xs font-black text-slate-800 uppercase tracking-wider">Thông tin liên hệ</h3>
+                                    <div class="flex gap-2">
+                                        <!-- Share Button -->
+                                        <button @click.stop="openShare('{{ url('/properties') }}/' + selectedProperty.slug, selectedProperty.title)" 
+                                                class="w-7.5 h-7.5 rounded-full bg-white text-slate-500 hover:bg-slate-100 hover:text-primary flex items-center justify-center shadow-xs border border-slate-200/40 transition-all duration-200 active:scale-95">
+                                            <svg class="w-4.5 h-4.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2">
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="M8.684 10.742l4.622-2.311m0 0a3 3 0 10-2.667-1.772a3 3 0 002.667 1.772zm0 6.518l-4.623-2.311a3 3 0 11-2.667-1.772a3 3 0 012.667 1.772zm1.144 0a3 3 0 112.667 1.772a3 3 0 01-2.667-1.772z" />
+                                            </svg>
+                                        </button>
+                                        <!-- Favorite Button -->
+                                        <button @click.stop="toggleFav(selectedProperty)" 
+                                                class="w-7.5 h-7.5 rounded-full flex items-center justify-center shadow-xs border border-slate-200/40 transition-all duration-200 active:scale-95"
+                                                :class="isFav(selectedProperty.id) ? 'bg-red-500 text-white border-transparent animate-heart-pop' : 'bg-white text-slate-500 hover:bg-slate-100 hover:text-red-500'">
+                                            <svg class="w-4.5 h-4.5" :fill="isFav(selectedProperty.id) ? 'currentColor' : 'none'" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2"><path stroke-linecap="round" stroke-linejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" /></svg>
+                                        </button>
+                                    </div>
                                 </div>
-                                <div class="overflow-hidden">
-                                    <h4 class="font-extrabold text-xs text-slate-800 truncate" x-text="selectedProperty?.sale?.name"></h4>
-                                    <p class="text-[9px] text-slate-400 font-bold uppercase tracking-wide">Chủ nhà chính chủ</p>
+                                
+                                <!-- Host details -->
+                                <div class="flex items-center gap-3.5 bg-slate-50/70 p-3 rounded-2xl border border-slate-100">
+                                    <div class="w-11 h-11 rounded-full border border-slate-100 overflow-hidden bg-white flex-shrink-0">
+                                        <img :src="selectedProperty?.sale?.avatar" alt="Host Avatar" class="w-full h-full object-cover">
+                                    </div>
+                                    <div class="overflow-hidden">
+                                        <h4 class="font-extrabold text-xs text-slate-800 truncate" x-text="selectedProperty?.sale?.name"></h4>
+                                        <p class="text-[9px] text-slate-400 font-bold uppercase tracking-wide">Chủ nhà chính chủ</p>
+                                    </div>
                                 </div>
-                            </div>
 
-                            <!-- Phone & Zalo CTAs -->
-                            <div class="grid grid-cols-2 gap-3">
-                                <a :href="'tel:' + selectedProperty?.sale?.phone" class="bg-primary text-white font-extrabold text-xs py-3 rounded-2xl shadow-sm btn-hover-premium text-center flex items-center justify-center gap-1.5">
-                                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.94.725l.548 2.2a1 1 0 01-.321.988l-1.305.98a10.582 10.582 0 004.872 4.872l.98-1.305a1 1 0 01.988-.321l2.2.548a1 1 0 01.725.94V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" /></svg>
-                                    Gọi điện
-                                </a>
-                                <a :href="'https://zalo.me/' + selectedProperty?.sale?.phone" target="_blank" class="bg-white border border-slate-200 text-primary font-extrabold text-xs py-3 rounded-2xl shadow-xs btn-hover-premium text-center flex items-center justify-center gap-1.5">
-                                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" /></svg>
-                                    Nhắn Zalo
-                                </a>
-                            </div>
-                        </div>
-
-                        <!-- Scheduler Form -->
-                        <div class="space-y-4 pt-4 border-t border-slate-200/40">
-                            <h4 class="text-xs font-black text-slate-800 uppercase tracking-wider">Đặt lịch hẹn xem nhà</h4>
-                            
-                            <!-- Success Message Alert -->
-                            <div x-show="isApptSuccess" class="bg-green-50 border border-green-200 text-green-800 p-4 rounded-2xl text-xs text-center space-y-1">
-                                <p class="font-bold">Đặt lịch xem thành công!</p>
-                                <p class="text-slate-500">Đang chuyển hướng đến danh sách lịch hẹn...</p>
-                            </div>
-
-                            <form @submit.prevent="bookAppointment()" x-show="!isApptSuccess" class="space-y-3.5">
+                                <!-- Phone & Zalo CTAs -->
                                 <div class="grid grid-cols-2 gap-3">
-                                    <div>
-                                        <label class="block text-[8px] font-black text-slate-400 uppercase tracking-wider mb-1">Ngày hẹn</label>
-                                        <input type="date" x-model="apptDate" required class="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs font-semibold focus:outline-none focus:border-primary text-slate-700">
-                                    </div>
-                                    <div>
-                                        <label class="block text-[8px] font-black text-slate-400 uppercase tracking-wider mb-1">Giờ hẹn</label>
-                                        <input type="time" x-model="apptTime" required class="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs font-semibold focus:outline-none focus:border-primary text-slate-700">
-                                    </div>
+                                    <a :href="'tel:' + selectedProperty?.sale?.phone" class="bg-primary text-white font-extrabold text-xs py-3 rounded-2xl shadow-sm btn-hover-premium text-center flex items-center justify-center gap-1.5">
+                                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.94.725l.548 2.2a1 1 0 01-.321.988l-1.305.98a10.582 10.582 0 004.872 4.872l.98-1.305a1 1 0 01.988-.321l2.2.548a1 1 0 01.725.94V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" /></svg>
+                                        Gọi điện
+                                    </a>
+                                    <a :href="'https://zalo.me/' + selectedProperty?.sale?.phone" target="_blank" class="bg-white border border-slate-200 text-primary font-extrabold text-xs py-3 rounded-2xl shadow-xs btn-hover-premium text-center flex items-center justify-center gap-1.5">
+                                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" /></svg>
+                                        Nhắn Zalo
+                                    </a>
                                 </div>
-                                <div class="space-y-2">
-                                    <input type="text" x-model="apptName" placeholder="Họ và tên của bạn" required class="w-full bg-white border border-slate-200 rounded-xl px-3 py-2.5 text-xs font-semibold focus:outline-none focus:border-primary">
-                                    <input type="tel" x-model="apptPhone" placeholder="Số điện thoại của bạn" required class="w-full bg-white border border-slate-200 rounded-xl px-3 py-2.5 text-xs font-semibold focus:outline-none focus:border-primary">
+                            </div>
+
+                            <hr class="border-slate-100">
+
+                            <!-- Scheduler Form -->
+                            <div class="space-y-4">
+                                <h4 class="text-xs font-black text-slate-800 uppercase tracking-wider">Đặt lịch hẹn xem nhà</h4>
+                                
+                                <!-- Success Message Alert -->
+                                <div x-show="isApptSuccess" class="bg-green-50 border border-green-200 text-green-800 p-4 rounded-2xl text-xs text-center space-y-1">
+                                    <p class="font-bold">Đặt lịch xem thành công!</p>
+                                    <p class="text-slate-500">Đang chuyển hướng đến danh sách lịch hẹn...</p>
                                 </div>
-                                <button type="submit" class="w-full bg-primary text-white font-extrabold py-3.5 rounded-2xl text-xs shadow-md btn-hover-premium">
-                                    Gửi yêu cầu đặt lịch hẹn
-                                </button>
-                            </form>
+
+                                <form @submit.prevent="bookAppointment()" x-show="!isApptSuccess" class="space-y-3.5">
+                                    <div class="grid grid-cols-2 gap-3">
+                                        <div>
+                                            <label class="block text-[8px] font-black text-slate-400 uppercase tracking-wider mb-1">Ngày hẹn</label>
+                                            <input type="date" x-model="apptDate" required class="w-full bg-slate-50 border border-slate-200/50 rounded-xl px-3 py-2 text-xs font-semibold focus:outline-none focus:border-primary focus:bg-white transition-all text-slate-700">
+                                        </div>
+                                        <div>
+                                            <label class="block text-[8px] font-black text-slate-400 uppercase tracking-wider mb-1">Giờ hẹn</label>
+                                            <input type="time" x-model="apptTime" required class="w-full bg-slate-50 border border-slate-200/50 rounded-xl px-3 py-2 text-xs font-semibold focus:outline-none focus:border-primary focus:bg-white transition-all text-slate-700">
+                                        </div>
+                                    </div>
+                                    <div class="space-y-2">
+                                        <input type="text" x-model="apptName" placeholder="Họ và tên của bạn" required class="w-full bg-slate-50 border border-slate-200/50 rounded-xl px-3 py-2.5 text-xs font-semibold focus:outline-none focus:border-primary focus:bg-white transition-all">
+                                        <input type="tel" x-model="apptPhone" placeholder="Số điện thoại của bạn" required class="w-full bg-slate-50 border border-slate-200/50 rounded-xl px-3 py-2.5 text-xs font-semibold focus:outline-none focus:border-primary focus:bg-white transition-all">
+                                    </div>
+                                    <button type="submit" class="w-full bg-primary text-white font-extrabold py-3.5 rounded-2xl text-xs shadow-md btn-hover-premium">
+                                        Gửi yêu cầu đặt lịch hẹn
+                                    </button>
+                                </form>
+                            </div>
+
                         </div>
 
                     </div>
