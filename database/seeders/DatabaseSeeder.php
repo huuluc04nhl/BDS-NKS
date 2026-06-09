@@ -16,7 +16,7 @@ class DatabaseSeeder extends Seeder
     public function run(): void
     {
         // 1. Seed Users
-        $admin = User::firstOrCreate(
+        $admin = User::updateOrCreate(
             ['email' => 'admin@nks.vn'],
             [
                 'name' => 'NKS Admin',
@@ -25,7 +25,7 @@ class DatabaseSeeder extends Seeder
             ]
         );
 
-        $user1 = User::firstOrCreate(
+        $user1 = User::updateOrCreate(
             ['email' => 'duyphan@example.com'],
             [
                 'name' => 'Duy Phan',
@@ -34,7 +34,7 @@ class DatabaseSeeder extends Seeder
             ]
         );
 
-        $user2 = User::firstOrCreate(
+        $user2 = User::updateOrCreate(
             ['email' => 'quocanh@example.com'],
             [
                 'name' => 'Quốc Anh',
@@ -43,7 +43,7 @@ class DatabaseSeeder extends Seeder
             ]
         );
 
-        $user3 = User::firstOrCreate(
+        $user3 = User::updateOrCreate(
             ['email' => 'thanhthao@example.com'],
             [
                 'name' => 'Thanh Thảo',
