@@ -44,7 +44,6 @@ Route::prefix('nks-api')->group(function () {
     // Admin User Management routes
     Route::get('/admin/users', [PropertyController::class, 'apiAdminGetUsers']);
     Route::post('/admin/users/create', [PropertyController::class, 'apiAdminCreateUser']);
-    Route::post('/admin/users/update/{id}', [PropertyController::class, 'apiAdminUpdateUser']);
     Route::post('/admin/users/toggle-status/{id}', [PropertyController::class, 'apiAdminToggleUserStatus']);
     Route::delete('/admin/users/delete/{id}', [PropertyController::class, 'apiAdminDeleteUser']);
 

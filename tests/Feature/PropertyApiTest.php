@@ -470,39 +470,6 @@ class PropertyApiTest extends TestCase
             ->assertJsonFragment(['email' => 'renter@nks.vn'])
             ->assertJsonFragment(['email' => $admin->email]);
 
-        // 3. Try to update renter details as renter (should return 403)
-        $updateRenterResponse = $this->postJson("/nks-api/admin/users/update/{$renter->id}", [
-            'admin_id' => $renter->id,
-            'name' => 'Should Fail',
-            'email' => 'renter@nks.vn',
-            'role' => 'owner'
-        ]);
-        $updateRenterResponse->assertStatus(403);
-
-        // 4. Update renter details as admin (should return 200)
-        $updateAdminResponse = $this->postJson("/nks-api/admin/users/update/{$renter->id}", [
-            'admin_id' => $admin->id,
-            'name' => 'Upgraded Renter',
-            'email' => 'renter@nks.vn',
-            'phone' => '0999999999',
-            'role' => 'owner'
-        ]);
-        $updateAdminResponse->assertStatus(200)
-            ->assertJson([
-                'success' => true,
-                'user' => [
-                    'name' => 'Upgraded Renter',
-                    'role' => 'owner',
-                    'phone' => '0999999999'
-                ]
-            ]);
-
-        $this->assertDatabaseHas('users', [
-            'id' => $renter->id,
-            'role' => 'owner',
-            'name' => 'Upgraded Renter'
-        ]);
-
         // 5. Try to delete own account as admin (should return 400)
         $deleteSelfResponse = $this->deleteJson("/nks-api/admin/users/delete/{$admin->id}?admin_id={$admin->id}");
         $deleteSelfResponse->assertStatus(400);

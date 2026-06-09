@@ -452,9 +452,6 @@
                                                          <button @click="viewUserDetails(u)" class="w-8 h-8 rounded-full bg-white text-slate-500 hover:bg-slate-50 hover:text-slate-700 flex items-center justify-center border border-slate-200/60 shadow-xs transition-all active:scale-95" title="Chi tiết hoạt động">
                                                              <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
                                                          </button>
-                                                         <button @click="openEditUserModal(u)" class="w-8 h-8 rounded-full bg-white text-slate-500 hover:bg-blue-50 hover:text-blue-600 flex items-center justify-center border border-slate-200/60 shadow-xs transition-all active:scale-95" title="Sửa thông tin">
-                                                             <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
-                                                         </button>
                                                          <button @click="toggleUserStatus(u.id)" 
                                                                  :disabled="parseInt(u.id) === parseInt(user.id)"
                                                                  :class="parseInt(u.id) === parseInt(user.id) ? 'opacity-35 cursor-not-allowed' : (u.status === 'blocked' ? 'hover:bg-green-50 hover:text-green-600 text-slate-400' : 'hover:bg-red-50 hover:text-red-600 text-slate-400')"
@@ -894,70 +891,7 @@
         </div>
     </div>
 
-    <!-- EDIT USER MODAL OVERLAY (Admin Only) -->
-    <div x-show="showEditUserModal" 
-         x-transition:enter="transition ease-out duration-300"
-         x-transition:enter-start="opacity-0"
-         x-transition:enter-end="opacity-100"
-         x-transition:leave="transition ease-in duration-200"
-         x-transition:leave-start="opacity-100"
-         x-transition:leave-end="opacity-0"
-         class="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm"
-         style="display: none;"
-         x-cloak>
-        
-        <div @click.away="showEditUserModal = false" 
-             x-show="showEditUserModal"
-             x-transition:enter="transition ease-out duration-300 transform"
-             x-transition:enter-start="opacity-0 scale-95 translate-y-4"
-             x-transition:enter-end="opacity-100 scale-100 translate-y-0"
-             x-transition:leave="transition ease-in duration-200 transform"
-             x-transition:leave-start="opacity-100 scale-100 translate-y-0"
-             x-transition:leave-end="opacity-0 scale-95 translate-y-4"
-             class="bg-white rounded-[32px] shadow-2xl max-w-md w-full overflow-hidden border border-slate-100 flex flex-col relative">
-            
-            <button @click="showEditUserModal = false" class="absolute top-4 right-4 z-50 w-9 h-9 rounded-full bg-white/95 hover:bg-white text-slate-500 hover:text-slate-800 shadow-md flex items-center justify-center transition-all active:scale-95 border border-slate-100">
-                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
-            </button>
 
-            <div class="p-6 sm:p-8 space-y-6">
-                <div>
-                    <h2 class="text-xl font-black text-slate-900 leading-snug">Chỉnh sửa thành viên</h2>
-                    <p class="text-xs text-slate-400">Thay đổi thông tin hồ sơ và phân quyền thành viên hệ thống.</p>
-                </div>
-
-                <form @submit.prevent="updateUser()" class="space-y-4">
-                    <!-- Name -->
-                    <div>
-                        <label class="block text-[10px] font-black text-slate-400 uppercase tracking-wider mb-1.5">Tên hiển thị *</label>
-                        <input type="text" x-model="editUserForm.name" required class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-3 text-xs font-semibold focus:outline-none focus:border-primary focus:bg-white transition-all text-slate-700">
-                    </div>
-
-                    <!-- Email -->
-                    <div>
-                        <label class="block text-[10px] font-black text-slate-400 uppercase tracking-wider mb-1.5">Địa chỉ Email *</label>
-                        <input type="email" x-model="editUserForm.email" required class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-3 text-xs font-semibold focus:outline-none focus:border-primary focus:bg-white transition-all text-slate-700">
-                    </div>
-
-                    <!-- Phone -->
-                    <div>
-                        <label class="block text-[10px] font-black text-slate-400 uppercase tracking-wider mb-1.5">Số điện thoại</label>
-                        <input type="text" x-model="editUserForm.phone" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-3 text-xs font-semibold focus:outline-none focus:border-primary focus:bg-white transition-all text-slate-700">
-                    </div>
-
-                    <!-- Role -->
-                    <div>
-                        <label class="block text-[10px] font-black text-slate-400 uppercase tracking-wider mb-1.5">Vai trò hệ thống *</label>
-                        <select x-model="editUserForm.role" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-3 text-xs font-semibold focus:outline-none focus:border-primary focus:bg-white text-slate-700">
-                            <option value="renter">Khách thuê</option>
-                            <option value="owner">Chủ nhà</option>
-                            <option value="admin">Quản trị viên</option>
-                        </select>
-                    </div>
-
-                    </div>
-        </div>
-    </div>
 
     <!-- ADD USER MODAL OVERLAY (Admin Only) -->
     <div x-show="showAddUserModal" 
@@ -1216,8 +1150,6 @@
             // Admin User Management State
             allUsers: [],
             userSearchQuery: '',
-            showEditUserModal: false,
-            editUserForm: { id: null, name: '', email: '', phone: '', role: '', status: 'active' },
             isLoadingUsers: false,
             
             // New Modals State
@@ -1826,70 +1758,7 @@
                 }
             },
 
-            openEditUserModal(u) {
-                this.editUserForm = {
-                    id: u.id,
-                    name: u.name,
-                    email: u.email,
-                    phone: u.phone || '',
-                    role: u.role,
-                    status: u.status || 'active'
-                };
-                this.showEditUserModal = true;
-            },
 
-            async updateUser() {
-                if (!this.editUserForm.name || !this.editUserForm.email) {
-                    alert('Vui lòng điền đầy đủ Tên hiển thị và Địa chỉ Email.');
-                    return;
-                }
-                try {
-                    const res = await fetch(`/nks-api/admin/users/update/${this.editUserForm.id}`, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'Accept': 'application/json',
-                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-                        },
-                        body: JSON.stringify({
-                            admin_id: this.user.id,
-                            name: this.editUserForm.name,
-                            email: this.editUserForm.email,
-                            phone: this.editUserForm.phone,
-                            role: this.editUserForm.role,
-                            status: this.editUserForm.status
-                        })
-                    });
-                    if (res.ok) {
-                        const data = await res.json();
-                        
-                        // Update in local state reactively
-                        const idx = this.allUsers.findIndex(u => u.id === this.editUserForm.id);
-                        if (idx > -1) {
-                            this.allUsers.splice(idx, 1, data.user);
-                            this.allUsers = [...this.allUsers];
-                        }
-                        
-                        // If current admin updated their own profile, sync local user info
-                        if (parseInt(this.editUserForm.id) === parseInt(this.user.id)) {
-                            this.user = data.user;
-                            localStorage.setItem('nks_user', JSON.stringify(this.user));
-                            this.nameInput = this.user.name;
-                            this.phoneInput = this.user.phone || '';
-                            this.avatarInput = this.user.avatar || '';
-                            window.dispatchEvent(new CustomEvent('nks-login-change'));
-                        }
-
-                        this.showEditUserModal = false;
-                        alert('Cập nhật thành viên thành công!');
-                    } else {
-                        const err = await res.json();
-                        alert(err.message || 'Lỗi cập nhật thành viên.');
-                    }
-                } catch (e) {
-                    alert('Lỗi kết nối máy chủ CSDL.');
-                }
-            },
 
             async deleteUser(id) {
                 if (parseInt(id) === parseInt(this.user.id)) {
