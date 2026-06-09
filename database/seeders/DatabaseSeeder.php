@@ -16,26 +16,41 @@ class DatabaseSeeder extends Seeder
     public function run(): void
     {
         // 1. Seed Users
-        $user1 = User::create([
-            'name' => 'Duy Phan',
-            'email' => 'duyphan@example.com',
-            'password' => bcrypt('123456'),
-            'role' => 'renter'
-        ]);
+        $admin = User::firstOrCreate(
+            ['email' => 'admin@nks.vn'],
+            [
+                'name' => 'NKS Admin',
+                'password' => bcrypt('admin123'),
+                'role' => 'admin'
+            ]
+        );
 
-        $user2 = User::create([
-            'name' => 'Quốc Anh',
-            'email' => 'quocanh@example.com',
-            'password' => bcrypt('123456'),
-            'role' => 'renter'
-        ]);
+        $user1 = User::firstOrCreate(
+            ['email' => 'duyphan@example.com'],
+            [
+                'name' => 'Duy Phan',
+                'password' => bcrypt('123456'),
+                'role' => 'renter'
+            ]
+        );
 
-        $user3 = User::create([
-            'name' => 'Thanh Thảo',
-            'email' => 'thanhthao@example.com',
-            'password' => bcrypt('123456'),
-            'role' => 'renter'
-        ]);
+        $user2 = User::firstOrCreate(
+            ['email' => 'quocanh@example.com'],
+            [
+                'name' => 'Quốc Anh',
+                'password' => bcrypt('123456'),
+                'role' => 'renter'
+            ]
+        );
+
+        $user3 = User::firstOrCreate(
+            ['email' => 'thanhthao@example.com'],
+            [
+                'name' => 'Thanh Thảo',
+                'password' => bcrypt('123456'),
+                'role' => 'renter'
+            ]
+        );
 
         // 2. Seed Demands (Nhu cầu)
         Demand::create([
