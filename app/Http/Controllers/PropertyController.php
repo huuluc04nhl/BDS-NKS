@@ -1499,4 +1499,149 @@ class PropertyController extends Controller
             ], 500);
         }
     }
+
+    /**
+     * API: Admin Get All Users
+     */
+    public function apiAdminGetUsers(Request $request)
+    {
+        try {
+            $adminId = $request->query('admin_id');
+            $admin = \App\Models\User::find($adminId);
+            if (!$admin || $admin->role !== 'admin') {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Bạn không có quyền truy cập chức năng này.'
+                ], 403);
+            }
+
+            $users = \App\Models\User::orderBy('id', 'desc')->get();
+            return response()->json([
+                'success' => true,
+                'users' => $users
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Lỗi CSDL: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * API: Admin Update User details
+     */
+    public function apiAdminUpdateUser(Request $request, $id)
+    {
+        try {
+            $request->validate([
+                'admin_id' => 'required|integer',
+                'name' => 'required|string',
+                'email' => 'required|string|email',
+                'phone' => 'nullable|string',
+                'role' => 'required|string|in:renter,owner,admin'
+            ]);
+
+            $admin = \App\Models\User::find($request->admin_id);
+            if (!$admin || $admin->role !== 'admin') {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Bạn không có quyền thực hiện chức năng này.'
+                ], 403);
+            }
+
+            $user = \App\Models\User::find($id);
+            if (!$user) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Thành viên không tồn tại.'
+                ], 404);
+            }
+
+            // Check email unique except this user
+            $emailExists = \App\Models\User::where('email', $request->email)
+                ->where('id', '!=', $id)
+                ->exists();
+            if ($emailExists) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Địa chỉ email đã được sử dụng bởi thành viên khác.'
+                ], 422);
+            }
+
+            $user->update([
+                'name' => $request->name,
+                'email' => $request->email,
+                'phone' => $request->phone,
+                'role' => $request->role
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'user' => $user
+            ]);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => implode(' ', \Illuminate\Support\Arr::flatten($e->errors()))
+            ], 422);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Lỗi CSDL: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * API: Admin Delete User
+     */
+    public function apiAdminDeleteUser(Request $request, $id)
+    {
+        try {
+            $adminId = $request->query('admin_id') ?: $request->input('admin_id');
+            if (!$adminId) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Thiếu mã người dùng quản trị.'
+                ], 400);
+            }
+
+            $admin = \App\Models\User::find($adminId);
+            if (!$admin || $admin->role !== 'admin') {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Bạn không có quyền thực hiện chức năng này.'
+                ], 403);
+            }
+
+            $user = \App\Models\User::find($id);
+            if (!$user) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Thành viên không tồn tại.'
+                ], 404);
+            }
+
+            if ((int)$user->id === (int)$adminId) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Bạn không thể tự xóa tài khoản của chính mình.'
+                ], 400);
+            }
+
+            // Delete the user and all database dependencies cascade-style
+            $user->delete();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Đã xóa thành viên thành công.'
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Lỗi CSDL: ' . $e->getMessage()
+            ], 500);
+        }
+    }
 }

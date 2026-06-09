@@ -40,6 +40,11 @@ Route::prefix('nks-api')->group(function () {
     Route::get('/properties/owner/{userId}', [PropertyController::class, 'apiGetOwnerProperties']);
     Route::post('/properties/update/{id}', [PropertyController::class, 'apiUpdateProperty']);
     Route::delete('/properties/delete/{id}', [PropertyController::class, 'apiDeleteProperty']);
+    
+    // Admin User Management routes
+    Route::get('/admin/users', [PropertyController::class, 'apiAdminGetUsers']);
+    Route::post('/admin/users/update/{id}', [PropertyController::class, 'apiAdminUpdateUser']);
+    Route::delete('/admin/users/delete/{id}', [PropertyController::class, 'apiAdminDeleteUser']);
 });
 
 // Secure Online Database Migration Trigger for Vercel Serverless

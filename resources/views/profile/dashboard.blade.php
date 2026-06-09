@@ -21,8 +21,8 @@
                             <h3 class="text-lg font-bold text-slate-800" x-text="user ? user.name : ''"></h3>
                             <p class="text-xs text-slate-400 mt-1" x-text="user ? user.email : ''"></p>
                             <span class="inline-flex mt-3 px-3 py-1 rounded-full text-[10px] font-extrabold tracking-wide uppercase"
-                                  :class="user && user.role === 'owner' ? 'bg-primary/10 text-primary' : 'bg-slate-100 text-slate-500'"
-                                  x-text="user && user.role === 'owner' ? 'Chủ nhà chính chủ' : 'Khách thuê'"></span>
+                                  :class="user && user.role === 'admin' ? 'bg-rose-100 text-rose-600 border border-rose-200' : (user && user.role === 'owner' ? 'bg-primary/10 text-primary' : 'bg-slate-100 text-slate-500')"
+                                  x-text="user && user.role === 'admin' ? 'Quản trị viên' : (user && user.role === 'owner' ? 'Chủ nhà chính chủ' : 'Khách thuê')"></span>
                         </div>
                         
                         <!-- Nav Items -->
@@ -56,6 +56,17 @@
                                     <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" /></svg>
                                     Tin đăng chính chủ
                                     <span class="ml-auto bg-slate-100 text-slate-600 px-2 py-0.5 rounded-full text-xs font-bold" :class="activeTab === 'properties' && 'bg-white/20 text-white'" x-text="ownerProperties.length">0</span>
+                                </button>
+                            </template>
+
+                            <!-- Admin Specific Tab -->
+                            <template x-if="user && user.role === 'admin'">
+                                <button @click="activeTab = 'users'; loadAllUsers();" 
+                                        class="w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-sm font-semibold transition-all duration-300"
+                                        :class="activeTab === 'users' ? 'bg-primary text-white shadow-md shadow-primary/20' : 'text-slate-600 hover:bg-slate-50 hover:text-primary'">
+                                    <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" /></svg>
+                                    Quản lý thành viên
+                                    <span class="ml-auto bg-slate-100 text-slate-600 px-2 py-0.5 rounded-full text-xs font-bold" :class="activeTab === 'users' && 'bg-white/20 text-white'" x-text="allUsers.length">0</span>
                                 </button>
                             </template>
                         </div>
@@ -306,6 +317,108 @@
                                 </template>
                             </div>
                         </template>
+                    </div>
+
+                    <!-- TAB: USER MANAGEMENT (Admin Only) -->
+                    <div x-show="activeTab === 'users' && isLoggedIn && user && user.role === 'admin'"
+                         x-transition:enter="transition ease-out duration-300 transform"
+                         x-transition:enter-start="opacity-0 translate-y-4"
+                         x-transition:enter-end="opacity-100 translate-y-0"
+                         x-transition:leave="transition ease-in duration-200 transform"
+                         x-transition:leave-start="opacity-100 translate-y-0"
+                         x-transition:leave-end="opacity-0 translate-y-4"
+                         x-cloak class="space-y-8">
+                         
+                         <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                             <div>
+                                 <h2 class="text-2xl font-extrabold text-slate-800">Quản lý thành viên</h2>
+                                 <p class="text-sm text-slate-400 mt-1">Danh sách thành viên đăng ký và phân quyền hệ thống</p>
+                             </div>
+                             
+                             <!-- Search bar -->
+                             <div class="relative max-w-xs w-full">
+                                 <input type="text" 
+                                        x-model="userSearchQuery" 
+                                        placeholder="Tìm tên, email, sđt..." 
+                                        class="w-full bg-slate-50 border border-slate-200 rounded-full pl-10 pr-4 py-2.5 text-xs font-semibold focus:outline-none focus:border-primary focus:bg-white transition-all text-slate-700">
+                                 <div class="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400">
+                                     <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                         <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                                     </svg>
+                                 </div>
+                             </div>
+                         </div>
+
+                         <!-- Loading State -->
+                         <div x-show="isLoadingUsers" class="text-center py-12 space-y-3">
+                             <div class="inline-block w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
+                             <p class="text-xs text-slate-400">Đang tải danh sách thành viên...</p>
+                         </div>
+
+                         <!-- Users Table -->
+                         <div x-show="!isLoadingUsers" class="bg-white border border-slate-100 rounded-3xl overflow-hidden shadow-sm">
+                             <div class="overflow-x-auto">
+                                 <table class="min-w-full divide-y divide-slate-100">
+                                     <thead>
+                                         <tr class="text-left text-[10px] font-bold text-slate-400 uppercase tracking-wider bg-slate-50/50">
+                                             <th class="px-6 py-4">Thành viên</th>
+                                             <th class="px-6 py-4">Số điện thoại</th>
+                                             <th class="px-6 py-4">Vai trò</th>
+                                             <th class="px-6 py-4">Ngày tham gia</th>
+                                             <th class="px-6 py-4 text-right">Thao tác</th>
+                                         </tr>
+                                     </thead>
+                                     <tbody class="divide-y divide-slate-50 text-sm">
+                                         <template x-for="u in filteredUsers" :key="u.id">
+                                             <tr class="hover:bg-slate-50/30 transition-colors">
+                                                 <td class="px-6 py-4">
+                                                     <div class="flex items-center gap-3">
+                                                         <div class="w-10 h-10 rounded-full overflow-hidden bg-slate-50 border border-slate-100 flex-shrink-0">
+                                                             <img :src="u.avatar ? u.avatar : 'https://api.dicebear.com/7.x/adventurer/svg?seed=' + u.name" alt="Avatar" class="w-full h-full object-cover">
+                                                         </div>
+                                                         <div>
+                                                             <div class="font-bold text-slate-800" x-text="u.name"></div>
+                                                             <div class="text-xs text-slate-400" x-text="u.email"></div>
+                                                         </div>
+                                                     </div>
+                                                 </td>
+                                                 <td class="px-6 py-4 text-slate-600 font-semibold" x-text="u.phone || 'Chưa cập nhật'"></td>
+                                                 <td class="px-6 py-4">
+                                                     <template x-if="u.role === 'admin'">
+                                                         <span class="inline-flex px-2.5 py-1 rounded-full text-[10px] font-extrabold tracking-wider uppercase bg-rose-50 text-rose-600 border border-rose-100">Admin</span>
+                                                     </template>
+                                                     <template x-if="u.role === 'owner'">
+                                                         <span class="inline-flex px-2.5 py-1 rounded-full text-[10px] font-extrabold tracking-wider uppercase bg-emerald-50 text-emerald-600 border border-emerald-100">Chủ nhà</span>
+                                                     </template>
+                                                     <template x-if="u.role === 'renter'">
+                                                         <span class="inline-flex px-2.5 py-1 rounded-full text-[10px] font-extrabold tracking-wider uppercase bg-blue-50 text-blue-600 border border-blue-100">Khách thuê</span>
+                                                     </template>
+                                                 </td>
+                                                 <td class="px-6 py-4 text-xs text-slate-500" x-text="new Date(u.created_at).toLocaleDateString('vi-VN')"></td>
+                                                 <td class="px-6 py-4">
+                                                     <div class="flex items-center justify-end gap-2">
+                                                         <button @click="openEditUserModal(u)" class="w-8 h-8 rounded-full bg-white text-slate-500 hover:bg-blue-50 hover:text-blue-600 flex items-center justify-center border border-slate-200/60 shadow-xs transition-all active:scale-95" title="Sửa thông tin">
+                                                             <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
+                                                         </button>
+                                                         <button @click="deleteUser(u.id)" 
+                                                                 :disabled="parseInt(u.id) === parseInt(user.id)"
+                                                                 :class="parseInt(u.id) === parseInt(user.id) ? 'opacity-35 cursor-not-allowed' : 'hover:bg-red-50 hover:text-red-600'"
+                                                                 class="w-8 h-8 rounded-full bg-white text-slate-500 flex items-center justify-center border border-slate-200/60 shadow-xs transition-all active:scale-95" title="Xóa thành viên">
+                                                             <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                                                         </button>
+                                                     </div>
+                                                 </td>
+                                             </tr>
+                                         </template>
+                                         <template x-if="filteredUsers.length === 0">
+                                             <tr>
+                                                 <td colspan="5" class="px-6 py-12 text-center text-slate-400 text-xs">Không tìm thấy thành viên phù hợp.</td>
+                                             </tr>
+                                         </template>
+                                     </tbody>
+                                 </table>
+                             </div>
+                         </div>
                     </div>
                     
                     <!-- TAB: REGISTER AS OWNER / HOST -->
@@ -716,6 +829,75 @@
             </div>
         </div>
     </div>
+
+    <!-- EDIT USER MODAL OVERLAY (Admin Only) -->
+    <div x-show="showEditUserModal" 
+         x-transition:enter="transition ease-out duration-300"
+         x-transition:enter-start="opacity-0"
+         x-transition:enter-end="opacity-100"
+         x-transition:leave="transition ease-in duration-200"
+         x-transition:leave-start="opacity-100"
+         x-transition:leave-end="opacity-0"
+         class="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm"
+         style="display: none;"
+         x-cloak>
+        
+        <div @click.away="showEditUserModal = false" 
+             x-show="showEditUserModal"
+             x-transition:enter="transition ease-out duration-300 transform"
+             x-transition:enter-start="opacity-0 scale-95 translate-y-4"
+             x-transition:enter-end="opacity-100 scale-100 translate-y-0"
+             x-transition:leave="transition ease-in duration-200 transform"
+             x-transition:leave-start="opacity-100 scale-100 translate-y-0"
+             x-transition:leave-end="opacity-0 scale-95 translate-y-4"
+             class="bg-white rounded-[32px] shadow-2xl max-w-md w-full overflow-hidden border border-slate-100 flex flex-col relative">
+            
+            <button @click="showEditUserModal = false" class="absolute top-4 right-4 z-50 w-9 h-9 rounded-full bg-white/95 hover:bg-white text-slate-500 hover:text-slate-800 shadow-md flex items-center justify-center transition-all active:scale-95 border border-slate-100">
+                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+            </button>
+
+            <div class="p-6 sm:p-8 space-y-6">
+                <div>
+                    <h2 class="text-xl font-black text-slate-900 leading-snug">Chỉnh sửa thành viên</h2>
+                    <p class="text-xs text-slate-400">Thay đổi thông tin hồ sơ và phân quyền thành viên hệ thống.</p>
+                </div>
+
+                <form @submit.prevent="updateUser()" class="space-y-4">
+                    <!-- Name -->
+                    <div>
+                        <label class="block text-[10px] font-black text-slate-400 uppercase tracking-wider mb-1.5">Tên hiển thị *</label>
+                        <input type="text" x-model="editUserForm.name" required class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-3 text-xs font-semibold focus:outline-none focus:border-primary focus:bg-white transition-all text-slate-700">
+                    </div>
+
+                    <!-- Email -->
+                    <div>
+                        <label class="block text-[10px] font-black text-slate-400 uppercase tracking-wider mb-1.5">Địa chỉ Email *</label>
+                        <input type="email" x-model="editUserForm.email" required class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-3 text-xs font-semibold focus:outline-none focus:border-primary focus:bg-white transition-all text-slate-700">
+                    </div>
+
+                    <!-- Phone -->
+                    <div>
+                        <label class="block text-[10px] font-black text-slate-400 uppercase tracking-wider mb-1.5">Số điện thoại</label>
+                        <input type="text" x-model="editUserForm.phone" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-3 text-xs font-semibold focus:outline-none focus:border-primary focus:bg-white transition-all text-slate-700">
+                    </div>
+
+                    <!-- Role -->
+                    <div>
+                        <label class="block text-[10px] font-black text-slate-400 uppercase tracking-wider mb-1.5">Vai trò hệ thống *</label>
+                        <select x-model="editUserForm.role" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-3 text-xs font-semibold focus:outline-none focus:border-primary focus:bg-white text-slate-700">
+                            <option value="renter">Khách thuê</option>
+                            <option value="owner">Chủ nhà</option>
+                            <option value="admin">Quản trị viên</option>
+                        </select>
+                    </div>
+
+                    <button type="submit" class="w-full bg-primary hover:bg-primary-dark text-white font-extrabold py-4 rounded-xl shadow-md shadow-primary/20 hover:shadow-lg transition-all hover:scale-[1.01] active:scale-95 text-xs uppercase tracking-wider">
+                        Lưu thay đổi
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
 </div>
 @endsection
 
@@ -729,6 +911,13 @@
             appointments: [],
             favorites: [],
             ownerProperties: [],
+            
+            // Admin User Management State
+            allUsers: [],
+            userSearchQuery: '',
+            showEditUserModal: false,
+            editUserForm: { id: null, name: '', email: '', phone: '', role: '' },
+            isLoadingUsers: false,
             
             // Edit Profile State
             nameInput: '',
@@ -849,6 +1038,10 @@
                             this.avatarInput = this.user.avatar || '';
 
                             window.dispatchEvent(new CustomEvent('nks-login-change'));
+
+                            if (this.activeTab === 'users' && this.user && this.user.role === 'admin') {
+                                this.loadAllUsers();
+                            }
                         } else if (res.status === 401) {
                             this.handleStaleSession();
                             return;
@@ -1235,6 +1428,132 @@
                 this.favorites = this.favorites.filter(f => f.id !== id);
                 localStorage.setItem('nks_favorites', JSON.stringify(this.favorites));
                 window.dispatchEvent(new CustomEvent('nks-fav-change'));
+            },
+
+            get filteredUsers() {
+                if (!this.userSearchQuery) return this.allUsers;
+                const query = this.userSearchQuery.toLowerCase();
+                return this.allUsers.filter(u => {
+                    const nameMatch = u.name ? u.name.toLowerCase().includes(query) : false;
+                    const emailMatch = u.email ? u.email.toLowerCase().includes(query) : false;
+                    const phoneMatch = u.phone ? u.phone.includes(query) : false;
+                    return nameMatch || emailMatch || phoneMatch;
+                });
+            },
+
+            async loadAllUsers() {
+                if (!this.isLoggedIn || !this.user || this.user.role !== 'admin') return;
+                this.isLoadingUsers = true;
+                try {
+                    const res = await fetch(`/nks-api/admin/users?admin_id=${this.user.id}`, {
+                        method: 'GET',
+                        headers: {
+                            'Accept': 'application/json'
+                        }
+                    });
+                    if (res.ok) {
+                        const data = await res.json();
+                        this.allUsers = data.users || [];
+                    } else {
+                        const err = await res.json();
+                        alert(err.message || 'Lỗi nạp danh sách thành viên.');
+                    }
+                } catch (e) {
+                    console.error('Failed to load users:', e);
+                } finally {
+                    this.isLoadingUsers = false;
+                }
+            },
+
+            openEditUserModal(u) {
+                this.editUserForm = {
+                    id: u.id,
+                    name: u.name,
+                    email: u.email,
+                    phone: u.phone || '',
+                    role: u.role
+                };
+                this.showEditUserModal = true;
+            },
+
+            async updateUser() {
+                if (!this.editUserForm.name || !this.editUserForm.email) {
+                    alert('Vui lòng điền đầy đủ Tên hiển thị và Địa chỉ Email.');
+                    return;
+                }
+                try {
+                    const res = await fetch(`/nks-api/admin/users/update/${this.editUserForm.id}`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Accept': 'application/json',
+                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                        },
+                        body: JSON.stringify({
+                            admin_id: this.user.id,
+                            name: this.editUserForm.name,
+                            email: this.editUserForm.email,
+                            phone: this.editUserForm.phone,
+                            role: this.editUserForm.role
+                        })
+                    });
+                    if (res.ok) {
+                        const data = await res.json();
+                        
+                        // Update in local state reactively
+                        const idx = this.allUsers.findIndex(u => u.id === this.editUserForm.id);
+                        if (idx > -1) {
+                            this.allUsers.splice(idx, 1, data.user);
+                            this.allUsers = [...this.allUsers];
+                        }
+                        
+                        // If current admin updated their own profile, sync local user info
+                        if (parseInt(this.editUserForm.id) === parseInt(this.user.id)) {
+                            this.user = data.user;
+                            localStorage.setItem('nks_user', JSON.stringify(this.user));
+                            this.nameInput = this.user.name;
+                            this.phoneInput = this.user.phone || '';
+                            this.avatarInput = this.user.avatar || '';
+                            window.dispatchEvent(new CustomEvent('nks-login-change'));
+                        }
+
+                        this.showEditUserModal = false;
+                        alert('Cập nhật thành viên thành công!');
+                    } else {
+                        const err = await res.json();
+                        alert(err.message || 'Lỗi cập nhật thành viên.');
+                    }
+                } catch (e) {
+                    alert('Lỗi kết nối máy chủ CSDL.');
+                }
+            },
+
+            async deleteUser(id) {
+                if (parseInt(id) === parseInt(this.user.id)) {
+                    alert('Bạn không thể tự xóa tài khoản của chính mình.');
+                    return;
+                }
+                if (!confirm('Bạn có chắc chắn muốn xóa thành viên này? Toàn bộ dữ liệu tin đăng và lịch hẹn liên quan sẽ bị xóa sạch khỏi hệ thống.')) {
+                    return;
+                }
+                try {
+                    const res = await fetch(`/nks-api/admin/users/delete/${id}?admin_id=${this.user.id}`, {
+                        method: 'DELETE',
+                        headers: {
+                            'Accept': 'application/json',
+                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                        }
+                    });
+                    if (res.ok) {
+                        this.allUsers = this.allUsers.filter(u => u.id !== id);
+                        alert('Đã xóa thành viên thành công.');
+                    } else {
+                        const err = await res.json();
+                        alert(err.message || 'Lỗi xóa thành viên.');
+                    }
+                } catch (e) {
+                    alert('Lỗi kết nối máy chủ CSDL.');
+                }
             }
         }));
     });
