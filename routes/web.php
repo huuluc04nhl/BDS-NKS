@@ -68,7 +68,11 @@ Route::get('/run-migrations-secure-nks', function () {
             }
 
             $command = request()->query('fresh') === 'true' ? 'migrate:fresh' : 'migrate';
-            \Illuminate\Support\Facades\Artisan::call($command, ['--force' => true]);
+            $params = ['--force' => true];
+            if (request()->query('fresh') === 'true' || request()->query('seed') === 'true') {
+                $params['--seed'] = true;
+            }
+            \Illuminate\Support\Facades\Artisan::call($command, $params);
             return response()->json([
                 'success' => true,
                 'command' => $command,
