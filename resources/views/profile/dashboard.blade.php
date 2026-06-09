@@ -48,26 +48,62 @@
                                 <span class="ml-auto bg-slate-100 text-slate-600 px-2 py-0.5 rounded-full text-xs font-bold" :class="activeTab === 'appointments' && 'bg-white/20 text-white'" x-text="appointments.length">0</span>
                             </button>
                             
-                            <!-- Owner Specific Tab -->
-                            <template x-if="user && user.role === 'owner'">
-                                <button @click="activeTab = 'properties'" 
-                                        class="w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-sm font-semibold transition-all duration-300"
-                                        :class="activeTab === 'properties' ? 'bg-primary text-white shadow-md shadow-primary/20' : 'text-slate-600 hover:bg-slate-50 hover:text-primary'">
-                                    <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" /></svg>
-                                    Tin đăng chính chủ
-                                    <span class="ml-auto bg-slate-100 text-slate-600 px-2 py-0.5 rounded-full text-xs font-bold" :class="activeTab === 'properties' && 'bg-white/20 text-white'" x-text="ownerProperties.length">0</span>
-                                </button>
+                            <!-- User Specific Tabs -->
+                            <template x-if="user && user.role !== 'admin'">
+                                <div class="space-y-1">
+                                    <!-- Owner Specific Tab -->
+                                    <template x-if="user.role === 'owner'">
+                                        <button @click="activeTab = 'properties'" 
+                                                class="w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-sm font-semibold transition-all duration-300 mb-1"
+                                                :class="activeTab === 'properties' ? 'bg-primary text-white shadow-md shadow-primary/20' : 'text-slate-600 hover:bg-slate-50 hover:text-primary'">
+                                            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" /></svg>
+                                            Tin đăng chính chủ
+                                            <span class="ml-auto bg-slate-100 text-slate-600 px-2 py-0.5 rounded-full text-xs font-bold" :class="activeTab === 'properties' && 'bg-white/20 text-white'" x-text="ownerProperties.length">0</span>
+                                        </button>
+                                    </template>
+                                    
+                                    <button @click="activeTab = 'emails'; loadEmails();" 
+                                            class="w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-sm font-semibold transition-all duration-300"
+                                            :class="activeTab === 'emails' ? 'bg-primary text-white shadow-md shadow-primary/20' : 'text-slate-600 hover:bg-slate-50 hover:text-primary'">
+                                        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg>
+                                        Hộp thư thông báo
+                                        <span class="ml-auto bg-slate-100 text-slate-600 px-2 py-0.5 rounded-full text-xs font-bold" :class="activeTab === 'emails' && 'bg-white/20 text-white'" x-text="emails.length">0</span>
+                                    </button>
+                                    <button @click="activeTab = 'chat'; startChatPolling();" 
+                                            class="w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-sm font-semibold transition-all duration-300"
+                                            :class="activeTab === 'chat' ? 'bg-primary text-white shadow-md shadow-primary/20' : 'text-slate-600 hover:bg-slate-50 hover:text-primary'">
+                                        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" /></svg>
+                                        Trò chuyện hỗ trợ
+                                        <span class="ml-auto bg-rose-500 text-white px-2 py-0.5 rounded-full text-[10px] font-bold" x-show="unreadChatCount > 0" x-text="unreadChatCount">0</span>
+                                    </button>
+                                </div>
                             </template>
 
-                            <!-- Admin Specific Tab -->
+                            <!-- Admin Specific Tabs -->
                             <template x-if="user && user.role === 'admin'">
-                                <button @click="activeTab = 'users'; loadAllUsers();" 
-                                        class="w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-sm font-semibold transition-all duration-300"
-                                        :class="activeTab === 'users' ? 'bg-primary text-white shadow-md shadow-primary/20' : 'text-slate-600 hover:bg-slate-50 hover:text-primary'">
-                                    <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" /></svg>
-                                    Quản lý thành viên
-                                    <span class="ml-auto bg-slate-100 text-slate-600 px-2 py-0.5 rounded-full text-xs font-bold" :class="activeTab === 'users' && 'bg-white/20 text-white'" x-text="allUsers.length">0</span>
-                                </button>
+                                <div class="space-y-1">
+                                    <button @click="activeTab = 'users'; loadAllUsers();" 
+                                            class="w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-sm font-semibold transition-all duration-300"
+                                            :class="activeTab === 'users' ? 'bg-primary text-white shadow-md shadow-primary/20' : 'text-slate-600 hover:bg-slate-50 hover:text-primary'">
+                                        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" /></svg>
+                                        Quản lý thành viên
+                                        <span class="ml-auto bg-slate-100 text-slate-600 px-2 py-0.5 rounded-full text-xs font-bold" :class="activeTab === 'users' && 'bg-white/20 text-white'" x-text="allUsers.length">0</span>
+                                    </button>
+                                    <button @click="activeTab = 'emails_admin'; loadAdminEmails();" 
+                                            class="w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-sm font-semibold transition-all duration-300"
+                                            :class="activeTab === 'emails_admin' ? 'bg-primary text-white shadow-md shadow-primary/20' : 'text-slate-600 hover:bg-slate-50 hover:text-primary'">
+                                        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" /></svg>
+                                        Nhật ký Email
+                                        <span class="ml-auto bg-slate-100 text-slate-600 px-2 py-0.5 rounded-full text-xs font-bold" :class="activeTab === 'emails_admin' && 'bg-white/20 text-white'" x-text="adminEmails.length">0</span>
+                                    </button>
+                                    <button @click="activeTab = 'chat_admin'; startAdminChatPolling();" 
+                                            class="w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-sm font-semibold transition-all duration-300"
+                                            :class="activeTab === 'chat_admin' ? 'bg-primary text-white shadow-md shadow-primary/20' : 'text-slate-600 hover:bg-slate-50 hover:text-primary'">
+                                        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" /></svg>
+                                        CSKH & Hỗ trợ Chat
+                                        <span class="ml-auto bg-rose-500 text-white px-2 py-0.5 rounded-full text-[10px] font-bold" x-show="adminUnreadChatCount > 0" x-text="adminUnreadChatCount">0</span>
+                                    </button>
+                                </div>
                             </template>
                         </div>
                     </div>
@@ -335,16 +371,23 @@
                                  <p class="text-sm text-slate-400 mt-1">Danh sách thành viên đăng ký và phân quyền hệ thống</p>
                              </div>
                              
-                             <!-- Search bar -->
-                             <div class="relative max-w-xs w-full">
-                                 <input type="text" 
-                                        x-model="userSearchQuery" 
-                                        placeholder="Tìm tên, email, sđt..." 
-                                        class="w-full bg-slate-50 border border-slate-200 rounded-full pl-10 pr-4 py-2.5 text-xs font-semibold focus:outline-none focus:border-primary focus:bg-white transition-all text-slate-700">
-                                 <div class="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400">
-                                     <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                                         <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                                     </svg>
+                             <div class="flex items-center gap-3">
+                                 <!-- Add user button -->
+                                 <button @click="openAddUserModal()" class="bg-primary text-white font-bold text-xs px-4 py-2.5 rounded-full shadow-md btn-hover-premium flex items-center gap-1 whitespace-nowrap">
+                                     <span>Thêm mới +</span>
+                                 </button>
+
+                                 <!-- Search bar -->
+                                 <div class="relative max-w-xs w-full">
+                                     <input type="text" 
+                                            x-model="userSearchQuery" 
+                                            placeholder="Tìm tên, email, sđt..." 
+                                            class="w-full bg-slate-50 border border-slate-200 rounded-full pl-10 pr-4 py-2.5 text-xs font-semibold focus:outline-none focus:border-primary focus:bg-white transition-all text-slate-700">
+                                     <div class="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400">
+                                         <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                             <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                                         </svg>
+                                     </div>
                                  </div>
                              </div>
                          </div>
@@ -364,6 +407,7 @@
                                              <th class="px-6 py-4">Thành viên</th>
                                              <th class="px-6 py-4">Số điện thoại</th>
                                              <th class="px-6 py-4">Vai trò</th>
+                                             <th class="px-6 py-4">Trạng thái</th>
                                              <th class="px-6 py-4">Ngày tham gia</th>
                                              <th class="px-6 py-4 text-right">Thao tác</th>
                                          </tr>
@@ -394,11 +438,31 @@
                                                          <span class="inline-flex px-2.5 py-1 rounded-full text-[10px] font-extrabold tracking-wider uppercase bg-blue-50 text-blue-600 border border-blue-100">Khách thuê</span>
                                                      </template>
                                                  </td>
+                                                 <td class="px-6 py-4">
+                                                     <template x-if="u.status === 'blocked'">
+                                                         <span class="inline-flex px-2.5 py-1 rounded-full text-[10px] font-extrabold tracking-wider uppercase bg-red-50 text-red-600 border border-red-100">Khóa</span>
+                                                     </template>
+                                                     <template x-if="u.status !== 'blocked'">
+                                                         <span class="inline-flex px-2.5 py-1 rounded-full text-[10px] font-extrabold tracking-wider uppercase bg-green-50 text-green-600 border border-green-100">Hoạt động</span>
+                                                     </template>
+                                                 </td>
                                                  <td class="px-6 py-4 text-xs text-slate-500" x-text="new Date(u.created_at).toLocaleDateString('vi-VN')"></td>
                                                  <td class="px-6 py-4">
                                                      <div class="flex items-center justify-end gap-2">
+                                                         <button @click="viewUserDetails(u)" class="w-8 h-8 rounded-full bg-white text-slate-500 hover:bg-slate-50 hover:text-slate-700 flex items-center justify-center border border-slate-200/60 shadow-xs transition-all active:scale-95" title="Chi tiết hoạt động">
+                                                             <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
+                                                         </button>
                                                          <button @click="openEditUserModal(u)" class="w-8 h-8 rounded-full bg-white text-slate-500 hover:bg-blue-50 hover:text-blue-600 flex items-center justify-center border border-slate-200/60 shadow-xs transition-all active:scale-95" title="Sửa thông tin">
                                                              <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
+                                                         </button>
+                                                         <button @click="toggleUserStatus(u.id)" 
+                                                                 :disabled="parseInt(u.id) === parseInt(user.id)"
+                                                                 :class="parseInt(u.id) === parseInt(user.id) ? 'opacity-35 cursor-not-allowed' : (u.status === 'blocked' ? 'hover:bg-green-50 hover:text-green-600 text-slate-400' : 'hover:bg-red-50 hover:text-red-600 text-slate-400')"
+                                                                 class="w-8 h-8 rounded-full bg-white flex items-center justify-center border border-slate-200/60 shadow-xs transition-all active:scale-95" :title="u.status === 'blocked' ? 'Kích hoạt tài khoản' : 'Khóa tài khoản'">
+                                                             <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                                                 <path x-show="u.status !== 'blocked'" stroke-linecap="round" stroke-linejoin="round" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
+                                                                 <path x-show="u.status === 'blocked'" stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                                                             </svg>
                                                          </button>
                                                          <button @click="deleteUser(u.id)" 
                                                                  :disabled="parseInt(u.id) === parseInt(user.id)"
@@ -412,7 +476,7 @@
                                          </template>
                                          <template x-if="filteredUsers.length === 0">
                                              <tr>
-                                                 <td colspan="5" class="px-6 py-12 text-center text-slate-400 text-xs">Không tìm thấy thành viên phù hợp.</td>
+                                                 <td colspan="6" class="px-6 py-12 text-center text-slate-400 text-xs">Không tìm thấy thành viên phù hợp.</td>
                                              </tr>
                                          </template>
                                      </tbody>
@@ -891,10 +955,247 @@
                         </select>
                     </div>
 
+                    </div>
+        </div>
+    </div>
+
+    <!-- ADD USER MODAL OVERLAY (Admin Only) -->
+    <div x-show="showAddUserModal" 
+         x-transition:enter="transition ease-out duration-300"
+         x-transition:enter-start="opacity-0"
+         x-transition:enter-end="opacity-100"
+         x-transition:leave="transition ease-in duration-200"
+         x-transition:leave-start="opacity-100"
+         x-transition:leave-end="opacity-0"
+         class="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm"
+         style="display: none;"
+         x-cloak>
+        
+        <div @click.away="showAddUserModal = false" 
+             x-show="showAddUserModal"
+             x-transition:enter="transition ease-out duration-300 transform"
+             x-transition:enter-start="opacity-0 scale-95 translate-y-4"
+             x-transition:enter-end="opacity-100 scale-100 translate-y-0"
+             x-transition:leave="transition ease-in duration-200 transform"
+             x-transition:leave-start="opacity-100 scale-100 translate-y-0"
+             x-transition:leave-end="opacity-0 scale-95 translate-y-4"
+             class="bg-white rounded-[32px] shadow-2xl max-w-md w-full overflow-hidden border border-slate-100 flex flex-col relative">
+            
+            <button @click="showAddUserModal = false" class="absolute top-4 right-4 z-50 w-9 h-9 rounded-full bg-white/95 hover:bg-white text-slate-500 hover:text-slate-800 shadow-md flex items-center justify-center transition-all active:scale-95 border border-slate-100">
+                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+            </button>
+
+            <div class="p-6 sm:p-8 space-y-6">
+                <div>
+                    <h2 class="text-xl font-black text-slate-900 leading-snug">Thêm thành viên mới</h2>
+                    <p class="text-xs text-slate-400">Khởi tạo tài khoản thành viên hệ thống BDS NKS.</p>
+                </div>
+
+                <form @submit.prevent="addUser()" class="space-y-4">
+                    <!-- Name -->
+                    <div>
+                        <label class="block text-[10px] font-black text-slate-400 uppercase tracking-wider mb-1.5">Tên hiển thị *</label>
+                        <input type="text" x-model="addUserForm.name" required placeholder="Nguyễn Văn A" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-3 text-xs font-semibold focus:outline-none focus:border-primary focus:bg-white transition-all text-slate-700">
+                    </div>
+
+                    <!-- Email -->
+                    <div>
+                        <label class="block text-[10px] font-black text-slate-400 uppercase tracking-wider mb-1.5">Địa chỉ Email *</label>
+                        <input type="email" x-model="addUserForm.email" required placeholder="user@nks.vn" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-3 text-xs font-semibold focus:outline-none focus:border-primary focus:bg-white transition-all text-slate-700">
+                    </div>
+
+                    <!-- Password -->
+                    <div>
+                        <label class="block text-[10px] font-black text-slate-400 uppercase tracking-wider mb-1.5">Mật khẩu khởi tạo *</label>
+                        <input type="password" x-model="addUserForm.password" required placeholder="Mật khẩu từ 6 ký tự" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-3 text-xs font-semibold focus:outline-none focus:border-primary focus:bg-white transition-all text-slate-700">
+                    </div>
+
+                    <!-- Phone -->
+                    <div>
+                        <label class="block text-[10px] font-black text-slate-400 uppercase tracking-wider mb-1.5">Số điện thoại</label>
+                        <input type="text" x-model="addUserForm.phone" placeholder="09xxxxxxxx" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-3 text-xs font-semibold focus:outline-none focus:border-primary focus:bg-white transition-all text-slate-700">
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-4">
+                        <!-- Role -->
+                        <div>
+                            <label class="block text-[10px] font-black text-slate-400 uppercase tracking-wider mb-1.5">Vai trò *</label>
+                            <select x-model="addUserForm.role" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-3 text-xs font-semibold focus:outline-none focus:border-primary focus:bg-white text-slate-700">
+                                <option value="renter">Khách thuê</option>
+                                <option value="owner">Chủ nhà</option>
+                                <option value="admin">Quản trị viên</option>
+                            </select>
+                        </div>
+
+                        <!-- Status -->
+                        <div>
+                            <label class="block text-[10px] font-black text-slate-400 uppercase tracking-wider mb-1.5">Trạng thái *</label>
+                            <select x-model="addUserForm.status" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-3 text-xs font-semibold focus:outline-none focus:border-primary focus:bg-white text-slate-700">
+                                <option value="active">Hoạt động</option>
+                                <option value="blocked">Khóa</option>
+                            </select>
+                        </div>
+                    </div>
+
                     <button type="submit" class="w-full bg-primary hover:bg-primary-dark text-white font-extrabold py-4 rounded-xl shadow-md shadow-primary/20 hover:shadow-lg transition-all hover:scale-[1.01] active:scale-95 text-xs uppercase tracking-wider">
-                        Lưu thay đổi
+                        Tạo tài khoản
                     </button>
                 </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- USER DETAILS MODAL OVERLAY (Admin Only) -->
+    <div x-show="showUserDetailsModal" 
+         x-transition:enter="transition ease-out duration-300"
+         x-transition:enter-start="opacity-0"
+         x-transition:enter-end="opacity-100"
+         x-transition:leave="transition ease-in duration-200"
+         x-transition:leave-start="opacity-100"
+         x-transition:leave-end="opacity-0"
+         class="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm"
+         style="display: none;"
+         x-cloak>
+        
+        <div @click.away="showUserDetailsModal = false" 
+             x-show="showUserDetailsModal"
+             x-transition:enter="transition ease-out duration-300 transform"
+             x-transition:enter-start="opacity-0 scale-95 translate-y-4"
+             x-transition:enter-end="opacity-100 scale-100 translate-y-0"
+             x-transition:leave="transition ease-in duration-200 transform"
+             x-transition:leave-start="opacity-100 scale-100 translate-y-0"
+             x-transition:leave-end="opacity-0 scale-95 translate-y-4"
+             class="bg-white rounded-[32px] shadow-2xl max-w-2xl w-full max-h-[85vh] overflow-hidden border border-slate-100 flex flex-col relative">
+            
+            <button @click="showUserDetailsModal = false" class="absolute top-4 right-4 z-50 w-9 h-9 rounded-full bg-white/95 hover:bg-white text-slate-500 hover:text-slate-800 shadow-md flex items-center justify-center transition-all active:scale-95 border border-slate-100">
+                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+            </button>
+
+            <div class="p-6 sm:p-8 overflow-y-auto space-y-6 flex-grow" x-show="selectedUserDetails">
+                <div class="flex items-center gap-4 border-b border-slate-100 pb-5">
+                    <div class="w-16 h-16 rounded-full overflow-hidden bg-slate-50 border border-slate-100 flex-shrink-0">
+                        <img :src="selectedUserDetails.avatar ? selectedUserDetails.avatar : 'https://api.dicebear.com/7.x/adventurer/svg?seed=' + selectedUserDetails.name" alt="Avatar" class="w-full h-full object-cover">
+                    </div>
+                    <div>
+                        <h2 class="text-xl font-black text-slate-900 leading-snug" x-text="selectedUserDetails.name"></h2>
+                        <p class="text-xs text-slate-400" x-text="selectedUserDetails.email"></p>
+                        <div class="flex gap-2 mt-1.5">
+                            <span class="inline-flex px-2 py-0.5 rounded text-[9px] font-bold uppercase"
+                                  :class="selectedUserDetails.role === 'admin' ? 'bg-rose-50 text-rose-600' : (selectedUserDetails.role === 'owner' ? 'bg-emerald-50 text-emerald-600' : 'bg-blue-50 text-blue-600')"
+                                  x-text="selectedUserDetails.role === 'admin' ? 'Quản trị' : (selectedUserDetails.role === 'owner' ? 'Chủ nhà' : 'Khách thuê')"></span>
+                            <span class="inline-flex px-2 py-0.5 rounded text-[9px] font-bold uppercase"
+                                  :class="selectedUserDetails.status === 'blocked' ? 'bg-red-50 text-red-600' : 'bg-green-50 text-green-600'"
+                                  x-text="selectedUserDetails.status === 'blocked' ? 'Bị khóa' : 'Hoạt động'"></span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- User activity listings -->
+                <div class="space-y-6">
+                    <!-- Bookings -->
+                    <div>
+                        <h3 class="text-xs font-extrabold text-slate-400 uppercase tracking-wider mb-2">Lịch hẹn xem nhà (<span x-text="selectedUserDetails.appointments?.length || 0"></span>)</h3>
+                        <div class="space-y-2 max-h-[150px] overflow-y-auto pr-1">
+                            <template x-for="appt in selectedUserDetails.appointments" :key="appt.id">
+                                <div class="p-3 bg-slate-50 rounded-xl text-xs flex justify-between items-center border border-slate-100">
+                                    <div>
+                                        <p class="font-bold text-slate-700" x-text="appt.appt_name"></p>
+                                        <p class="text-slate-400 text-[10px]" x-text="`${appt.appointment_date} lúc ${appt.appointment_time}`"></p>
+                                    </div>
+                                    <span class="px-2 py-0.5 rounded text-[9px] font-bold bg-green-100 text-green-700" x-text="appt.status"></span>
+                                </div>
+                            </template>
+                            <template x-if="!selectedUserDetails.appointments || selectedUserDetails.appointments.length === 0">
+                                <p class="text-[10px] text-slate-400 italic">Không có lịch hẹn.</p>
+                            </template>
+                        </div>
+                    </div>
+
+                    <!-- Submitted Properties (Owner only) -->
+                    <template x-if="selectedUserDetails.role === 'owner'">
+                        <div>
+                            <h3 class="text-xs font-extrabold text-slate-400 uppercase tracking-wider mb-2">Tin đăng cho thuê (<span x-text="selectedUserDetails.properties?.length || 0"></span>)</h3>
+                            <div class="space-y-2 max-h-[150px] overflow-y-auto pr-1">
+                                <template x-for="prop in selectedUserDetails.properties" :key="prop.id">
+                                    <div class="p-3 bg-slate-50 rounded-xl text-xs flex justify-between items-center border border-slate-100">
+                                        <p class="font-bold text-slate-700 truncate max-w-[80%]" x-text="prop.title"></p>
+                                        <span class="font-bold text-primary" x-text="prop.formated_price || prop.price"></span>
+                                    </div>
+                                </template>
+                                <template x-if="!selectedUserDetails.properties || selectedUserDetails.properties.length === 0">
+                                    <p class="text-[10px] text-slate-400 italic">Không có tin đăng.</p>
+                                </template>
+                            </div>
+                        </div>
+                    </template>
+
+                    <!-- Email logs history for this specific user -->
+                    <div>
+                        <h3 class="text-xs font-extrabold text-slate-400 uppercase tracking-wider mb-2">Lịch sử Email đã nhận (<span x-text="selectedUserDetails.emails?.length || 0"></span>)</h3>
+                        <div class="space-y-2 max-h-[200px] overflow-y-auto pr-1">
+                            <template x-for="email in selectedUserDetails.emails" :key="email.id">
+                                <div class="p-3 bg-slate-50 hover:bg-slate-100 rounded-xl text-xs border border-slate-100 cursor-pointer" @click="openEmailDetail(email)">
+                                    <div class="flex justify-between items-start">
+                                        <p class="font-bold text-slate-700" x-text="email.subject"></p>
+                                        <span class="text-[9px] text-slate-400" x-text="new Date(email.sent_at || email.created_at).toLocaleDateString('vi-VN')"></span>
+                                    </div>
+                                    <p class="text-slate-400 text-[10px] truncate mt-1" x-text="email.body"></p>
+                                </div>
+                            </template>
+                            <template x-if="!selectedUserDetails.emails || selectedUserDetails.emails.length === 0">
+                                <p class="text-[10px] text-slate-400 italic">Không có email được gửi.</p>
+                            </template>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- EMAIL DETAIL MODAL OVERLAY -->
+    <div x-show="showEmailDetailModal" 
+         x-transition:enter="transition ease-out duration-300"
+         x-transition:enter-start="opacity-0"
+         x-transition:enter-end="opacity-100"
+         x-transition:leave="transition ease-in duration-200"
+         x-transition:leave-start="opacity-100"
+         x-transition:leave-end="opacity-0"
+         class="fixed inset-0 z-[120] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm"
+         style="display: none;"
+         x-cloak>
+        
+        <div @click.away="showEmailDetailModal = false" 
+             x-show="showEmailDetailModal"
+             x-transition:enter="transition ease-out duration-300 transform"
+             x-transition:enter-start="opacity-0 scale-95 translate-y-4"
+             x-transition:enter-end="opacity-100 scale-100 translate-y-0"
+             x-transition:leave="transition ease-in duration-200 transform"
+             x-transition:leave-start="opacity-100 scale-100 translate-y-0"
+             x-transition:leave-end="opacity-0 scale-95 translate-y-4"
+             class="bg-white rounded-[32px] shadow-2xl max-w-lg w-full overflow-hidden border border-slate-100 flex flex-col relative"
+             x-show="activeEmailDetail">
+            
+            <button @click="showEmailDetailModal = false" class="absolute top-4 right-4 z-50 w-9 h-9 rounded-full bg-white/95 hover:bg-white text-slate-500 hover:text-slate-800 shadow-md flex items-center justify-center transition-all active:scale-95 border border-slate-100">
+                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+            </button>
+
+            <div class="p-6 sm:p-8 space-y-6" x-show="activeEmailDetail">
+                <div class="border-b border-slate-100 pb-4">
+                    <span class="inline-flex px-2 py-0.5 rounded text-[9px] font-bold uppercase bg-primary/10 text-primary mb-2">Thư Hệ Thống</span>
+                    <h2 class="text-base font-extrabold text-slate-800" x-text="activeEmailDetail.subject"></h2>
+                    <div class="mt-2 text-[10px] text-slate-400 space-y-0.5">
+                        <p x-text="`Người nhận: ${activeEmailDetail.recipient_email}`"></p>
+                        <p x-text="`Thời gian: ${new Date(activeEmailDetail.sent_at || activeEmailDetail.created_at).toLocaleString('vi-VN')}`"></p>
+                    </div>
+                </div>
+
+                <div class="bg-slate-50 rounded-2xl p-5 border border-slate-100/60 max-h-[300px] overflow-y-auto">
+                    <p class="text-xs text-slate-600 whitespace-pre-wrap leading-relaxed" x-text="activeEmailDetail.body"></p>
+                </div>
+
+                <button @click="showEmailDetailModal = false" class="w-full bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold py-3 rounded-full text-xs transition-colors">
+                    Đóng cửa sổ
+                </button>
             </div>
         </div>
     </div>
@@ -916,8 +1217,34 @@
             allUsers: [],
             userSearchQuery: '',
             showEditUserModal: false,
-            editUserForm: { id: null, name: '', email: '', phone: '', role: '' },
+            editUserForm: { id: null, name: '', email: '', phone: '', role: '', status: 'active' },
             isLoadingUsers: false,
+            
+            // New Modals State
+            showAddUserModal: false,
+            addUserForm: { name: '', email: '', password: '', phone: '', role: 'renter', status: 'active' },
+            showUserDetailsModal: false,
+            selectedUserDetails: { name: '', email: '', role: '', status: '', appointments: [], properties: [], emails: [] },
+            
+            // Email Logs State
+            emails: [],
+            isLoadingEmails: false,
+            adminEmails: [],
+            isLoadingAdminEmails: false,
+            activeEmailDetail: {},
+            showEmailDetailModal: false,
+
+            // Support Chat State
+            chatMessages: [],
+            chatInputMessage: '',
+            unreadChatCount: 0,
+            chatPollingInterval: null,
+            conversations: [],
+            adminUnreadChatCount: 0,
+            activeChatClient: null,
+            adminChatMessages: [],
+            adminChatInputMessage: '',
+            adminChatPollingInterval: null,
             
             // Edit Profile State
             nameInput: '',
@@ -978,6 +1305,40 @@
                 });
                 
                 this.loadMockData();
+
+                // Setup watcher for activeTab changes to handle chat polling and loading logs
+                this.$watch('activeTab', (value) => {
+                    this.handleTabChange(value);
+                });
+
+                // Load initial tab data
+                if (tabParam) {
+                    this.handleTabChange(tabParam);
+                }
+            },
+
+            handleTabChange(tab) {
+                // Clear any existing polling intervals to avoid leaks
+                if (this.chatPollingInterval) {
+                    clearInterval(this.chatPollingInterval);
+                    this.chatPollingInterval = null;
+                }
+                if (this.adminChatPollingInterval) {
+                    clearInterval(this.adminChatPollingInterval);
+                    this.adminChatPollingInterval = null;
+                }
+
+                if (tab === 'chat') {
+                    this.startChatPolling();
+                } else if (tab === 'chat_admin') {
+                    this.startAdminChatPolling();
+                } else if (tab === 'emails') {
+                    this.loadEmails();
+                } else if (tab === 'emails_admin') {
+                    this.loadAdminEmails();
+                } else if (tab === 'users') {
+                    this.loadAllUsers();
+                }
             },
             
             checkLogin() {
@@ -1471,7 +1832,8 @@
                     name: u.name,
                     email: u.email,
                     phone: u.phone || '',
-                    role: u.role
+                    role: u.role,
+                    status: u.status || 'active'
                 };
                 this.showEditUserModal = true;
             },
@@ -1494,7 +1856,8 @@
                             name: this.editUserForm.name,
                             email: this.editUserForm.email,
                             phone: this.editUserForm.phone,
-                            role: this.editUserForm.role
+                            role: this.editUserForm.role,
+                            status: this.editUserForm.status
                         })
                     });
                     if (res.ok) {
@@ -1554,6 +1917,283 @@
                 } catch (e) {
                     alert('Lỗi kết nối máy chủ CSDL.');
                 }
+            },
+
+            openAddUserModal() {
+                this.addUserForm = { name: '', email: '', password: '', phone: '', role: 'renter', status: 'active' };
+                this.showAddUserModal = true;
+            },
+
+            async addUser() {
+                try {
+                    const res = await fetch('/nks-api/admin/users/create', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Accept': 'application/json',
+                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                        },
+                        body: JSON.stringify({
+                            admin_id: this.user.id,
+                            name: this.addUserForm.name,
+                            email: this.addUserForm.email,
+                            password: this.addUserForm.password,
+                            phone: this.addUserForm.phone,
+                            role: this.addUserForm.role,
+                            status: this.addUserForm.status
+                        })
+                    });
+                    if (res.ok) {
+                        const data = await res.json();
+                        this.allUsers = [data.user, ...this.allUsers];
+                        this.showAddUserModal = false;
+                        alert('Thêm thành viên mới thành công!');
+                    } else {
+                        const err = await res.json();
+                        alert(err.message || 'Lỗi thêm thành viên.');
+                    }
+                } catch (e) {
+                    alert('Lỗi kết nối máy chủ.');
+                }
+            },
+
+            async toggleUserStatus(id) {
+                try {
+                    const res = await fetch(`/nks-api/admin/users/toggle-status/${id}`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Accept': 'application/json',
+                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                        },
+                        body: JSON.stringify({ admin_id: this.user.id })
+                    });
+                    if (res.ok) {
+                        const data = await res.json();
+                        const idx = this.allUsers.findIndex(u => u.id === id);
+                        if (idx > -1) {
+                            this.allUsers.splice(idx, 1, data.user);
+                            this.allUsers = [...this.allUsers];
+                        }
+                        alert(data.user.status === 'blocked' ? 'Đã khóa tài khoản thành viên.' : 'Đã kích hoạt lại tài khoản thành viên.');
+                    } else {
+                        const err = await res.json();
+                        alert(err.message || 'Lỗi đổi trạng thái tài khoản.');
+                    }
+                } catch (e) {
+                    alert('Lỗi kết nối máy chủ.');
+                }
+            },
+
+            async viewUserDetails(u) {
+                // Filter local state first for instant feel
+                const userAppointments = this.appointments.filter(a => parseInt(a.user_id) === parseInt(u.id));
+                const userProperties = this.ownerProperties.filter(p => parseInt(p.user_id) === parseInt(u.id));
+                
+                // Fetch emails from emails list
+                let userEmails = [];
+                if (this.adminEmails.length > 0) {
+                    userEmails = this.adminEmails.filter(e => parseInt(e.user_id) === parseInt(u.id) || e.recipient_email === u.email);
+                } else {
+                    // Try to load emails if they aren't loaded yet
+                    try {
+                        const res = await fetch(`/nks-api/emails/list?user_id=${this.user.id}`, {
+                            method: 'GET',
+                            headers: { 'Accept': 'application/json' }
+                        });
+                        if (res.ok) {
+                            const data = await res.json();
+                            this.adminEmails = data.logs || [];
+                            userEmails = this.adminEmails.filter(e => parseInt(e.user_id) === parseInt(u.id) || e.recipient_email === u.email);
+                        }
+                    } catch (e) {
+                        console.error('Failed to load user emails details', e);
+                    }
+                }
+
+                this.selectedUserDetails = {
+                    name: u.name,
+                    email: u.email,
+                    role: u.role,
+                    status: u.status,
+                    appointments: userAppointments,
+                    properties: userProperties,
+                    emails: userEmails
+                };
+                this.showUserDetailsModal = true;
+            },
+
+            async loadEmails() {
+                if (!this.isLoggedIn || !this.user) return;
+                this.isLoadingEmails = true;
+                try {
+                    const res = await fetch(`/nks-api/emails/list?user_id=${this.user.id}`, {
+                        method: 'GET',
+                        headers: { 'Accept': 'application/json' }
+                    });
+                    if (res.ok) {
+                        const data = await res.json();
+                        this.emails = data.logs || [];
+                    }
+                } catch (e) {
+                    console.error('Failed to load emails logs', e);
+                } finally {
+                    this.isLoadingEmails = false;
+                }
+            },
+
+            openEmailDetail(email) {
+                this.activeEmailDetail = email;
+                this.showEmailDetailModal = true;
+            },
+
+            async loadAdminEmails() {
+                if (!this.isLoggedIn || !this.user || this.user.role !== 'admin') return;
+                this.isLoadingAdminEmails = true;
+                try {
+                    const res = await fetch(`/nks-api/emails/list?user_id=${this.user.id}`, {
+                        method: 'GET',
+                        headers: { 'Accept': 'application/json' }
+                    });
+                    if (res.ok) {
+                        const data = await res.json();
+                        this.adminEmails = data.logs || [];
+                    }
+                } catch (e) {
+                    console.error('Failed to load system emails', e);
+                } finally {
+                    this.isLoadingAdminEmails = false;
+                }
+            },
+
+            async fetchMessages() {
+                if (!this.isLoggedIn || !this.user) return;
+                try {
+                    const res = await fetch(`/nks-api/chat/history?user_id=${this.user.id}`, {
+                        method: 'GET',
+                        headers: { 'Accept': 'application/json' }
+                    });
+                    if (res.ok) {
+                        const data = await res.json();
+                        this.chatMessages = data.messages || [];
+                        this.$nextTick(() => {
+                            const el = this.$refs.chatMessagesContainer;
+                            if (el) el.scrollTop = el.scrollHeight;
+                        });
+                    }
+                } catch (e) {
+                    console.error('Failed to fetch messages', e);
+                }
+            },
+
+            startChatPolling() {
+                this.fetchMessages();
+                this.chatPollingInterval = setInterval(() => {
+                    this.fetchMessages();
+                }, 5000);
+            },
+
+            async sendChatMessage() {
+                if (!this.chatInputMessage.trim()) return;
+                const body = {
+                    sender_id: this.user.id,
+                    message: this.chatInputMessage
+                };
+                this.chatInputMessage = '';
+                try {
+                    const res = await fetch('/nks-api/chat/send', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Accept': 'application/json',
+                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                        },
+                        body: JSON.stringify(body)
+                    });
+                    if (res.ok) {
+                        this.fetchMessages();
+                    }
+                } catch (e) {
+                    console.error('Failed to send message', e);
+                }
+            },
+
+            async loadConversations() {
+                if (!this.isLoggedIn || !this.user || this.user.role !== 'admin') return;
+                try {
+                    const res = await fetch(`/nks-api/chat/conversations?admin_id=${this.user.id}`, {
+                        method: 'GET',
+                        headers: { 'Accept': 'application/json' }
+                    });
+                    if (res.ok) {
+                        const data = await res.json();
+                        this.conversations = data.conversations || [];
+                    }
+                } catch (e) {
+                    console.error('Failed to load conversations', e);
+                }
+            },
+
+            async fetchAdminClientMessages() {
+                if (!this.activeChatClient) return;
+                try {
+                    const res = await fetch(`/nks-api/chat/history?user_id=${this.user.id}&client_id=${this.activeChatClient.id}`, {
+                        method: 'GET',
+                        headers: { 'Accept': 'application/json' }
+                    });
+                    if (res.ok) {
+                        const data = await res.json();
+                        this.adminChatMessages = data.messages || [];
+                        this.$nextTick(() => {
+                            const el = this.$refs.adminChatContainer;
+                            if (el) el.scrollTop = el.scrollHeight;
+                        });
+                    }
+                } catch (e) {
+                    console.error('Failed to fetch client messages', e);
+                }
+            },
+
+            async selectConversation(client) {
+                this.activeChatClient = client;
+                this.fetchAdminClientMessages();
+            },
+
+            async sendAdminChatMessage() {
+                if (!this.adminChatInputMessage.trim() || !this.activeChatClient) return;
+                const body = {
+                    sender_id: this.user.id,
+                    receiver_id: this.activeChatClient.id,
+                    message: this.adminChatInputMessage
+                };
+                this.adminChatInputMessage = '';
+                try {
+                    const res = await fetch('/nks-api/chat/send', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Accept': 'application/json',
+                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                        },
+                        body: JSON.stringify(body)
+                    });
+                    if (res.ok) {
+                        this.fetchAdminClientMessages();
+                        this.loadConversations();
+                    }
+                } catch (e) {
+                    console.error('Failed to send admin reply', e);
+                }
+            },
+
+            startAdminChatPolling() {
+                this.loadConversations();
+                this.adminChatPollingInterval = setInterval(() => {
+                    this.loadConversations();
+                    if (this.activeChatClient) {
+                        this.fetchAdminClientMessages();
+                    }
+                }, 5000);
             }
         }));
     });

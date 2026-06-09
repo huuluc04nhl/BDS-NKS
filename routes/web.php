@@ -43,8 +43,18 @@ Route::prefix('nks-api')->group(function () {
     
     // Admin User Management routes
     Route::get('/admin/users', [PropertyController::class, 'apiAdminGetUsers']);
+    Route::post('/admin/users/create', [PropertyController::class, 'apiAdminCreateUser']);
     Route::post('/admin/users/update/{id}', [PropertyController::class, 'apiAdminUpdateUser']);
+    Route::post('/admin/users/toggle-status/{id}', [PropertyController::class, 'apiAdminToggleUserStatus']);
     Route::delete('/admin/users/delete/{id}', [PropertyController::class, 'apiAdminDeleteUser']);
+
+    // Chat routes
+    Route::get('/chat/history', [PropertyController::class, 'apiGetChatHistory']);
+    Route::post('/chat/send', [PropertyController::class, 'apiSendChatMessage']);
+    Route::get('/chat/conversations', [PropertyController::class, 'apiGetConversations']);
+
+    // Email routes
+    Route::get('/emails/list', [PropertyController::class, 'apiGetEmailLogs']);
 });
 
 // Secure Online Database Migration Trigger for Vercel Serverless

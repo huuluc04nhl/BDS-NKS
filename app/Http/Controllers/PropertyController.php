@@ -487,8 +487,17 @@ class PropertyController extends Controller
                 'email' => $request->email,
                 'password' => bcrypt($request->password),
                 'role' => $request->role,
+                'status' => 'active',
                 'avatar' => 'https://api.dicebear.com/7.x/adventurer/svg?seed=' . urlencode($request->name)
             ]);
+
+            // Log registration email
+            $this->logSystemEmail(
+                $user->id,
+                $user->email,
+                'Chào mừng bạn đến với BDS NKS - Hệ thống Bất Động Sản Chính Chủ',
+                "Xin chào {$user->name},\n\nTài khoản của bạn đã được đăng ký thành công trên hệ thống BDS NKS.\nVai trò của bạn: " . ($user->role === 'owner' ? 'Chủ nhà chính chủ' : 'Khách thuê tìm nhà') . "\n\nCảm ơn bạn đã lựa chọn dịch vụ của chúng tôi!"
+            );
 
             // Authenticate in Laravel session
             \Illuminate\Support\Facades\Auth::login($user, true);
@@ -501,6 +510,7 @@ class PropertyController extends Controller
                     'email' => $user->email,
                     'phone' => $user->phone,
                     'role' => $user->role,
+                    'status' => $user->status,
                     'avatar' => $user->avatar
                 ]
             ]);
@@ -537,6 +547,13 @@ class PropertyController extends Controller
                 ], 401);
             }
 
+            if ($user->status === 'blocked') {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Tài khoản của bạn đã bị khóa tạm thời. Vui lòng liên hệ quản trị viên.'
+                ], 403);
+            }
+
             // Authenticate in Laravel session
             \Illuminate\Support\Facades\Auth::login($user, true);
 
@@ -548,6 +565,7 @@ class PropertyController extends Controller
                     'email' => $user->email,
                     'phone' => $user->phone,
                     'role' => $user->role,
+                    'status' => $user->status,
                     'avatar' => $user->avatar
                 ]
             ]);
@@ -591,6 +609,14 @@ class PropertyController extends Controller
 
             // Find or silently restore/recreate the user
             $user = \App\Models\User::where('email', $email)->first();
+
+            if ($user && $user->status === 'blocked') {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Tài khoản của bạn đã bị khóa tạm thời. Vui lòng liên hệ quản trị viên.'
+                ], 403);
+            }
+
             $isRecreated = false;
 
             if (!$user) {
@@ -601,6 +627,7 @@ class PropertyController extends Controller
                     'password' => bcrypt('nks_default_pass_2026'), // Safe default password
                     'phone' => $userData['phone'] ?? null,
                     'role' => $userData['role'] ?? 'renter',
+                    'status' => $userData['status'] ?? 'active',
                     'avatar' => $userData['avatar'] ?? 'https://api.dicebear.com/7.x/adventurer/svg?seed=' . urlencode($userData['name'] ?? 'nks')
                 ]);
                 $isRecreated = true;
@@ -610,6 +637,7 @@ class PropertyController extends Controller
                     'name' => $userData['name'] ?? $user->name,
                     'phone' => $userData['phone'] ?? $user->phone,
                     'role' => $userData['role'] ?? $user->role,
+                    'status' => $userData['status'] ?? $user->status,
                     'avatar' => $userData['avatar'] ?? $user->avatar
                 ]);
             }
@@ -971,6 +999,48 @@ class PropertyController extends Controller
                 'appointment_time' => $request->appointment_time,
                 'status' => 'confirmed' // Auto-confirm for interactive feel
             ]);
+
+            // Resolve property & host details for notifications
+            $propertyTitle = 'Bất động sản chính chủ';
+            $hostEmail = 'nks.diaocchinhchu@nks.vn';
+            $hostName = 'Đội ngũ NKS';
+
+            $propId = $request->property_id;
+            $items = $this->fetchAllItems();
+            $property = collect($items)->first(function ($item) use ($propId) {
+                return (string)$item['id'] === (string)$propId;
+            });
+
+            if ($property) {
+                $propertyTitle = $property['title'] ?? $propertyTitle;
+                $hostEmail = $property['email'] ?? $hostEmail;
+                $hostName = $property['sale']['name'] ?? $hostName;
+            }
+
+            // Log email to renter
+            $renterEmail = $request->appt_phone . '@nks-sms.vn';
+            if ($userId) {
+                $u = \App\Models\User::find($userId);
+                if ($u) {
+                    $renterEmail = $u->email;
+                }
+            }
+
+            $this->logSystemEmail(
+                $userId,
+                $renterEmail,
+                'Xác nhận lịch hẹn xem nhà thành công',
+                "Xin chào {$request->appt_name},\n\nLịch hẹn của bạn xem BDS \"{$propertyTitle}\" đã được xác nhận thành công.\nThời gian: {$request->appointment_date} lúc {$request->appointment_time}.\nChủ nhà liên hệ: {$hostName} ({$hostEmail}).\n\nCảm ơn bạn đã sử dụng BDS NKS!"
+            );
+
+            // Log email to host
+            $hostUser = \App\Models\User::where('email', $hostEmail)->first();
+            $this->logSystemEmail(
+                $hostUser ? $hostUser->id : null,
+                $hostEmail,
+                'Yêu cầu lịch hẹn mới cho tin đăng của bạn',
+                "Xin chào {$hostName},\n\nBạn nhận được yêu cầu lịch hẹn xem nhà mới từ khách hàng {$request->appt_name} (SĐT: {$request->appt_phone}).\nBất động sản: \"{$propertyTitle}\"\nThời gian hẹn: {$request->appointment_date} lúc {$request->appointment_time}.\n\nVui lòng chuẩn bị đón tiếp khách hàng."
+            );
 
             return response()->json([
                 'success' => true,
@@ -1642,6 +1712,314 @@ class PropertyController extends Controller
                 'success' => false,
                 'message' => 'Lỗi CSDL: ' . $e->getMessage()
             ], 500);
+        }
+    }
+
+    /**
+     * Helper: Log email to database
+     */
+    protected function logSystemEmail($userId, $recipientEmail, $subject, $body)
+    {
+        try {
+            \App\Models\EmailLog::create([
+                'user_id' => $userId,
+                'recipient_email' => $recipientEmail,
+                'subject' => $subject,
+                'body' => $body,
+                'sent_at' => now()
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Failed to log email: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * API: Admin Create User
+     */
+    public function apiAdminCreateUser(Request $request)
+    {
+        try {
+            $request->validate([
+                'admin_id' => 'required|integer',
+                'name' => 'required|string',
+                'email' => 'required|string|email|unique:users,email',
+                'password' => 'required|string|min:6',
+                'phone' => 'nullable|string',
+                'role' => 'required|string|in:renter,owner,admin',
+                'status' => 'required|string|in:active,blocked'
+            ]);
+
+            $admin = \App\Models\User::find($request->admin_id);
+            if (!$admin || $admin->role !== 'admin') {
+                return response()->json(['success' => false, 'message' => 'Bạn không có quyền thực hiện chức năng này.'], 403);
+            }
+
+            $user = \App\Models\User::create([
+                'name' => $request->name,
+                'email' => $request->email,
+                'password' => bcrypt($request->password),
+                'phone' => $request->phone,
+                'role' => $request->role,
+                'status' => $request->status,
+                'avatar' => 'https://api.dicebear.com/7.x/adventurer/svg?seed=' . urlencode($request->name)
+            ]);
+
+            // Log registration email
+            $this->logSystemEmail(
+                $user->id,
+                $user->email,
+                'Chào mừng bạn đến với BDS NKS - Hệ thống Bất Động Sản Chính Chủ',
+                "Xin chào {$user->name},\n\nTài khoản của bạn đã được khởi tạo bởi quản trị viên hệ thống.\nEmail: {$user->email}\nVai trò: " . ($user->role === 'admin' ? 'Quản trị viên' : ($user->role === 'owner' ? 'Chủ nhà chính chủ' : 'Khách thuê')) . "\n\nChúc bạn có những trải nghiệm tuyệt vời cùng BDS NKS!"
+            );
+
+            return response()->json(['success' => true, 'user' => $user]);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return response()->json(['success' => false, 'message' => implode(' ', \Illuminate\Support\Arr::flatten($e->errors()))], 422);
+        } catch (\Exception $e) {
+            return response()->json(['success' => false, 'message' => 'Lỗi CSDL: ' . $e->getMessage()], 500);
+        }
+    }
+
+    /**
+     * API: Admin Toggle User Status
+     */
+    public function apiAdminToggleUserStatus(Request $request, $id)
+    {
+        try {
+            $adminId = $request->input('admin_id');
+            $admin = \App\Models\User::find($adminId);
+            if (!$admin || $admin->role !== 'admin') {
+                return response()->json(['success' => false, 'message' => 'Bạn không có quyền thực hiện chức năng này.'], 403);
+            }
+
+            $user = \App\Models\User::find($id);
+            if (!$user) {
+                return response()->json(['success' => false, 'message' => 'Thành viên không tồn tại.'], 404);
+            }
+
+            if ((int)$user->id === (int)$adminId) {
+                return response()->json(['success' => false, 'message' => 'Bạn không thể tự khóa tài khoản của chính mình.'], 400);
+            }
+
+            $newStatus = $user->status === 'blocked' ? 'active' : 'blocked';
+            $user->update(['status' => $newStatus]);
+
+            // Log email notification
+            $subject = $newStatus === 'blocked' ? 'Thông báo: Tài khoản của bạn đã bị khóa tạm thời' : 'Thông báo: Tài khoản của bạn đã được kích hoạt lại';
+            $body = $newStatus === 'blocked' 
+                ? "Xin chào {$user->name},\n\nTài khoản của bạn ({$user->email}) đã bị khóa tạm thời bởi quản trị viên BDS NKS do vi phạm chính sách hoặc yêu cầu từ hệ thống. Vui lòng liên hệ hỗ trợ để biết thêm thông tin."
+                : "Xin chào {$user->name},\n\nTài khoản của bạn ({$user->email}) đã được kích hoạt lại thành công. Bạn hiện tại có thể tiếp tục sử dụng tất cả tính năng của BDS NKS.";
+
+            $this->logSystemEmail($user->id, $user->email, $subject, $body);
+
+            return response()->json(['success' => true, 'user' => $user]);
+        } catch (\Exception $e) {
+            return response()->json(['success' => false, 'message' => 'Lỗi CSDL: ' . $e->getMessage()], 500);
+        }
+    }
+
+    /**
+     * API: Get Chat History
+     */
+    public function apiGetChatHistory(Request $request)
+    {
+        try {
+            $request->validate([
+                'user_id' => 'required|integer',
+                'client_id' => 'nullable|integer'
+            ]);
+
+            $user = \App\Models\User::find($request->user_id);
+            if (!$user) {
+                return response()->json(['success' => false, 'message' => 'Người dùng không hợp lệ.'], 404);
+            }
+
+            $admin = \App\Models\User::where('role', 'admin')->first();
+            $adminId = $admin ? $admin->id : 1;
+
+            if ($user->role === 'admin') {
+                $clientId = $request->query('client_id');
+                if (!$clientId) {
+                    return response()->json(['success' => false, 'message' => 'Cần cung cấp mã khách hàng.'], 400);
+                }
+                $messages = \App\Models\Message::where(function ($q) use ($user, $clientId) {
+                    $q->where('sender_id', $user->id)->where('receiver_id', $clientId);
+                })->orWhere(function ($q) use ($user, $clientId) {
+                    $q->where('sender_id', $clientId)->where('receiver_id', $user->id);
+                })->orderBy('created_at', 'asc')->get();
+            } else {
+                $messages = \App\Models\Message::where(function ($q) use ($user, $adminId) {
+                    $q->where('sender_id', $user->id)->where('receiver_id', $adminId);
+                })->orWhere(function ($q) use ($user, $adminId) {
+                    $q->where('sender_id', $adminId)->where('receiver_id', $user->id);
+                })->orderBy('created_at', 'asc')->get();
+            }
+
+            // Mark messages as read
+            \App\Models\Message::where('receiver_id', $user->id)
+                ->where('is_read', false)
+                ->update(['is_read' => true]);
+
+            return response()->json([
+                'success' => true,
+                'messages' => $messages
+            ]);
+        } catch (\Exception $e) {
+            return response()->json(['success' => false, 'message' => 'Lỗi CSDL: ' . $e->getMessage()], 500);
+        }
+    }
+
+    /**
+     * API: Send Chat Message
+     */
+    public function apiSendChatMessage(Request $request)
+    {
+        try {
+            $request->validate([
+                'sender_id' => 'required|integer',
+                'receiver_id' => 'nullable|integer',
+                'message' => 'required|string'
+            ]);
+
+            $sender = \App\Models\User::find($request->sender_id);
+            if (!$sender) {
+                return response()->json(['success' => false, 'message' => 'Người gửi không hợp lệ.'], 404);
+            }
+
+            $admin = \App\Models\User::where('role', 'admin')->first();
+            $adminId = $admin ? $admin->id : 1;
+            $receiverId = $request->receiver_id ?: $adminId;
+
+            // Create message
+            $msg = \App\Models\Message::create([
+                'sender_id' => $sender->id,
+                'receiver_id' => $receiverId,
+                'message' => $request->message,
+                'is_read' => false
+            ]);
+
+            // Email Notification log
+            $receiver = \App\Models\User::find($receiverId);
+            if ($receiver) {
+                $this->logSystemEmail(
+                    $receiver->id,
+                    $receiver->email,
+                    'Tin nhắn hỗ trợ mới từ ' . $sender->name,
+                    "Xin chào {$receiver->name},\n\nBạn nhận được tin nhắn mới từ thành viên {$sender->name} ({$sender->email}):\n\n\"{$request->message}\"\n\nVui lòng truy cập trang Dashboard của BDS NKS để trả lời."
+                );
+            }
+
+            // Auto-chatbot reply for renter/owner support chat to Admin, to make it interactive:
+            if ($sender->role !== 'admin' && $receiverId === $adminId) {
+                // Let's create an auto-reply from Admin
+                \App\Models\Message::create([
+                    'sender_id' => $adminId,
+                    'receiver_id' => $sender->id,
+                    'message' => "Hệ thống NKS: Cảm ơn phản hồi của bạn. Đội ngũ CSKH đã nhận được tin nhắn và sẽ liên hệ hỗ trợ bạn qua SĐT " . ($sender->phone ?: 'đã đăng ký') . " trong vòng 15 phút tới.",
+                    'is_read' => false
+                ]);
+            }
+
+            return response()->json([
+                'success' => true,
+                'message_obj' => $msg
+            ]);
+        } catch (\Exception $e) {
+            return response()->json(['success' => false, 'message' => 'Lỗi CSDL: ' . $e->getMessage()], 500);
+        }
+    }
+
+    /**
+     * API: Get Support Conversations (Admin View)
+     */
+    public function apiGetConversations(Request $request)
+    {
+        try {
+            $adminId = $request->query('admin_id');
+            $admin = \App\Models\User::find($adminId);
+            if (!$admin || $admin->role !== 'admin') {
+                return response()->json(['success' => false, 'message' => 'Bạn không có quyền truy cập.'], 403);
+            }
+
+            // Get all unique users who are NOT admin
+            $userIds = \App\Models\Message::where('sender_id', '!=', $adminId)
+                ->orWhere('receiver_id', '!=', $adminId)
+                ->get()
+                ->flatMap(function($msg) use ($adminId) {
+                    return [$msg->sender_id, $msg->receiver_id];
+                })
+                ->filter(function($id) use ($adminId) {
+                    return $id && (int)$id !== (int)$adminId;
+                })
+                ->unique();
+
+            $conversations = [];
+            foreach ($userIds as $userId) {
+                $user = \App\Models\User::find($userId);
+                if (!$user) continue;
+
+                $lastMsg = \App\Models\Message::where(function($q) use ($adminId, $userId) {
+                    $q->where('sender_id', $adminId)->where('receiver_id', $userId);
+                })->orWhere(function($q) use ($adminId, $userId) {
+                    $q->where('sender_id', $userId)->where('receiver_id', $adminId);
+                })->orderBy('created_at', 'desc')->first();
+
+                $unreadCount = \App\Models\Message::where('sender_id', $userId)
+                    ->where('receiver_id', $adminId)
+                    ->where('is_read', false)
+                    ->count();
+
+                if ($lastMsg) {
+                    $conversations[] = [
+                        'user' => $user,
+                        'last_message' => $lastMsg->message,
+                        'last_time' => $lastMsg->created_at,
+                        'unread_count' => $unreadCount
+                    ];
+                }
+            }
+
+            // Sort by last message time desc
+            usort($conversations, function($a, $b) {
+                return strtotime($b['last_time']) - strtotime($a['last_time']);
+            });
+
+            return response()->json([
+                'success' => true,
+                'conversations' => $conversations
+            ]);
+        } catch (\Exception $e) {
+            return response()->json(['success' => false, 'message' => 'Lỗi CSDL: ' . $e->getMessage()], 500);
+        }
+    }
+
+    /**
+     * API: Get Email Logs
+     */
+    public function apiGetEmailLogs(Request $request)
+    {
+        try {
+            $userId = $request->query('user_id');
+            $user = \App\Models\User::find($userId);
+            if (!$user) {
+                return response()->json(['success' => false, 'message' => 'Người dùng không hợp lệ.'], 404);
+            }
+
+            if ($user->role === 'admin') {
+                $logs = \App\Models\EmailLog::with('user')->orderBy('created_at', 'desc')->get();
+            } else {
+                $logs = \App\Models\EmailLog::where('user_id', $user->id)
+                    ->orWhere('recipient_email', $user->email)
+                    ->orderBy('created_at', 'desc')
+                    ->get();
+            }
+
+            return response()->json([
+                'success' => true,
+                'logs' => $logs
+            ]);
+        } catch (\Exception $e) {
+            return response()->json(['success' => false, 'message' => 'Lỗi CSDL: ' . $e->getMessage()], 500);
         }
     }
 }
