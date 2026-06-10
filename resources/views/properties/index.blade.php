@@ -474,6 +474,21 @@
                 
                 this.$nextTick(() => {
                     this.initMap();
+                    
+                    const focusParam = urlParams.get('focus');
+                    if (focusParam) {
+                        setTimeout(() => {
+                            const p = this.properties.find(item => String(item.id) === String(focusParam));
+                            if (p) {
+                                this.focusProperty(p);
+                                // Scroll card into view
+                                const cardEl = document.getElementById('property-card-' + p.id);
+                                if (cardEl) {
+                                    cardEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                                }
+                            }
+                        }, 800);
+                    }
                 });
 
                 window.openPropertyModal = (id) => {
