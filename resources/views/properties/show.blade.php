@@ -154,7 +154,22 @@
                 <div class="space-y-4">
                     <h3 class="text-base font-bold text-slate-800">Vị trí địa lý chính xác (3 Thật)</h3>
                     <p class="text-xs text-slate-400">Địa chỉ bất động sản được ghim định vị GPS chính xác trên hệ thống bản đồ số MapLibre.</p>
-                    <div class="h-[280px] rounded-3xl overflow-hidden border border-slate-100 shadow-sm relative">
+                    <div class="h-[280px] rounded-3xl overflow-hidden border border-slate-100 shadow-sm relative transition-all duration-500 ease-in-out"
+                         :class="isMapExpanded ? 'h-[500px]' : 'h-[280px]'">
+                        <!-- Expand/Collapse Button -->
+                        <button @click="toggleMapExpansion()" 
+                                class="absolute top-3 left-3 z-10 bg-white/95 hover:bg-white text-slate-700 hover:text-primary font-extrabold text-xs px-3.5 py-2 rounded-2xl shadow-lg border border-slate-100 flex items-center gap-1.5 transition-all duration-200 active:scale-95"
+                                type="button">
+                            <!-- Expand icon when collapsed -->
+                            <svg x-show="!isMapExpanded" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5v-4m0 4h-4m4 0l-5-5" />
+                            </svg>
+                            <!-- Collapse icon when expanded -->
+                            <svg x-show="isMapExpanded" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2" style="display: none;" x-cloak>
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M9 9V4m0 5H4m5 0L3 3m12 6V4m0 5h5m-5 0l6-6M9 15v5m0-5H4m5 0l-6 6m6-6v5m0-5h5m-5 0l6 6" />
+                            </svg>
+                            <span x-text="isMapExpanded ? 'Thu nhỏ bản đồ' : 'Mở rộng bản đồ'"></span>
+                        </button>
                         <div id="property-detail-map" class="w-full h-full"></div>
                     </div>
                 </div>
@@ -263,6 +278,10 @@
             favorites: [],
             appointments: [],
             isFavorite: false,
+            
+            // Map Expansion State
+            isMapExpanded: false,
+            mapInstance: null,
             
             // Form State
             apptDate: '',
@@ -427,7 +446,7 @@
                 const [lat, lng] = geoString.split(',').map(parseFloat);
                 if (isNaN(lat) || isNaN(lng)) return;
                 
-                const map = new maplibregl.Map({
+                this.mapInstance = new maplibregl.Map({
                     container: 'property-detail-map',
                     style: {
                         version: 8,
@@ -455,12 +474,28 @@
                     zoom: 15
                 });
                 
-                map.addControl(new maplibregl.NavigationControl(), 'top-right');
+                this.mapInstance.addControl(new maplibregl.NavigationControl(), 'top-right');
                 
                 // Add Marker
                 new maplibregl.Marker()
                     .setLngLat([lng, lat])
-                    .addTo(map);
+                    .addTo(this.mapInstance);
+            },
+
+            toggleMapExpansion() {
+                this.isMapExpanded = !this.isMapExpanded;
+                this.$nextTick(() => {
+                    if (this.mapInstance) {
+                        this.mapInstance.resize();
+                        const geoString = this.property.geolocation;
+                        if (geoString) {
+                            const [lat, lng] = geoString.split(',').map(parseFloat);
+                            if (!isNaN(lat) && !isNaN(lng)) {
+                                this.mapInstance.panTo([lng, lat], { animate: true });
+                            }
+                        }
+                    }
+                });
             }
         }));
     });
