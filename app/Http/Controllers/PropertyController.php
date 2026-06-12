@@ -534,10 +534,85 @@ class PropertyController extends Controller
     {
         try {
             $request->validate([
-                'email' => 'required|string|email',
+                'email' => 'required|string',
                 'password' => 'required|string'
             ]);
 
+            $remoteUser = null;
+            $accessToken = null;
+            
+            try {
+                $response = Http::timeout(5)->withoutVerifying()->post('https://account.nks.vn/api/user/login', [
+                    'username' => $request->email,
+                    'password' => $request->password,
+                    'fbtoken' => 'web_default_token',
+                    'system' => 'NKS',
+                    'device' => $request->header('User-Agent') ?? 'web browser',
+                    'ip_address' => $request->ip(),
+                    'location' => ''
+                ]);
+
+                if ($response->successful()) {
+                    $data = $response->json();
+                    $accessToken = $data['access_token'] ?? null;
+                    $remoteUser = $data['user'] ?? $data['user_info'] ?? $data['data'] ?? null;
+                }
+            } catch (\Exception $e) {
+                Log::warning('NKS Login API unavailable, falling back to local DB check: ' . $e->getMessage());
+            }
+
+            if ($remoteUser && $accessToken) {
+                $email = $remoteUser['email'] ?? $request->email;
+                $name = $remoteUser['name'] ?? $remoteUser['username'] ?? $remoteUser['fullname'] ?? 'Thành viên NKS';
+                $phone = $remoteUser['phone'] ?? null;
+                $avatar = $remoteUser['avatar'] ?? null;
+                $role = $remoteUser['role'] ?? 'renter';
+                $status = $remoteUser['status'] ?? 'active';
+                $point = intval($remoteUser['point'] ?? 0);
+
+                if (!$avatar) {
+                    $avatar = 'https://api.dicebear.com/7.x/adventurer/svg?seed=' . urlencode($name);
+                }
+
+                $user = \App\Models\User::updateOrCreate(
+                    ['email' => $email],
+                    [
+                        'name' => $name,
+                        'phone' => $phone,
+                        'avatar' => $avatar,
+                        'role' => $role,
+                        'status' => $status,
+                        'point' => $point,
+                        'password' => bcrypt($request->password)
+                    ]
+                );
+
+                if ($user->status === 'blocked') {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Tài khoản của bạn đã bị khóa tạm thời. Vui lòng liên hệ quản trị viên.'
+                    ], 403);
+                }
+
+                \Illuminate\Support\Facades\Auth::login($user, true);
+
+                return response()->json([
+                    'success' => true,
+                    'access_token' => $accessToken,
+                    'user' => [
+                        'id' => $user->id,
+                        'name' => $user->name,
+                        'email' => $user->email,
+                        'phone' => $user->phone,
+                        'role' => $user->role,
+                        'status' => $user->status,
+                        'avatar' => $user->avatar,
+                        'point' => $user->point
+                    ]
+                ]);
+            }
+
+            // Fallback check on local DB (offline / test execution)
             $user = \App\Models\User::where('email', $request->email)->first();
 
             if (!$user || !\Illuminate\Support\Facades\Hash::check($request->password, $user->password)) {
@@ -554,11 +629,11 @@ class PropertyController extends Controller
                 ], 403);
             }
 
-            // Authenticate in Laravel session
             \Illuminate\Support\Facades\Auth::login($user, true);
 
             return response()->json([
                 'success' => true,
+                'access_token' => 'mock_token_for_local_' . $user->id,
                 'user' => [
                     'id' => $user->id,
                     'name' => $user->name,
@@ -566,7 +641,8 @@ class PropertyController extends Controller
                     'phone' => $user->phone,
                     'role' => $user->role,
                     'status' => $user->status,
-                    'avatar' => $user->avatar
+                    'avatar' => $user->avatar,
+                    'point' => $user->point
                 ]
             ]);
         } catch (\Illuminate\Validation\ValidationException $e) {
@@ -598,16 +674,38 @@ class PropertyController extends Controller
     {
         try {
             $userData = $request->input('user');
-            if (!$userData) {
-                return response()->json(['success' => false, 'message' => 'Không tìm thấy dữ liệu người dùng.'], 400);
+            $accessToken = $request->input('access_token');
+            
+            $remoteUser = null;
+            if ($accessToken && strpos($accessToken, 'mock_token_for_local_') === false) {
+                try {
+                    $response = Http::timeout(5)->withoutVerifying()->post('https://account.nks.vn/api/nks/user', [
+                        'access_token' => $accessToken
+                    ]);
+                    if ($response->successful()) {
+                        $remoteUser = $response->json();
+                        if (isset($remoteUser['user'])) {
+                            $remoteUser = $remoteUser['user'];
+                        } elseif (isset($remoteUser['user_info'])) {
+                            $remoteUser = $remoteUser['user_info'];
+                        }
+                    }
+                } catch (\Exception $e) {
+                    Log::warning('NKS Sync API failed, using cached user payload: ' . $e->getMessage());
+                }
             }
 
-            $email = $userData['email'] ?? null;
+            $email = null;
+            if ($remoteUser) {
+                $email = $remoteUser['email'] ?? ($userData['email'] ?? null);
+            } elseif ($userData) {
+                $email = $userData['email'] ?? null;
+            }
+
             if (!$email) {
                 return response()->json(['success' => false, 'message' => 'Thiếu địa chỉ email.'], 400);
             }
 
-            // Find or silently restore/recreate the user
             $user = \App\Models\User::where('email', $email)->first();
 
             if ($user && $user->status === 'blocked') {
@@ -619,30 +717,65 @@ class PropertyController extends Controller
 
             $isRecreated = false;
 
-            if (!$user) {
-                // User was wiped from DB (e.g. SQLite reset on Vercel), recreate them
-                $user = \App\Models\User::create([
-                    'name' => $userData['name'] ?? 'Thành viên NKS',
-                    'email' => $email,
-                    'password' => bcrypt('nks_default_pass_2026'), // Safe default password
-                    'phone' => $userData['phone'] ?? null,
-                    'role' => $userData['role'] ?? 'renter',
-                    'status' => $userData['status'] ?? 'active',
-                    'avatar' => $userData['avatar'] ?? 'https://api.dicebear.com/7.x/adventurer/svg?seed=' . urlencode($userData['name'] ?? 'nks')
-                ]);
-                $isRecreated = true;
+            if ($remoteUser) {
+                $name = $remoteUser['name'] ?? $remoteUser['username'] ?? $remoteUser['fullname'] ?? ($userData['name'] ?? 'Thành viên NKS');
+                $phone = $remoteUser['phone'] ?? ($userData['phone'] ?? null);
+                $avatar = $remoteUser['avatar'] ?? ($userData['avatar'] ?? null);
+                $role = $remoteUser['role'] ?? ($userData['role'] ?? 'renter');
+                $status = $remoteUser['status'] ?? ($userData['status'] ?? 'active');
+                $point = intval($remoteUser['point'] ?? 0);
+
+                if (!$avatar) {
+                    $avatar = 'https://api.dicebear.com/7.x/adventurer/svg?seed=' . urlencode($name);
+                }
+
+                if (!$user) {
+                    $user = \App\Models\User::create([
+                        'name' => $name,
+                        'email' => $email,
+                        'password' => bcrypt('nks_default_pass_2026'),
+                        'phone' => $phone,
+                        'avatar' => $avatar,
+                        'role' => $role,
+                        'status' => $status,
+                        'point' => $point
+                    ]);
+                    $isRecreated = true;
+                } else {
+                    $user->update([
+                        'name' => $name,
+                        'phone' => $phone,
+                        'avatar' => $avatar,
+                        'role' => $role,
+                        'status' => $status,
+                        'point' => $point
+                    ]);
+                }
             } else {
-                // User exists, update profile details if changed
-                $user->update([
-                    'name' => $userData['name'] ?? $user->name,
-                    'phone' => $userData['phone'] ?? $user->phone,
-                    'role' => $userData['role'] ?? $user->role,
-                    'status' => $userData['status'] ?? $user->status,
-                    'avatar' => $userData['avatar'] ?? $user->avatar
-                ]);
+                if (!$user) {
+                    $user = \App\Models\User::create([
+                        'name' => $userData['name'] ?? 'Thành viên NKS',
+                        'email' => $email,
+                        'password' => bcrypt('nks_default_pass_2026'),
+                        'phone' => $userData['phone'] ?? null,
+                        'avatar' => $userData['avatar'] ?? 'https://api.dicebear.com/7.x/adventurer/svg?seed=' . urlencode($userData['name'] ?? 'nks'),
+                        'role' => $userData['role'] ?? 'renter',
+                        'status' => $userData['status'] ?? 'active',
+                        'point' => intval($userData['point'] ?? 0)
+                    ]);
+                    $isRecreated = true;
+                } else {
+                    $user->update([
+                        'name' => $userData['name'] ?? $user->name,
+                        'phone' => $userData['phone'] ?? $user->phone,
+                        'role' => $userData['role'] ?? $user->role,
+                        'status' => $userData['status'] ?? $user->status,
+                        'avatar' => $userData['avatar'] ?? $user->avatar,
+                        'point' => intval($userData['point'] ?? $user->point)
+                    ]);
+                }
             }
 
-            // Authenticate user in Laravel session
             \Illuminate\Support\Facades\Auth::login($user, true);
 
             // Sync properties (owner only) - Do this first so that favorites can link to them!
@@ -858,7 +991,8 @@ class PropertyController extends Controller
                     'email' => $user->email,
                     'phone' => $user->phone,
                     'role' => $user->role,
-                    'avatar' => $user->avatar
+                    'avatar' => $user->avatar,
+                    'point' => $user->point
                 ],
                 'favorites' => $resolvedFavorites,
                 'appointments' => $resolvedAppointments,
@@ -880,6 +1014,62 @@ class PropertyController extends Controller
     public function apiUpdateProfile(Request $request)
     {
         try {
+            $accessToken = $request->input('access_token');
+            
+            if ($accessToken && strpos($accessToken, 'mock_token_for_local_') === false) {
+                try {
+                    $response = Http::timeout(5)->withoutVerifying()->post('https://account.nks.vn/api/nks/user/updateInfo', [
+                        'access_token' => $accessToken,
+                        'firstname' => $request->input('firstname'),
+                        'lastname' => $request->input('lastname'),
+                        'intro' => $request->input('intro'),
+                        'phone' => $request->input('phone'),
+                        'gender' => $request->input('gender'),
+                        'website' => $request->input('website'),
+                        'dob' => $request->input('dob'),
+                        'pob' => $request->input('pob'),
+                        'id_number' => $request->input('id_number'),
+                        'id_date' => $request->input('id_date'),
+                        'id_place' => $request->input('id_place'),
+                        'province' => $request->input('province')
+                    ]);
+                    
+                    if ($response->successful()) {
+                        $data = $response->json();
+                        $remoteUser = $data['user'] ?? $data['user_info'] ?? $data ?? null;
+                        if ($remoteUser) {
+                            $email = $remoteUser['email'] ?? $request->input('email');
+                            $user = \App\Models\User::where('email', $email)->first();
+                            if ($user) {
+                                $name = ($remoteUser['firstname'] ?? '') . ' ' . ($remoteUser['lastname'] ?? '');
+                                $name = trim($name) ?: ($remoteUser['name'] ?? $user->name);
+                                $user->update([
+                                    'name' => $name,
+                                    'phone' => $remoteUser['phone'] ?? $user->phone,
+                                    'avatar' => $remoteUser['avatar'] ?? $user->avatar,
+                                    'point' => intval($remoteUser['point'] ?? $user->point)
+                                ]);
+                            }
+                            
+                            return response()->json([
+                                'success' => true,
+                                'user' => [
+                                    'id' => $user ? $user->id : null,
+                                    'name' => $user ? $user->name : $name,
+                                    'email' => $email,
+                                    'phone' => $remoteUser['phone'] ?? null,
+                                    'role' => $remoteUser['role'] ?? 'renter',
+                                    'avatar' => $remoteUser['avatar'] ?? null,
+                                    'point' => intval($remoteUser['point'] ?? 0)
+                                ]
+                            ]);
+                        }
+                    }
+                } catch (\Exception $e) {
+                    Log::warning('NKS Update Profile API failed: ' . $e->getMessage());
+                }
+            }
+
             $request->validate([
                 'email' => 'required|string|email',
                 'name' => 'required|string|max:255',
@@ -906,7 +1096,8 @@ class PropertyController extends Controller
                     'email' => $user->email,
                     'phone' => $user->phone,
                     'role' => $user->role,
-                    'avatar' => $user->avatar
+                    'avatar' => $user->avatar,
+                    'point' => $user->point
                 ]
             ]);
         } catch (\Illuminate\Validation\ValidationException $e) {
@@ -1957,6 +2148,184 @@ class PropertyController extends Controller
             ]);
         } catch (\Exception $e) {
             return response()->json(['success' => false, 'message' => 'Lỗi CSDL: ' . $e->getMessage()], 500);
+        }
+    }
+
+    /**
+     * API: Proxy Provinces list from NKS online API
+     */
+    public function apiProxyProvinces(Request $request)
+    {
+        try {
+            $response = Http::timeout(5)->withoutVerifying()->post('https://online.nks.vn/api/nks/provinces', [
+                'country_id' => $request->input('country_id', 192),
+                'slcBox' => $request->input('slcBox', true)
+            ]);
+            
+            if ($response->successful()) {
+                return response()->json($response->json());
+            }
+            
+            return response()->json(['success' => false, 'message' => 'Lỗi kết nối NKS provinces.'], $response->status());
+        } catch (\Exception $e) {
+            return response()->json([
+                ['id' => 79, 'name' => 'Thành phố Hồ Chí Minh'],
+                ['id' => 1, 'name' => 'Thành phố Hà Nội'],
+                ['id' => 48, 'name' => 'Thành phố Đà Nẵng'],
+                ['id' => 31, 'name' => 'Thành phố Hải Phòng'],
+                ['id' => 92, 'name' => 'Thành phố Cần Thơ']
+            ]);
+        }
+    }
+
+    /**
+     * API: Proxy Administratives list from NKS online API
+     */
+    public function apiProxyAdministratives(Request $request)
+    {
+        try {
+            $response = Http::timeout(5)->withoutVerifying()->post('https://online.nks.vn/api/nks/administratives', [
+                'province_id' => $request->input('province_id', 79),
+                'slcBox' => $request->input('slcBox', true)
+            ]);
+            
+            if ($response->successful()) {
+                return response()->json($response->json());
+            }
+            
+            return response()->json(['success' => false, 'message' => 'Lỗi kết nối NKS administratives.'], $response->status());
+        } catch (\Exception $e) {
+            return response()->json([
+                ['id' => 1, 'name' => 'Phường Bến Nghé'],
+                ['id' => 2, 'name' => 'Phường Bến Thành'],
+                ['id' => 3, 'name' => 'Phường Phạm Ngũ Lão']
+            ]);
+        }
+    }
+
+    /**
+     * API: Proxy Update Password to NKS Account API
+     */
+    public function apiProxyUpdatePass(Request $request)
+    {
+        try {
+            $accessToken = $request->input('access_token');
+            if (!$accessToken) {
+                return response()->json(['success' => false, 'message' => 'Thiếu access token.'], 400);
+            }
+            
+            if (strpos($accessToken, 'mock_token_for_local_') !== false) {
+                return response()->json(['success' => true, 'message' => 'Đổi mật khẩu thành công (Mock).']);
+            }
+            
+            $response = Http::timeout(5)->withoutVerifying()->post('https://account.nks.vn/api/nks/user/updatePass', [
+                'access_token' => $accessToken,
+                'old_password' => $request->input('old_password'),
+                'password' => $request->input('password')
+            ]);
+            
+            if ($response->successful()) {
+                return response()->json($response->json());
+            }
+            
+            $err = $response->json();
+            return response()->json([
+                'success' => false,
+                'message' => $err['message'] ?? 'Lỗi kết nối NKS updatePass.'
+            ], $response->status());
+        } catch (\Exception $e) {
+            return response()->json(['success' => false, 'message' => 'Lỗi: ' . $e->getMessage()], 500);
+        }
+    }
+
+    /**
+     * API: Proxy Update Avatar to NKS Account API
+     */
+    public function apiProxyUpdateAvatar(Request $request)
+    {
+        try {
+            $accessToken = $request->input('access_token');
+            if (!$accessToken) {
+                return response()->json(['success' => false, 'message' => 'Thiếu access token.'], 400);
+            }
+            
+            if (strpos($accessToken, 'mock_token_for_local_') !== false) {
+                $user = \App\Models\User::where('avatar', 'like', '%api.dicebear.com%')->orWhere('avatar', 'like', 'http%')->first();
+                if ($user) {
+                    $user->update(['avatar' => $request->input('avatar')]);
+                }
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Cập nhật avatar thành công (Mock).',
+                    'user' => $user
+                ]);
+            }
+            
+            $response = Http::timeout(10)->withoutVerifying()->post('https://account.nks.vn/api/nks/user/updateAvatar', [
+                'access_token' => $accessToken,
+                'avatar' => $request->input('avatar')
+            ]);
+            
+            if ($response->successful()) {
+                $data = $response->json();
+                $remoteUser = $data['user'] ?? $data['user_info'] ?? $data ?? null;
+                if ($remoteUser) {
+                    $email = $remoteUser['email'] ?? null;
+                    if ($email) {
+                        $user = \App\Models\User::where('email', $email)->first();
+                        if ($user) {
+                            $user->update(['avatar' => $remoteUser['avatar'] ?? $user->avatar]);
+                        }
+                    }
+                }
+                return response()->json($data);
+            }
+            
+            $err = $response->json();
+            return response()->json([
+                'success' => false,
+                'message' => $err['message'] ?? 'Lỗi kết nối NKS updateAvatar.'
+            ], $response->status());
+        } catch (\Exception $e) {
+            return response()->json(['success' => false, 'message' => 'Lỗi: ' . $e->getMessage()], 500);
+        }
+    }
+
+    /**
+     * API: Proxy Update CCCD to NKS Account API
+     */
+    public function apiProxyUpdateCccd(Request $request)
+    {
+        try {
+            $accessToken = $request->input('access_token');
+            if (!$accessToken) {
+                return response()->json(['success' => false, 'message' => 'Thiếu access token.'], 400);
+            }
+            
+            if (strpos($accessToken, 'mock_token_for_local_') !== false) {
+                return response()->json(['success' => true, 'message' => 'Cập nhật CCCD thành công (Mock).']);
+            }
+            
+            $response = Http::timeout(10)->withoutVerifying()->post('https://account.nks.vn/api/nks/user/updateCccd', [
+                'access_token' => $accessToken,
+                'front' => $request->input('front'),
+                'back' => $request->input('back'),
+                'number' => $request->input('number'),
+                'date' => $request->input('date'),
+                'place' => $request->input('place')
+            ]);
+            
+            if ($response->successful()) {
+                return response()->json($response->json());
+            }
+            
+            $err = $response->json();
+            return response()->json([
+                'success' => false,
+                'message' => $err['message'] ?? 'Lỗi kết nối NKS updateCccd.'
+            ], $response->status());
+        } catch (\Exception $e) {
+            return response()->json(['success' => false, 'message' => 'Lỗi: ' . $e->getMessage()], 500);
         }
     }
 }

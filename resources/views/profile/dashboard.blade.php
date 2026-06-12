@@ -123,54 +123,118 @@
                          x-transition:leave-start="opacity-100 translate-y-0"
                          x-transition:leave-end="opacity-0 translate-y-4"
                          x-cloak class="space-y-8">
-                        <div>
-                            <h2 class="text-2xl font-extrabold text-slate-800">Thông tin cá nhân</h2>
-                            <p class="text-sm text-slate-400 mt-1">Cập nhật hồ sơ thành viên của bạn tại BDS NKS</p>
+                        <!-- User Header Card -->
+                        <div class="flex flex-col sm:flex-row items-center gap-6 pb-6 border-b border-slate-100 mb-6">
+                            <div class="relative group cursor-pointer w-24 h-24 rounded-full overflow-hidden border-4 border-primary/10 shadow-sm" @click="showUpdateAvatarModal = true">
+                                <img :src="user && user.avatar ? user.avatar : 'https://api.dicebear.com/7.x/adventurer/svg?seed=' + (user ? user.name : 'nks')" alt="Avatar" class="w-full h-full object-cover">
+                                <div class="absolute inset-0 bg-slate-900/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-all duration-200">
+                                    <span class="text-[10px] text-white font-extrabold uppercase tracking-wider">Đổi ảnh</span>
+                                </div>
+                            </div>
+                            <div class="text-center sm:text-left space-y-1 w-full">
+                                <div class="flex flex-wrap items-center justify-center sm:justify-start gap-2.5">
+                                    <h3 class="text-xl font-black text-slate-800" x-text="user ? user.name : 'Thành viên NKS'"></h3>
+                                    <span class="inline-flex items-center gap-1 bg-amber-500/10 text-amber-600 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wide border border-amber-200/50">
+                                        <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                        </svg>
+                                        <span x-text="(point || 0) + ' điểm'"></span>
+                                    </span>
+                                </div>
+                                <p class="text-xs text-slate-400 font-medium" x-text="user ? user.email : ''"></p>
+                                <div class="flex items-center justify-center sm:justify-start gap-3 mt-3 pt-2">
+                                    <button type="button" @click="showUpdatePassModal = true" class="inline-flex items-center gap-1 text-slate-500 hover:text-primary transition-all text-xs font-bold bg-white border border-slate-200 px-3.5 py-2 rounded-2xl shadow-xs hover:shadow-sm">
+                                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
+                                        </svg>
+                                        Mật khẩu
+                                    </button>
+                                    <button type="button" @click="cccdNumberInput = idNumberInput; cccdDateInput = idDateInput; cccdPlaceInput = idPlaceInput; showUpdateCccdModal = true" class="inline-flex items-center gap-1 text-slate-500 hover:text-primary transition-all text-xs font-bold bg-white border border-slate-200 px-3.5 py-2 rounded-2xl shadow-xs hover:shadow-sm">
+                                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M10 6H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V8a2 2 0 00-2-2h-5m-4 0V5a2 2 0 114 0v1m-4 0a2 2 0 104 0m-5 8a2 2 0 100-4 2 2 0 000 4zm0 0c1.378 0 2.5-1.122 2.5-2.5S10.378 9 9 9m9 2h-3m3 4h-3" />
+                                        </svg>
+                                        CCCD / CMND
+                                    </button>
+                                </div>
+                            </div>
                         </div>
-                        
-                        <form @submit.prevent="updateProfile()" class="space-y-6 max-w-xl">
-                            <!-- Avatar URL -->
+
+                        <!-- Profile Info Form -->
+                        <form @submit.prevent="updateProfile()" class="space-y-6 max-w-2xl">
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Họ</label>
+                                    <input type="text" x-model="firstnameInput" placeholder="Ví dụ: Nguyễn" class="w-full bg-slate-50 border border-slate-200 rounded-2xl px-4 py-3.5 text-sm focus:outline-none focus:border-primary focus:bg-white transition-all text-slate-700">
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Tên</label>
+                                    <input type="text" x-model="lastnameInput" placeholder="Ví dụ: Văn A" class="w-full bg-slate-50 border border-slate-200 rounded-2xl px-4 py-3.5 text-sm focus:outline-none focus:border-primary focus:bg-white transition-all text-slate-700">
+                                </div>
+                            </div>
+                            
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Số điện thoại</label>
+                                    <input type="tel" x-model="phoneInput" placeholder="Số điện thoại" class="w-full bg-slate-50 border border-slate-200 rounded-2xl px-4 py-3.5 text-sm focus:outline-none focus:border-primary focus:bg-white transition-all text-slate-700">
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Website cá nhân</label>
+                                    <input type="url" x-model="websiteInput" placeholder="https://example.com" class="w-full bg-slate-50 border border-slate-200 rounded-2xl px-4 py-3.5 text-sm focus:outline-none focus:border-primary focus:bg-white transition-all text-slate-700">
+                                </div>
+                            </div>
+
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Giới tính</label>
+                                    <select x-model="genderInput" class="w-full bg-slate-50 border border-slate-200 rounded-2xl px-4 py-3.5 text-sm focus:outline-none focus:border-primary focus:bg-white text-slate-700">
+                                        <option value="0">Nam</option>
+                                        <option value="1">Nữ</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Tỉnh / Thành phố</label>
+                                    <select x-model="provinceInput" class="w-full bg-slate-50 border border-slate-200 rounded-2xl px-4 py-3.5 text-sm focus:outline-none focus:border-primary focus:bg-white text-slate-700">
+                                        <option value="">Chọn Tỉnh / Thành phố</option>
+                                        <template x-for="p in provinces" :key="p.id || p.name">
+                                            <option :value="p.id || p.name" x-text="p.name" :selected="provinceInput == p.id || provinceInput == p.name"></option>
+                                        </template>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Ngày sinh</label>
+                                    <input type="date" x-model="dobInput" class="w-full bg-slate-50 border border-slate-200 rounded-2xl px-4 py-3.5 text-sm focus:outline-none focus:border-primary focus:bg-white transition-all text-slate-700">
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Nơi sinh</label>
+                                    <input type="text" x-model="pobInput" placeholder="Ví dụ: Hà Nội" class="w-full bg-slate-50 border border-slate-200 rounded-2xl px-4 py-3.5 text-sm focus:outline-none focus:border-primary focus:bg-white transition-all text-slate-700">
+                                </div>
+                            </div>
+
+                            <!-- ID Info (Read-only as per CCCD workflow requirement) -->
+                            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 bg-slate-50/50 p-4 rounded-3xl border border-slate-100">
+                                <div>
+                                    <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Số CCCD / CMND</label>
+                                    <div class="text-xs font-semibold text-slate-600 py-1" x-text="idNumberInput || 'Chưa cập nhật'"></div>
+                                </div>
+                                <div>
+                                    <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Ngày cấp</label>
+                                    <div class="text-xs font-semibold text-slate-600 py-1" x-text="idDateInput || 'Chưa cập nhật'"></div>
+                                </div>
+                                <div>
+                                    <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Nơi cấp</label>
+                                    <div class="text-xs font-semibold text-slate-600 py-1" x-text="idPlaceInput || 'Chưa cập nhật'"></div>
+                                </div>
+                            </div>
+
                             <div>
-                                <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Ảnh đại diện (Link ảnh)</label>
-                                <input type="url" x-model="avatarInput" placeholder="https://example.com/avatar.jpg" class="w-full bg-slate-50 border border-slate-200 rounded-2xl px-4 py-3.5 text-sm focus:outline-none focus:border-primary focus:bg-white transition-all">
+                                <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Tiểu sử / Giới thiệu bản thân</label>
+                                <textarea rows="3" x-model="introInput" placeholder="Giới thiệu ngắn gọn về bản thân..." class="w-full bg-slate-50 border border-slate-200 rounded-2xl px-4 py-3.5 text-sm focus:outline-none focus:border-primary focus:bg-white transition-all text-slate-700"></textarea>
                             </div>
                             
-                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                                <!-- Name -->
-                                <div>
-                                    <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Tên hiển thị</label>
-                                    <input type="text" x-model="nameInput" required class="w-full bg-slate-50 border border-slate-200 rounded-2xl px-4 py-3.5 text-sm focus:outline-none focus:border-primary focus:bg-white transition-all">
-                                </div>
-                                <!-- Phone -->
-                                <div>
-                                    <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Số điện thoại liên hệ</label>
-                                    <input type="tel" x-model="phoneInput" class="w-full bg-slate-50 border border-slate-200 rounded-2xl px-4 py-3.5 text-sm focus:outline-none focus:border-primary focus:bg-white transition-all">
-                                </div>
-                            </div>
-                            
-                            <button type="submit" class="bg-primary text-white font-bold px-6 py-3 rounded-full text-sm shadow-md btn-hover-premium">Cập nhật hồ sơ</button>
-                        </form>
-                        
-                        <hr class="border-slate-100">
-                        
-                        <div>
-                            <h3 class="text-lg font-bold text-slate-800">Cập nhật mật khẩu</h3>
-                            <p class="text-xs text-slate-400 mt-1">Đổi mật khẩu bảo mật tài khoản</p>
-                        </div>
-                        
-                        <form @submit.prevent="updatePassword()" class="space-y-6 max-w-xl">
-                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                                <div>
-                                    <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Mật khẩu hiện tại</label>
-                                    <input type="password" x-model="passwordCurrent" class="w-full bg-slate-50 border border-slate-200 rounded-2xl px-4 py-3.5 text-sm focus:outline-none focus:border-primary focus:bg-white transition-all">
-                                </div>
-                                <div>
-                                    <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Mật khẩu mới</label>
-                                    <input type="password" x-model="passwordNew" class="w-full bg-slate-50 border border-slate-200 rounded-2xl px-4 py-3.5 text-sm focus:outline-none focus:border-primary focus:bg-white transition-all">
-                                </div>
-                            </div>
-                            
-                            <button type="submit" class="bg-primary text-white font-bold px-6 py-3 rounded-full text-sm shadow-md btn-hover-premium">Đổi mật khẩu</button>
+                            <button type="submit" class="bg-primary text-white font-bold px-8 py-3.5 rounded-full text-sm shadow-md btn-hover-premium transition-all hover:scale-[1.02]">Cập nhật thông tin</button>
                         </form>
                     </div>
                     
@@ -568,20 +632,48 @@
                             <p class="text-sm text-slate-400 mt-1">Đăng nhập để lưu tin yêu thích và quản lý lịch hẹn</p>
                         </div>
                         
-                        <form @submit.prevent="login($refs.loginEmail.value, $refs.loginPass.value)" class="space-y-5">
+                        <!-- Normal Login Form (First Time) -->
+                        <form x-show="!showSecondLogin" @submit.prevent="login($refs.loginEmail.value, $refs.loginPass.value)" class="space-y-5">
                             <div>
                                 <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Địa chỉ Email</label>
-                                <input type="email" x-ref="loginEmail" required placeholder="name@example.com" class="w-full bg-slate-50 border border-slate-200 rounded-2xl px-4 py-3.5 text-sm focus:outline-none focus:border-primary focus:bg-white transition-all">
+                                <input type="email" x-ref="loginEmail" placeholder="name@example.com" class="w-full bg-slate-50 border border-slate-200 rounded-2xl px-4 py-3.5 text-sm focus:outline-none focus:border-primary focus:bg-white transition-all">
                             </div>
                             <div>
                                 <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Mật khẩu</label>
-                                <input type="password" x-ref="loginPass" required placeholder="••••••••" class="w-full bg-slate-50 border border-slate-200 rounded-2xl px-4 py-3.5 text-sm focus:outline-none focus:border-primary focus:bg-white transition-all">
+                                <input type="password" x-ref="loginPass" placeholder="••••••••" class="w-full bg-slate-50 border border-slate-200 rounded-2xl px-4 py-3.5 text-sm focus:outline-none focus:border-primary focus:bg-white transition-all">
                             </div>
                             <button type="submit" class="w-full bg-primary text-white font-bold py-4 rounded-full text-sm shadow-md btn-hover-premium">Đăng nhập</button>
                         </form>
+
+                        <!-- Second Login Form (Second Access) -->
+                        <form x-show="showSecondLogin" @submit.prevent="login(lastUsername, $refs.loginPassSecond.value)" class="space-y-5" style="display: none;" x-cloak>
+                            <div class="bg-slate-50 border border-slate-200/60 rounded-3xl p-5 text-center relative overflow-hidden">
+                                <div class="w-16 h-16 rounded-full bg-primary/10 overflow-hidden mx-auto mb-2 border border-slate-100 flex items-center justify-center">
+                                    <img :src="'https://api.dicebear.com/7.x/adventurer/svg?seed=' + encodeURIComponent(lastUsername)" alt="Avatar" class="w-full h-full object-cover">
+                                </div>
+                                <h3 class="text-sm font-bold text-slate-700 truncate" x-text="lastUsername"></h3>
+                                <p class="text-xs text-slate-400 mt-0.5">Chào mừng bạn quay lại!</p>
+                                
+                                <button type="button" @click="showSecondLogin = false" class="absolute top-3 right-3 text-slate-400 hover:text-primary transition-all p-1.5 hover:bg-white rounded-full shadow-xs" title="Đăng nhập bằng tài khoản khác">
+                                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
+                                    </svg>
+                                </button>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Mật khẩu</label>
+                                <input type="password" x-ref="loginPassSecond" placeholder="••••••••" class="w-full bg-slate-50 border border-slate-200 rounded-2xl px-4 py-3.5 text-sm focus:outline-none focus:border-primary focus:bg-white transition-all">
+                            </div>
+                            <button type="submit" class="w-full bg-primary text-white font-bold py-4 rounded-full text-sm shadow-md btn-hover-premium">Đăng nhập</button>
+                            <div class="text-center mt-2">
+                                <button type="button" @click="showSecondLogin = false" class="text-xs font-bold text-primary hover:underline flex items-center gap-1 mx-auto bg-transparent border-0 cursor-pointer">
+                                    Đăng nhập tài khoản khác &rarr;
+                                </button>
+                            </div>
+                        </form>
                         
                         <div class="text-center text-sm text-slate-400">
-                            Chưa có tài khoản? <button @click="activeTab = 'register'" class="text-primary font-bold hover:underline">Đăng ký thành viên</button>
+                            Chưa có tài khoản? <button @click="activeTab = 'register'" class="text-primary font-bold hover:underline bg-transparent border-0 cursor-pointer">Đăng ký thành viên</button>
                         </div>
                     </div>
                     
@@ -1159,6 +1251,267 @@
             </div>
         </div>
     </div>
+
+    <!-- AVATAR UPDATE MODAL OVERLAY -->
+    <div x-show="showUpdateAvatarModal" 
+         x-transition:enter="transition ease-out duration-300"
+         x-transition:enter-start="opacity-0"
+         x-transition:enter-end="opacity-100"
+         x-transition:leave="transition ease-in duration-200"
+         x-transition:leave-start="opacity-100"
+         x-transition:leave-end="opacity-0"
+         class="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm"
+         style="display: none;"
+         x-cloak>
+        
+        <div @click.away="showUpdateAvatarModal = false" 
+             x-show="showUpdateAvatarModal"
+             x-transition:enter="transition ease-out duration-300 transform"
+             x-transition:enter-start="opacity-0 scale-95 translate-y-4"
+             x-transition:enter-end="opacity-100 scale-100 translate-y-0"
+             x-transition:leave="transition ease-in duration-200 transform"
+             x-transition:leave-start="opacity-100 scale-100 translate-y-0"
+             x-transition:leave-end="opacity-0 scale-95 translate-y-4"
+             class="bg-white rounded-[32px] shadow-2xl max-w-md w-full overflow-hidden border border-slate-100 flex flex-col relative">
+            
+            <button @click="showUpdateAvatarModal = false" class="absolute top-4 right-4 z-50 w-9 h-9 rounded-full bg-white/95 hover:bg-white text-slate-500 hover:text-slate-800 shadow-md flex items-center justify-center transition-all active:scale-95 border border-slate-100">
+                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+            </button>
+
+            <div class="p-6 sm:p-8 space-y-6">
+                <div class="text-center">
+                    <h2 class="text-xl font-black text-slate-900 leading-snug">Cập nhật ảnh đại diện</h2>
+                    <p class="text-xs text-slate-400 mt-1">Cắt và tùy chỉnh ảnh đại diện của bạn</p>
+                </div>
+
+                <!-- Avatar Preview Area -->
+                <div class="flex flex-col items-center justify-center space-y-4 py-4 bg-slate-50 rounded-3xl border border-dashed border-slate-200 relative">
+                    <template x-if="!avatarImgSrc">
+                        <label class="cursor-pointer flex flex-col items-center justify-center p-6 text-center space-y-2 w-full">
+                            <div class="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center text-primary transition-all group-hover:scale-105">
+                                <svg class="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                </svg>
+                            </div>
+                            <span class="text-xs font-bold text-slate-600">Nhấp để chọn file ảnh</span>
+                            <span class="text-[10px] text-slate-400 font-medium">Hỗ trợ JPG, PNG, GIF</span>
+                            <input type="file" class="hidden" accept="image/*" @change="handleAvatarSelect">
+                        </label>
+                    </template>
+
+                    <template x-if="avatarImgSrc">
+                        <div class="w-full flex flex-col items-center space-y-6">
+                            <!-- Circular Mask container -->
+                            <div class="w-44 h-44 rounded-full overflow-hidden border-4 border-white shadow-xl relative bg-slate-100 flex items-center justify-center">
+                                <img :src="avatarImgSrc" 
+                                     alt="Crop Preview" 
+                                     class="w-full h-full object-cover transition-transform duration-75"
+                                     :style="`transform: scale(${avatarZoom}) rotate(${avatarRotate}deg);`" />
+                            </div>
+
+                            <!-- Controls -->
+                            <div class="w-full px-6 space-y-4">
+                                <!-- Zoom Slider -->
+                                <div class="space-y-1">
+                                    <div class="flex justify-between items-center text-[10px] font-bold text-slate-500 uppercase tracking-wider">
+                                        <span>Thu phóng</span>
+                                        <span x-text="Math.round(avatarZoom * 100) + '%'"></span>
+                                    </div>
+                                    <input type="range" 
+                                           min="1" 
+                                           max="3" 
+                                           step="0.05" 
+                                           x-model="avatarZoom" 
+                                           class="w-full h-1.5 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-primary">
+                                </div>
+
+                                <!-- Rotation Slider -->
+                                <div class="space-y-1">
+                                    <div class="flex justify-between items-center text-[10px] font-bold text-slate-500 uppercase tracking-wider">
+                                        <span>Xoay ảnh</span>
+                                        <span x-text="avatarRotate + '°'"></span>
+                                    </div>
+                                    <input type="range" 
+                                           min="0" 
+                                           max="360" 
+                                           step="1" 
+                                           x-model="avatarRotate" 
+                                           class="w-full h-1.5 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-primary">
+                                </div>
+                            </div>
+
+                            <!-- Retake button -->
+                            <label class="cursor-pointer text-xs font-bold text-primary hover:text-primary-dark transition-colors flex items-center gap-1">
+                                <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 1121.21 7.89M9 11l3-3 3 3m-3-3v12" />
+                                </svg>
+                                Chọn ảnh khác
+                                <input type="file" class="hidden" accept="image/*" @change="handleAvatarSelect">
+                            </label>
+                        </div>
+                    </template>
+                </div>
+
+                <!-- Action buttons -->
+                <div class="flex gap-3 pt-2">
+                    <button @click="showUpdateAvatarModal = false" class="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold py-3.5 rounded-full text-xs transition-colors">
+                        Hủy
+                    </button>
+                    <button @click="saveAvatar" :disabled="!avatarImgSrc" class="flex-1 bg-primary hover:bg-primary-dark disabled:opacity-50 text-white font-bold py-3.5 rounded-full text-xs transition-all shadow-md">
+                        Cập nhật
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- CCCD / CMND UPDATE MODAL OVERLAY -->
+    <div x-show="showUpdateCccdModal" 
+         x-transition:enter="transition ease-out duration-300"
+         x-transition:enter-start="opacity-0"
+         x-transition:enter-end="opacity-100"
+         x-transition:leave="transition ease-in duration-200"
+         x-transition:leave-start="opacity-100"
+         x-transition:leave-end="opacity-0"
+         class="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm"
+         style="display: none;"
+         x-cloak>
+        
+        <div @click.away="showUpdateCccdModal = false" 
+             x-show="showUpdateCccdModal"
+             x-transition:enter="transition ease-out duration-300 transform"
+             x-transition:enter-start="opacity-0 scale-95 translate-y-4"
+             x-transition:enter-end="opacity-100 scale-100 translate-y-0"
+             x-transition:leave="transition ease-in duration-200 transform"
+             x-transition:leave-start="opacity-100 scale-100 translate-y-0"
+             x-transition:leave-end="opacity-0 scale-95 translate-y-4"
+             class="bg-white rounded-[32px] shadow-2xl max-w-xl w-full overflow-hidden border border-slate-100 flex flex-col relative">
+            
+            <button @click="showUpdateCccdModal = false" class="absolute top-4 right-4 z-50 w-9 h-9 rounded-full bg-white/95 hover:bg-white text-slate-500 hover:text-slate-800 shadow-md flex items-center justify-center transition-all active:scale-95 border border-slate-100">
+                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+            </button>
+
+            <div class="p-6 sm:p-8 space-y-5 overflow-y-auto max-h-[90vh]">
+                <div class="text-center">
+                    <span class="inline-flex p-3 rounded-full bg-primary/10 text-primary mb-3">
+                        <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M10 6H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V8a2 2 0 00-2-2h-5m-4 0V5a2 2 0 114 0v1m-4 0a2 2 0 104 0m-5 8a2 2 0 100-4 2 2 0 000 4zm0 0c1.378 0 2.5-1.122 2.5-2.5S10.378 9 9 9m9 2h-3m3 4h-3" />
+                        </svg>
+                    </span>
+                    <h2 class="text-xl font-black text-slate-900 leading-snug">Xác thực CCCD / CMND</h2>
+                    <p class="text-xs text-slate-400 mt-1">Cung cấp ảnh mặt trước & sau cùng thông tin giấy tờ</p>
+                </div>
+
+                <!-- Info banner -->
+                <div class="bg-amber-50 border border-amber-100 rounded-2xl p-4 flex gap-3 text-xs text-amber-700 leading-relaxed">
+                    <svg class="w-5 h-5 flex-shrink-0 text-amber-500 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                    </svg>
+                    <div>
+                        <p class="font-extrabold mb-0.5">Yêu cầu hình ảnh:</p>
+                        <p>Ảnh chụp rõ nét, không bị lóa sáng, không mất góc và không bị che khuất các thông tin cá nhân quan trọng.</p>
+                    </div>
+                </div>
+
+                <!-- Image Selectors side-by-side -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <!-- Front Side Card -->
+                    <div class="space-y-2">
+                        <span class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider">Mặt trước CCCD</span>
+                        <div class="h-40 border-2 border-dashed border-slate-200 hover:border-primary/50 bg-slate-50/50 rounded-2xl overflow-hidden relative flex flex-col items-center justify-center p-4 transition-all group cursor-pointer">
+                            <template x-if="!cccdFrontSrc">
+                                <label class="w-full h-full flex flex-col items-center justify-center cursor-pointer text-center space-y-1.5">
+                                    <svg class="w-7 h-7 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                                    </svg>
+                                    <span class="text-xs font-bold text-slate-600">Chọn ảnh mặt trước</span>
+                                    <span class="text-[9px] text-slate-400 font-medium">Nhấp để tải lên</span>
+                                    <input type="file" class="hidden" accept="image/*" @change="handleCccdSelect($event, 'front')">
+                                </label>
+                            </template>
+                            <template x-if="cccdFrontSrc">
+                                <div class="w-full h-full relative group">
+                                    <img :src="cccdFrontSrc" alt="CCCD Front" class="w-full h-full object-cover rounded-xl">
+                                    <div class="absolute inset-0 bg-slate-900/50 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-all duration-200 rounded-xl">
+                                        <label class="cursor-pointer bg-white text-slate-800 text-[10px] font-bold px-3 py-1.5 rounded-xl shadow-md hover:scale-105 transition-all">
+                                            Thay đổi
+                                            <input type="file" class="hidden" accept="image/*" @change="handleCccdSelect($event, 'front')">
+                                        </label>
+                                    </div>
+                                </div>
+                            </template>
+                        </div>
+                    </div>
+
+                    <!-- Back Side Card -->
+                    <div class="space-y-2">
+                        <span class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider">Mặt sau CCCD</span>
+                        <div class="h-40 border-2 border-dashed border-slate-200 hover:border-primary/50 bg-slate-50/50 rounded-2xl overflow-hidden relative flex flex-col items-center justify-center p-4 transition-all group cursor-pointer">
+                            <template x-if="!cccdBackSrc">
+                                <label class="w-full h-full flex flex-col items-center justify-center cursor-pointer text-center space-y-1.5">
+                                    <svg class="w-7 h-7 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                                    </svg>
+                                    <span class="text-xs font-bold text-slate-600">Chọn ảnh mặt sau</span>
+                                    <span class="text-[9px] text-slate-400 font-medium">Nhấp để tải lên</span>
+                                    <input type="file" class="hidden" accept="image/*" @change="handleCccdSelect($event, 'back')">
+                                </label>
+                            </template>
+                            <template x-if="cccdBackSrc">
+                                <div class="w-full h-full relative group">
+                                    <img :src="cccdBackSrc" alt="CCCD Back" class="w-full h-full object-cover rounded-xl">
+                                    <div class="absolute inset-0 bg-slate-900/50 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-all duration-200 rounded-xl">
+                                        <label class="cursor-pointer bg-white text-slate-800 text-[10px] font-bold px-3 py-1.5 rounded-xl shadow-md hover:scale-105 transition-all">
+                                            Thay đổi
+                                            <input type="file" class="hidden" accept="image/*" @change="handleCccdSelect($event, 'back')">
+                                        </label>
+                                    </div>
+                                </div>
+                            </template>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Input Fields Grid -->
+                <div class="space-y-4 pt-2 border-t border-slate-100">
+                    <div>
+                        <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-2">Số CCCD / CMND (12 số)</label>
+                        <input type="text" 
+                               x-model="cccdNumberInput" 
+                               maxlength="12"
+                               placeholder="Ví dụ: 012345678901" 
+                               class="w-full bg-slate-50 border border-slate-200 rounded-2xl px-4 py-3 text-sm focus:outline-none focus:border-primary focus:bg-white transition-all text-slate-700 font-semibold">
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-2">Ngày cấp</label>
+                            <input type="date" 
+                                   x-model="cccdDateInput" 
+                                   class="w-full bg-slate-50 border border-slate-200 rounded-2xl px-4 py-3 text-sm focus:outline-none focus:border-primary focus:bg-white transition-all text-slate-700">
+                        </div>
+                        <div>
+                            <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-2">Nơi cấp</label>
+                            <input type="text" 
+                                   x-model="cccdPlaceInput" 
+                                   placeholder="Ví dụ: Cục Cảnh sát QLHC về TTXH" 
+                                   class="w-full bg-slate-50 border border-slate-200 rounded-2xl px-4 py-3 text-sm focus:outline-none focus:border-primary focus:bg-white transition-all text-slate-700">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Action buttons -->
+                <div class="flex gap-3 pt-3">
+                    <button @click="showUpdateCccdModal = false" class="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold py-3.5 rounded-full text-xs transition-colors">
+                        Đóng
+                    </button>
+                    <button @click="saveCccd" :disabled="!cccdFrontSrc || !cccdBackSrc || !cccdNumberInput" class="flex-1 bg-primary hover:bg-primary-dark disabled:opacity-50 text-white font-bold py-3.5 rounded-full text-xs transition-all shadow-md">
+                        Xác thực & Lưu
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
 @endsection
 
@@ -1204,18 +1557,39 @@
             adminChatInputMessage: '',
             adminChatPollingInterval: null,
             
-            // Edit Profile State
-            nameInput: '',
+            // Edit Profile State & Dynamic Locations
+            firstnameInput: '',
+            lastnameInput: '',
+            introInput: '',
             phoneInput: '',
-            avatarInput: '',
+            genderInput: 0,
+            websiteInput: '',
+            dobInput: '',
+            pobInput: '',
+            idNumberInput: '',
+            idDateInput: '',
+            idPlaceInput: '',
+            provinceInput: '',
+            point: 0,
+            provinces: [],
+            
+            // Edit password & CCCD Modals State
+            showUpdatePassModal: false,
+            showUpdateCccdModal: false,
+            showUpdateAvatarModal: false,
             passwordCurrent: '',
             passwordNew: '',
+            cccdNumberInput: '',
+            cccdDateInput: '',
+            cccdPlaceInput: '',
             
             // Owner Register State
             companyInput: '',
             addressInput: '',
             isOwnerRegSuccess: false,
             showRegisterPassword: false,
+            showSecondLogin: false,
+            lastUsername: '',
             
             // New Property Form Modal State
             showAddPropertyModal: false,
@@ -1257,6 +1631,13 @@
                     this.activeTab = tabParam;
                 }
                 
+                const savedLastUsername = localStorage.getItem('nks_last_username');
+                if (savedLastUsername) {
+                    this.lastUsername = savedLastUsername;
+                    this.showSecondLogin = true;
+                }
+                
+                this.loadProvinces();
                 this.checkLogin();
                 
                 window.addEventListener('nks-login-change', () => {
@@ -1305,9 +1686,29 @@
                 if (savedUser) {
                     this.isLoggedIn = true;
                     this.user = JSON.parse(savedUser);
-                    this.nameInput = this.user.name;
+                    
                     this.phoneInput = this.user.phone || '';
-                    this.avatarInput = this.user.avatar || '';
+                    this.point = this.user.point || 0;
+                    
+                    if (this.user.firstname) {
+                        this.firstnameInput = this.user.firstname;
+                        this.lastnameInput = this.user.lastname || '';
+                    } else {
+                        const parts = (this.user.name || '').split(' ');
+                        this.lastnameInput = parts.pop() || '';
+                        this.firstnameInput = parts.join(' ') || '';
+                    }
+                    
+                    this.introInput = this.user.intro || '';
+                    this.genderInput = this.user.gender !== undefined ? this.user.gender : 0;
+                    this.websiteInput = this.user.website || '';
+                    this.dobInput = this.user.dob || '';
+                    this.pobInput = this.user.pob || '';
+                    this.idNumberInput = this.user.id_number || '';
+                    this.idDateInput = this.user.id_date || '';
+                    this.idPlaceInput = this.user.id_place || '';
+                    this.provinceInput = this.user.province || '';
+                    
                 } else {
                     this.isLoggedIn = false;
                     this.user = null;
@@ -1333,6 +1734,7 @@
                             },
                             body: JSON.stringify({
                                 user: this.user,
+                                access_token: localStorage.getItem('nks_access_token') || '',
                                 favorites: savedFavs ? JSON.parse(savedFavs) : [],
                                 appointments: savedAppts ? JSON.parse(savedAppts) : [],
                                 properties: savedProps ? JSON.parse(savedProps) : []
@@ -1569,6 +1971,12 @@
                     if (res.ok) {
                         const data = await res.json();
                         localStorage.setItem('nks_user', JSON.stringify(data.user));
+                        localStorage.setItem('nks_last_username', email);
+                        if (data.access_token) {
+                            localStorage.setItem('nks_access_token', data.access_token);
+                        }
+                        this.lastUsername = email;
+                        this.showSecondLogin = true;
                         window.dispatchEvent(new CustomEvent('nks-login-change'));
                         this.activeTab = 'info';
                         this.loadMockData();
@@ -1619,11 +2027,6 @@
             },
             
             async updateProfile() {
-                if (!this.nameInput) {
-                    alert('Tên hiển thị không được bỏ trống.');
-                    return;
-                }
-                
                 try {
                     const res = await fetch('/nks-api/profile/update', {
                         method: 'POST',
@@ -1634,9 +2037,20 @@
                         },
                         body: JSON.stringify({
                             email: this.user.email,
-                            name: this.nameInput,
+                            access_token: localStorage.getItem('nks_access_token') || '',
+                            name: (this.firstnameInput + ' ' + this.lastnameInput).trim() || this.user.name,
+                            firstname: this.firstnameInput,
+                            lastname: this.lastnameInput,
+                            intro: this.introInput,
                             phone: this.phoneInput,
-                            avatar: this.avatarInput
+                            gender: this.genderInput,
+                            website: this.websiteInput,
+                            dob: this.dobInput,
+                            pob: this.pobInput,
+                            id_number: this.idNumberInput,
+                            id_date: this.idDateInput,
+                            id_place: this.idPlaceInput,
+                            province: this.provinceInput
                         })
                     });
 
@@ -1647,10 +2061,176 @@
                         window.dispatchEvent(new CustomEvent('nks-login-change'));
                         alert('Cập nhật thông tin cá nhân thành công!');
                     } else {
-                        alert('Cập nhật thất bại.');
+                        const err = await res.json();
+                        alert(err.message || 'Cập nhật thất bại.');
                     }
                 } catch (e) {
                     alert('Lỗi kết nối CSDL.');
+                }
+            },
+
+            async loadProvinces() {
+                try {
+                    const res = await fetch('/nks-api/nks/provinces', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                        },
+                        body: JSON.stringify({ country_id: 192, slcBox: true })
+                    });
+                    if (res.ok) {
+                        this.provinces = await res.json();
+                    }
+                } catch (e) {
+                    console.error('Failed to load provinces:', e);
+                }
+            },
+
+            // Avatar upload helpers
+            avatarZoom: 1,
+            avatarRotate: 0,
+            avatarImgSrc: '',
+            
+            handleAvatarSelect(event) {
+                const file = event.target.files[0];
+                if (!file) return;
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    this.avatarImgSrc = e.target.result;
+                    this.avatarZoom = 1;
+                    this.avatarRotate = 0;
+                };
+                reader.readAsDataURL(file);
+            },
+            
+            async saveAvatar() {
+                if (!this.avatarImgSrc) {
+                    alert('Vui lòng chọn ảnh trước.');
+                    return;
+                }
+                
+                const img = new Image();
+                img.onload = async () => {
+                    const canvas = document.createElement('canvas');
+                    const ctx = canvas.getContext('2d');
+                    
+                    canvas.width = 300;
+                    canvas.height = 300;
+                    
+                    ctx.clearRect(0, 0, 300, 300);
+                    
+                    // Draw centered
+                    ctx.translate(150, 150);
+                    ctx.rotate((this.avatarRotate * Math.PI) / 180);
+                    
+                    const scale = this.avatarZoom;
+                    const w = img.width;
+                    const h = img.height;
+                    
+                    const ratio = Math.max(300 / w, 300 / h) * scale;
+                    ctx.drawImage(img, - (w * ratio) / 2, - (h * ratio) / 2, w * ratio, h * ratio);
+                    
+                    const base64 = canvas.toDataURL('image/jpeg', 0.85);
+                    
+                    try {
+                        const res = await fetch('/nks-api/nks/user/updateAvatar', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'Accept': 'application/json',
+                                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                            },
+                            body: JSON.stringify({
+                                access_token: localStorage.getItem('nks_access_token') || '',
+                                avatar: base64
+                            })
+                        });
+                        
+                        if (res.ok) {
+                            const data = await res.json();
+                            const userObj = JSON.parse(localStorage.getItem('nks_user'));
+                            userObj.avatar = data.user?.avatar || base64;
+                            localStorage.setItem('nks_user', JSON.stringify(userObj));
+                            this.user.avatar = userObj.avatar;
+                            
+                            this.showUpdateAvatarModal = false;
+                            this.avatarImgSrc = '';
+                            alert('Cập nhật ảnh đại diện thành công!');
+                        } else {
+                            const err = await res.json();
+                            alert(err.message || 'Lỗi khi cập nhật avatar.');
+                        }
+                    } catch (e) {
+                        alert('Lỗi kết nối máy chủ.');
+                    }
+                };
+                img.src = this.avatarImgSrc;
+            },
+
+            // CCCD upload helpers
+            cccdFrontSrc: '',
+            cccdBackSrc: '',
+            
+            handleCccdSelect(event, side) {
+                const file = event.target.files[0];
+                if (!file) return;
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    if (side === 'front') {
+                        this.cccdFrontSrc = e.target.result;
+                    } else {
+                        this.cccdBackSrc = e.target.result;
+                    }
+                };
+                reader.readAsDataURL(file);
+            },
+            
+            async saveCccd() {
+                if (!this.cccdFrontSrc || !this.cccdBackSrc || !this.cccdNumberInput || !this.cccdDateInput || !this.cccdPlaceInput) {
+                    alert('Vui lòng nhập đầy đủ thông tin và chọn ảnh 2 mặt CCCD.');
+                    return;
+                }
+                
+                try {
+                    const res = await fetch('/nks-api/nks/user/updateCccd', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Accept': 'application/json',
+                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                        },
+                        body: JSON.stringify({
+                            access_token: localStorage.getItem('nks_access_token') || '',
+                            front: this.cccdFrontSrc,
+                            back: this.cccdBackSrc,
+                            number: this.cccdNumberInput,
+                            date: this.cccdDateInput,
+                            place: this.cccdPlaceInput
+                        })
+                    });
+                    
+                    if (res.ok) {
+                        const data = await res.json();
+                        
+                        const userObj = JSON.parse(localStorage.getItem('nks_user'));
+                        userObj.id_number = this.cccdNumberInput;
+                        userObj.id_date = this.cccdDateInput;
+                        userObj.id_place = this.cccdPlaceInput;
+                        localStorage.setItem('nks_user', JSON.stringify(userObj));
+                        
+                        this.idNumberInput = this.cccdNumberInput;
+                        this.idDateInput = this.cccdDateInput;
+                        this.idPlaceInput = this.cccdPlaceInput;
+                        
+                        this.showUpdateCccdModal = false;
+                        alert('Xác thực và cập nhật CCCD thành công!');
+                    } else {
+                        const err = await res.json();
+                        alert(err.message || 'Lỗi khi cập nhật CCCD.');
+                    }
+                } catch (e) {
+                    alert('Lỗi kết nối máy chủ.');
                 }
             },
             

@@ -26,6 +26,13 @@ Route::prefix('nks-api')->group(function () {
     Route::post('/profile/update', [PropertyController::class, 'apiUpdateProfile']);
     Route::post('/profile/upgrade-host', [PropertyController::class, 'apiUpgradeHost']);
     
+    // NKS Proxies
+    Route::post('/nks/provinces', [PropertyController::class, 'apiProxyProvinces']);
+    Route::post('/nks/administratives', [PropertyController::class, 'apiProxyAdministratives']);
+    Route::post('/nks/user/updatePass', [PropertyController::class, 'apiProxyUpdatePass']);
+    Route::post('/nks/user/updateAvatar', [PropertyController::class, 'apiProxyUpdateAvatar']);
+    Route::post('/nks/user/updateCccd', [PropertyController::class, 'apiProxyUpdateCccd']);
+    
     Route::post('/appointments/book', [PropertyController::class, 'apiBookAppointment']);
     Route::get('/appointments/user/{userId}', [PropertyController::class, 'apiGetAppointments']);
     Route::post('/appointments/cancel/{id}', [PropertyController::class, 'apiCancelAppointment']);
