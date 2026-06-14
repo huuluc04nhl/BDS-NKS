@@ -7,6 +7,7 @@ use App\Models\User;
 use App\Models\Message;
 use App\Models\EmailLog;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Http;
 
 class UserAdminChatTest extends TestCase
 {
@@ -18,6 +19,16 @@ class UserAdminChatTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
+
+        // Prevent real external calls during tests
+        Http::fake([
+            'account.nks.vn/api/nks/user/login' => Http::response([
+                'success' => false,
+                'code' => 500,
+                'error' => 'Tài khoản không tồn tại',
+                'message' => 'Unauthorized'
+            ], 200)
+        ]);
 
         // Create Default Users
         $this->admin = User::create([

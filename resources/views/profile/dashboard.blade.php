@@ -635,8 +635,8 @@
                         <!-- Normal Login Form (First Time) -->
                         <form x-show="!showSecondLogin" @submit.prevent="login($refs.loginEmail.value, $refs.loginPass.value)" class="space-y-5">
                             <div>
-                                <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Địa chỉ Email</label>
-                                <input type="email" x-ref="loginEmail" placeholder="name@example.com" class="w-full bg-slate-50 border border-slate-200 rounded-2xl px-4 py-3.5 text-sm focus:outline-none focus:border-primary focus:bg-white transition-all">
+                                <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Tên đăng nhập hoặc Email</label>
+                                <input type="text" x-ref="loginEmail" placeholder="Nhập tên đăng nhập hoặc email" class="w-full bg-slate-50 border border-slate-200 rounded-2xl px-4 py-3.5 text-sm focus:outline-none focus:border-primary focus:bg-white transition-all">
                             </div>
                             <div>
                                 <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Mật khẩu</label>

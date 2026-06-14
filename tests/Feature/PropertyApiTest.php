@@ -50,6 +50,53 @@ class PropertyApiTest extends TestCase
                         'formatedSqrPrice' => '294k/m²'
                     ]
                 ]
+            ], 200),
+            'account.nks.vn/api/nks/user/login' => Http::response([
+                'success' => true,
+                'access_token' => 'mock_nks_access_token_123',
+                'user' => [
+                    'id' => 999,
+                    'name' => 'Nguyen Van Owner',
+                    'username' => 'owner_username',
+                    'email' => 'owner@nks.vn',
+                    'phone' => '0987654321',
+                    'role' => 'owner',
+                    'status' => 'active',
+                    'point' => 100
+                ]
+            ], 200),
+            'account.nks.vn/api/nks/user' => Http::response([
+                'success' => true,
+                'user' => [
+                    'id' => 999,
+                    'name' => 'Nguyen Van Owner',
+                    'username' => 'owner_username',
+                    'email' => 'owner@nks.vn',
+                    'phone' => '0987654321',
+                    'role' => 'owner',
+                    'status' => 'active',
+                    'point' => 100
+                ]
+            ], 200),
+            'account.nks.vn/api/nks/user/updateInfo' => Http::response([
+                'success' => true,
+                'user' => [
+                    'id' => 999,
+                    'name' => 'Updated Name',
+                    'username' => 'owner_username',
+                    'email' => 'owner@nks.vn',
+                    'phone' => '0987654321',
+                    'role' => 'owner',
+                    'status' => 'active',
+                    'point' => 105
+                ]
+            ], 200),
+            'online.nks.vn/api/nks/provinces' => Http::response([
+                ['id' => 79, 'name' => 'Thành phố Hồ Chí Minh'],
+                ['id' => 1, 'name' => 'Thành phố Hà Nội']
+            ], 200),
+            'online.nks.vn/api/nks/administratives' => Http::response([
+                ['id' => 12227, 'name' => 'Phường Long Bình']
             ], 200)
         ]);
     }
