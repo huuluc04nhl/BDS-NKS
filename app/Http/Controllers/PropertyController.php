@@ -554,8 +554,19 @@ class PropertyController extends Controller
 
                 if ($response->successful()) {
                     $data = $response->json();
+                    Log::info('NKS Login Response: ' . json_encode($data));
+                    
+                    if (isset($data['success']) && !$data['success']) {
+                        return response()->json([
+                            'success' => false,
+                            'message' => $data['message'] ?? 'Tên đăng nhập hoặc mật khẩu không chính xác.'
+                        ], 401);
+                    }
+                    
                     $accessToken = $data['access_token'] ?? null;
                     $remoteUser = $data['user'] ?? $data['user_info'] ?? $data['data'] ?? null;
+                } else {
+                    Log::warning('NKS Login HTTP Error: ' . $response->status() . ' - ' . $response->body());
                 }
             } catch (\Exception $e) {
                 Log::warning('NKS Login API unavailable, falling back to local DB check: ' . $e->getMessage());
