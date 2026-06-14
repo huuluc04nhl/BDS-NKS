@@ -557,112 +557,86 @@ class PropertyController extends Controller
                     Log::info('NKS Login Response: ' . json_encode($data));
                     
                     if (isset($data['success']) && !$data['success']) {
-                        $errorMsg = $data['error'] ?? $data['message'] ?? '';
-                        // If the account does not exist on NKS, it might be a local mock user (like in tests).
-                        // In this case, we don't return 401 immediately, but fall back to the local DB.
-                        // Otherwise (e.g. wrong password for an existing NKS account), we fail immediately.
-                        if (strpos(strtolower($errorMsg), 'không tồn tại') === false && 
-                            strpos(strtolower($errorMsg), 'not found') === false) {
-                            return response()->json([
-                                'success' => false,
-                                'message' => $errorMsg ?: 'Tên đăng nhập hoặc mật khẩu không chính xác.'
-                            ], 401);
-                        }
-                    } else {
-                        $accessToken = $data['access_token'] ?? null;
-                        $remoteUser = $data['user'] ?? $data['user_info'] ?? $data['data'] ?? null;
+                        return response()->json([
+                            'success' => false,
+                            'message' => $data['error'] ?? $data['message'] ?? 'Tên đăng nhập hoặc mật khẩu không chính xác.'
+                        ], 401);
                     }
+                    
+                    $accessToken = $data['access_token'] ?? null;
+                    $remoteUser = $data['user'] ?? $data['user_info'] ?? $data['data'] ?? null;
+                    
+                    if (!$remoteUser || !$accessToken) {
+                        return response()->json([
+                            'success' => false,
+                            'message' => 'Không tìm thấy thông tin tài khoản từ hệ thống NKS.'
+                        ], 401);
+                    }
+                    
+                    $email = $remoteUser['email'] ?? $request->email;
+                    $name = $remoteUser['name'] ?? $remoteUser['username'] ?? $remoteUser['fullname'] ?? 'Thành viên NKS';
+                    $phone = $remoteUser['phone'] ?? null;
+                    $avatar = $remoteUser['avatar'] ?? null;
+                    $role = $remoteUser['role'] ?? 'renter';
+                    $status = $remoteUser['status'] ?? 'active';
+                    $point = intval($remoteUser['point'] ?? 0);
+
+                    if (!$avatar) {
+                        $avatar = 'https://api.dicebear.com/7.x/adventurer/svg?seed=' . urlencode($name);
+                    }
+
+                    $existingUser = \App\Models\User::where('email', $email)->first();
+                    $localStatus = ($existingUser && $existingUser->status === 'blocked') ? 'blocked' : $status;
+
+                    $user = \App\Models\User::updateOrCreate(
+                        ['email' => $email],
+                        [
+                            'name' => $name,
+                            'phone' => $phone,
+                            'avatar' => $avatar,
+                            'role' => $role,
+                            'status' => $localStatus,
+                            'point' => $point
+                        ]
+                    );
+
+                    if ($user->status === 'blocked') {
+                        return response()->json([
+                            'success' => false,
+                            'message' => 'Tài khoản của bạn đã bị khóa tạm thời. Vui lòng liên hệ quản trị viên.'
+                        ], 403);
+                    }
+
+                    \Illuminate\Support\Facades\Auth::login($user, true);
+
+                    return response()->json([
+                        'success' => true,
+                        'access_token' => $accessToken,
+                        'user' => [
+                            'id' => $user->id,
+                            'name' => $user->name,
+                            'email' => $user->email,
+                            'phone' => $user->phone,
+                            'role' => $user->role,
+                            'status' => $user->status,
+                            'avatar' => $user->avatar,
+                            'point' => $user->point
+                        ]
+                    ]);
                 } else {
                     Log::warning('NKS Login HTTP Error: ' . $response->status() . ' - ' . $response->body());
-                }
-            } catch (\Exception $e) {
-                Log::warning('NKS Login API unavailable, falling back to local DB check: ' . $e->getMessage());
-            }
-
-            if ($remoteUser && $accessToken) {
-                $email = $remoteUser['email'] ?? $request->email;
-                $name = $remoteUser['name'] ?? $remoteUser['username'] ?? $remoteUser['fullname'] ?? 'Thành viên NKS';
-                $phone = $remoteUser['phone'] ?? null;
-                $avatar = $remoteUser['avatar'] ?? null;
-                $role = $remoteUser['role'] ?? 'renter';
-                $status = $remoteUser['status'] ?? 'active';
-                $point = intval($remoteUser['point'] ?? 0);
-
-                if (!$avatar) {
-                    $avatar = 'https://api.dicebear.com/7.x/adventurer/svg?seed=' . urlencode($name);
-                }
-
-                $user = \App\Models\User::updateOrCreate(
-                    ['email' => $email],
-                    [
-                        'name' => $name,
-                        'phone' => $phone,
-                        'avatar' => $avatar,
-                        'role' => $role,
-                        'status' => $status,
-                        'point' => $point,
-                        'password' => bcrypt($request->password)
-                    ]
-                );
-
-                if ($user->status === 'blocked') {
                     return response()->json([
                         'success' => false,
-                        'message' => 'Tài khoản của bạn đã bị khóa tạm thời. Vui lòng liên hệ quản trị viên.'
-                    ], 403);
+                        'message' => 'Tên đăng nhập hoặc mật khẩu không chính xác.'
+                    ], 401);
                 }
-
-                \Illuminate\Support\Facades\Auth::login($user, true);
-
-                return response()->json([
-                    'success' => true,
-                    'access_token' => $accessToken,
-                    'user' => [
-                        'id' => $user->id,
-                        'name' => $user->name,
-                        'email' => $user->email,
-                        'phone' => $user->phone,
-                        'role' => $user->role,
-                        'status' => $user->status,
-                        'avatar' => $user->avatar,
-                        'point' => $user->point
-                    ]
-                ]);
-            }
-
-            // Fallback check on local DB (offline / test execution)
-            $user = \App\Models\User::where('email', $request->email)->first();
-
-            if (!$user || !\Illuminate\Support\Facades\Hash::check($request->password, $user->password)) {
+            } catch (\Exception $e) {
+                Log::warning('NKS Login API unavailable: ' . $e->getMessage());
                 return response()->json([
                     'success' => false,
-                    'message' => 'Email hoặc Mật khẩu không chính xác.'
-                ], 401);
+                    'message' => 'Hệ thống tài khoản NKS hiện không khả dụng. Vui lòng thử lại sau.'
+                ], 503);
             }
-
-            if ($user->status === 'blocked') {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Tài khoản của bạn đã bị khóa tạm thời. Vui lòng liên hệ quản trị viên.'
-                ], 403);
-            }
-
-            \Illuminate\Support\Facades\Auth::login($user, true);
-
-            return response()->json([
-                'success' => true,
-                'access_token' => 'mock_token_for_local_' . $user->id,
-                'user' => [
-                    'id' => $user->id,
-                    'name' => $user->name,
-                    'email' => $user->email,
-                    'phone' => $user->phone,
-                    'role' => $user->role,
-                    'status' => $user->status,
-                    'avatar' => $user->avatar,
-                    'point' => $user->point
-                ]
-            ]);
         } catch (\Illuminate\Validation\ValidationException $e) {
             return response()->json([
                 'success' => false,
@@ -760,12 +734,13 @@ class PropertyController extends Controller
                     ]);
                     $isRecreated = true;
                 } else {
+                    $localStatus = ($user->status === 'blocked') ? 'blocked' : $status;
                     $user->update([
                         'name' => $name,
                         'phone' => $phone,
                         'avatar' => $avatar,
                         'role' => $role,
-                        'status' => $status,
+                        'status' => $localStatus,
                         'point' => $point
                     ]);
                 }
@@ -783,11 +758,12 @@ class PropertyController extends Controller
                     ]);
                     $isRecreated = true;
                 } else {
+                    $localStatus = ($user->status === 'blocked') ? 'blocked' : ($userData['status'] ?? $user->status);
                     $user->update([
                         'name' => $userData['name'] ?? $user->name,
                         'phone' => $userData['phone'] ?? $user->phone,
                         'role' => $userData['role'] ?? $user->role,
-                        'status' => $userData['status'] ?? $user->status,
+                        'status' => $localStatus,
                         'avatar' => $userData['avatar'] ?? $user->avatar,
                         'point' => intval($userData['point'] ?? $user->point)
                     ]);

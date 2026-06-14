@@ -23,10 +23,18 @@ class UserAdminChatTest extends TestCase
         // Prevent real external calls during tests
         Http::fake([
             'account.nks.vn/api/nks/user/login' => Http::response([
-                'success' => false,
-                'code' => 500,
-                'error' => 'Tài khoản không tồn tại',
-                'message' => 'Unauthorized'
+                'success' => true,
+                'access_token' => 'mock_nks_access_token_123',
+                'user' => [
+                    'id' => 999,
+                    'name' => 'Duy renter',
+                    'username' => 'duy_renter',
+                    'email' => 'duy@example.com',
+                    'phone' => '123456',
+                    'role' => 'renter',
+                    'status' => 'active',
+                    'point' => 50
+                ]
             ], 200)
         ]);
 

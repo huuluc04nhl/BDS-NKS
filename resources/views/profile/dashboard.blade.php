@@ -688,61 +688,38 @@
                          x-cloak class="space-y-8 max-w-md mx-auto">
                         <div class="text-center">
                             <h2 class="text-2xl font-extrabold text-slate-800">Đăng ký thành viên</h2>
-                            <p class="text-sm text-slate-400 mt-1">Trở thành thành viên của cộng đồng BDS NKS</p>
+                            <p class="text-sm text-slate-400 mt-1">Hệ thống đồng bộ tài khoản NKS Account API</p>
                         </div>
                         
-                        <form @submit.prevent="register($refs.regName.value, $refs.regEmail.value, $refs.regPass.value, $refs.regRole.value)" class="space-y-5">
-                            <div>
-                                <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Họ và tên</label>
-                                <input type="text" x-ref="regName" required placeholder="Nguyễn Văn A" class="w-full bg-slate-50 border border-slate-200 rounded-2xl px-4 py-3.5 text-sm focus:outline-none focus:border-primary focus:bg-white transition-all">
+                        <div class="bg-blue-50/50 border border-blue-100/60 rounded-3xl p-8 text-center space-y-4 shadow-sm">
+                            <div class="w-14 h-14 rounded-full bg-primary/10 text-primary flex items-center justify-center mx-auto mb-2">
+                                <svg class="w-7 h-7" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                                </svg>
                             </div>
-                            <div>
-                                <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Địa chỉ Email</label>
-                                <input type="email" x-ref="regEmail" required placeholder="name@example.com" class="w-full bg-slate-50 border border-slate-200 rounded-2xl px-4 py-3.5 text-sm focus:outline-none focus:border-primary focus:bg-white transition-all">
+                            <h3 class="text-base font-bold text-slate-800">Đăng Ký Tài Khoản NKS</h3>
+                            <p class="text-xs text-slate-500 leading-relaxed max-w-xs mx-auto">
+                                Hệ thống BDS NKS sử dụng phương thức đăng nhập tập trung. Bạn không cần đăng ký tài khoản nội bộ riêng lẻ nữa. Mọi tài khoản thành viên đều được quản lý đồng nhất trên API NKS.
+                            </p>
+                            <p class="text-xs text-slate-400">
+                                Hãy sử dụng tài khoản API có sẵn của bạn để đăng nhập trực tiếp.
+                            </p>
+                            <div class="pt-3">
+                                <button @click="activeTab = 'login'" class="w-full bg-primary text-white font-bold py-3.5 rounded-full text-xs shadow-md btn-hover-premium transition-all">
+                                    Quay lại Đăng nhập ngay
+                                </button>
                             </div>
-                            <div>
-                                <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Mật khẩu</label>
-                                <div class="relative">
-                                    <input :type="showRegisterPassword ? 'text' : 'password'" x-ref="regPass" required placeholder="Mật khẩu ít nhất 6 ký tự" class="w-full bg-slate-50 border border-slate-200 rounded-2xl pl-4 pr-12 py-3.5 text-sm focus:outline-none focus:border-primary focus:bg-white transition-all">
-                                    <button type="button" @click="showRegisterPassword = !showRegisterPassword" class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors focus:outline-none">
-                                        <svg x-show="!showRegisterPassword" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                                            <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                                            <path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                                        </svg>
-                                        <svg x-show="showRegisterPassword" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" style="display: none;" x-cloak>
-                                            <path stroke-linecap="round" stroke-linejoin="round" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l18 18" />
-                                        </svg>
-                                    </button>
-                                </div>
-                            </div>
-                            <div>
-                                <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Nhập lại mật khẩu</label>
-                                <div class="relative">
-                                    <input :type="showRegisterPassword ? 'text' : 'password'" x-ref="regPassConfirm" required placeholder="Nhập lại mật khẩu" class="w-full bg-slate-50 border border-slate-200 rounded-2xl pl-4 pr-12 py-3.5 text-sm focus:outline-none focus:border-primary focus:bg-white transition-all">
-                                    <button type="button" @click="showRegisterPassword = !showRegisterPassword" class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors focus:outline-none">
-                                        <svg x-show="!showRegisterPassword" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                                            <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                                            <path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                                        </svg>
-                                        <svg x-show="showRegisterPassword" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" style="display: none;" x-cloak>
-                                            <path stroke-linecap="round" stroke-linejoin="round" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l18 18" />
-                                        </svg>
-                                    </button>
-                                </div>
-                            </div>
-                            <div>
-                                <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Vai trò tài khoản</label>
-                                <select x-ref="regRole" class="w-full bg-slate-50 border border-slate-200 rounded-2xl px-4 py-3.5 text-sm focus:outline-none focus:border-primary focus:bg-white transition-all">
-                                    <option value="renter">Tôi là Khách thuê tìm nhà</option>
-                                    <option value="owner">Tôi là Chủ nhà cho thuê</option>
-                                </select>
-                            </div>
-                            
-                            <button type="submit" class="w-full bg-primary text-white font-bold py-4 rounded-full text-sm shadow-md btn-hover-premium">Đăng ký thành viên</button>
-                        </form>
-                        
-                        <div class="text-center text-sm text-slate-400">
-                            Đã có tài khoản? <button @click="activeTab = 'login'" class="text-primary font-bold hover:underline">Đăng nhập</button>
+                        </div>
+
+                        <!-- Hidden registration form for backward compatibility and JS references -->
+                        <div style="display: none;">
+                            <form @submit.prevent="register($refs.regName.value, $refs.regEmail.value, $refs.regPass.value, $refs.regRole.value)">
+                                <input type="text" x-ref="regName" value="Mock Renter">
+                                <input type="email" x-ref="regEmail" value="mock@nks.vn">
+                                <input type="password" x-ref="regPass" value="password123">
+                                <input type="password" x-ref="regPassConfirm" value="password123">
+                                <select x-ref="regRole"><option value="renter">Renter</option></select>
+                            </form>
                         </div>
                     </div>
 
