@@ -1252,6 +1252,184 @@
         </div>
     </div>
 
+    <!-- PASSWORD UPDATE MODAL OVERLAY -->
+    <div x-show="showUpdatePassModal" 
+         x-transition:enter="transition ease-out duration-300"
+         x-transition:enter-start="opacity-0"
+         x-transition:enter-end="opacity-100"
+         x-transition:leave="transition ease-in duration-200"
+         x-transition:leave-start="opacity-100"
+         x-transition:leave-end="opacity-0"
+         class="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm"
+         style="display: none;"
+         x-cloak>
+        
+        <div @click.away="showUpdatePassModal = false" 
+             x-show="showUpdatePassModal"
+             x-transition:enter="transition ease-out duration-300 transform"
+             x-transition:enter-start="opacity-0 scale-95 translate-y-4"
+             x-transition:enter-end="opacity-100 scale-100 translate-y-0"
+             x-transition:leave="transition ease-in duration-200 transform"
+             x-transition:leave-start="opacity-100 scale-100 translate-y-0"
+             x-transition:leave-end="opacity-0 scale-95 translate-y-4"
+             class="bg-white rounded-[32px] shadow-2xl max-w-md w-full overflow-hidden border border-slate-100 flex flex-col relative">
+            
+            <button @click="showUpdatePassModal = false" class="absolute top-4 right-4 z-50 w-9 h-9 rounded-full bg-white/95 hover:bg-white text-slate-500 hover:text-slate-800 shadow-md flex items-center justify-center transition-all active:scale-95 border border-slate-100">
+                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+            </button>
+
+            <div class="p-6 sm:p-8 space-y-6 overflow-y-auto max-h-[85vh]">
+                <div class="text-center">
+                    <span class="inline-flex p-3 rounded-full bg-primary/10 text-primary mb-3">
+                        <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
+                        </svg>
+                    </span>
+                    <h2 class="text-xl font-black text-slate-900 leading-snug">Cập nhật mật khẩu</h2>
+                    <p class="text-xs text-slate-400 mt-1">Cập nhật mật khẩu bảo mật tài khoản thành viên NKS</p>
+                </div>
+
+                <form @submit.prevent="updatePassword" class="space-y-4">
+                    <!-- Old Password -->
+                    <div>
+                        <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-2">Mật khẩu hiện tại</label>
+                        <input type="password" 
+                               x-model="passwordCurrent" 
+                               placeholder="••••••••" 
+                               class="w-full bg-slate-50 border border-slate-200 rounded-2xl px-4 py-3 text-sm focus:outline-none focus:border-primary focus:bg-white transition-all text-slate-700 font-semibold">
+                    </div>
+
+                    <!-- New Password -->
+                    <div>
+                        <div class="flex justify-between items-center mb-2">
+                            <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider">Mật khẩu mới</label>
+                            <!-- Collapsible Generator trigger -->
+                            <button type="button" 
+                                    @click="showPasswordGenerator = !showPasswordGenerator"
+                                    class="text-[10px] text-primary hover:text-primary-dark font-extrabold flex items-center gap-1 transition-colors uppercase tracking-wider">
+                                <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />
+                                </svg>
+                                <span x-text="showPasswordGenerator ? 'Đóng bộ tạo' : 'Tạo ngẫu nhiên'"></span>
+                            </button>
+                        </div>
+                        <input type="password" 
+                               x-model="passwordNew" 
+                               placeholder="••••••••" 
+                               class="w-full bg-slate-50 border border-slate-200 rounded-2xl px-4 py-3 text-sm focus:outline-none focus:border-primary focus:bg-white transition-all text-slate-700 font-semibold">
+                    </div>
+
+                    <!-- Confirm Password -->
+                    <div>
+                        <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-2">Xác nhận mật khẩu mới</label>
+                        <input type="password" 
+                               x-model="passwordConfirm" 
+                               placeholder="••••••••" 
+                               class="w-full bg-slate-50 border border-slate-200 rounded-2xl px-4 py-3 text-sm focus:outline-none focus:border-primary focus:bg-white transition-all text-slate-700 font-semibold">
+                    </div>
+
+                    <!-- Collapsible Random Password Generator Card -->
+                    <div x-show="showPasswordGenerator" 
+                         x-collapse 
+                         x-cloak 
+                         class="bg-slate-50 rounded-2xl p-4 border border-slate-200/60 space-y-4">
+                        <div class="flex items-center justify-between border-b border-slate-200/60 pb-2">
+                            <span class="text-xs font-extrabold text-slate-700 flex items-center gap-1">
+                                <svg class="w-4 h-4 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                                </svg>
+                                Tạo mật khẩu an toàn
+                            </span>
+                        </div>
+
+                        <!-- Length Slider -->
+                        <div class="space-y-1">
+                            <div class="flex justify-between items-center text-[10px] font-bold text-slate-500 uppercase tracking-wider">
+                                <span>Độ dài mật khẩu</span>
+                                <span class="text-primary" x-text="genLength + ' ký tự'"></span>
+                            </div>
+                            <input type="range" 
+                                   min="6" 
+                                   max="32" 
+                                   step="1" 
+                                   x-model="genLength" 
+                                   class="w-full h-1.5 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-primary">
+                        </div>
+
+                        <!-- Checkboxes Grid -->
+                        <div class="grid grid-cols-2 gap-2.5">
+                            <label class="flex items-center gap-2 cursor-pointer text-xs font-bold text-slate-600">
+                                <input type="checkbox" x-model="genUpper" class="rounded border-slate-300 text-primary focus:ring-primary w-4 h-4">
+                                Chữ HOA
+                            </label>
+                            <label class="flex items-center gap-2 cursor-pointer text-xs font-bold text-slate-600">
+                                <input type="checkbox" x-model="genLower" class="rounded border-slate-300 text-primary focus:ring-primary w-4 h-4">
+                                Chữ thường
+                            </label>
+                            <label class="flex items-center gap-2 cursor-pointer text-xs font-bold text-slate-600">
+                                <input type="checkbox" x-model="genNumbers" class="rounded border-slate-300 text-primary focus:ring-primary w-4 h-4">
+                                Chữ số (0-9)
+                            </label>
+                            <label class="flex items-center gap-2 cursor-pointer text-xs font-bold text-slate-600">
+                                <input type="checkbox" x-model="genSpecial" class="rounded border-slate-300 text-primary focus:ring-primary w-4 h-4">
+                                Ký tự đặc biệt
+                            </label>
+                        </div>
+
+                        <!-- Generate button -->
+                        <button type="button" 
+                                @click="generateRandomPassword" 
+                                class="w-full bg-slate-200 hover:bg-slate-300/80 text-slate-700 font-extrabold py-2 rounded-xl text-xs transition-colors">
+                            Tự động sinh mật khẩu
+                        </button>
+
+                        <!-- Generated password display and copy -->
+                        <div x-show="generatedPass" class="space-y-3 pt-2 border-t border-slate-200/60" x-cloak>
+                            <div class="relative">
+                                <input type="text" 
+                                       readonly 
+                                       :value="generatedPass" 
+                                       class="w-full bg-white border border-slate-200 rounded-xl pl-3 pr-10 py-2.5 text-xs text-slate-700 font-mono font-bold focus:outline-none select-all">
+                                <button type="button" 
+                                        @click="navigator.clipboard.writeText(generatedPass); alert('Đã sao chép mật khẩu mới vào bộ nhớ tạm!');" 
+                                        class="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-primary transition-colors"
+                                        title="Sao chép">
+                                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" />
+                                    </svg>
+                                </button>
+                            </div>
+
+                            <!-- "Tôi đã lưu mật khẩu này" checkbox -->
+                            <label class="flex items-start gap-2.5 cursor-pointer text-[11px] text-amber-700 font-extrabold leading-relaxed">
+                                <input type="checkbox" x-model="hasSavedGenPass" class="rounded border-amber-300 text-amber-600 focus:ring-amber-500 w-4 h-4 mt-0.5">
+                                <span>Tôi đã lưu mật khẩu mới này vào nơi an toàn (ghi chú, quản lý mật khẩu...)</span>
+                            </label>
+
+                            <!-- Apply button -->
+                            <button type="button" 
+                                    @click="applyGeneratedPassword" 
+                                    :disabled="!hasSavedGenPass"
+                                    class="w-full bg-primary hover:bg-primary-dark disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold py-2 rounded-xl text-xs transition-all shadow-md">
+                                Áp dụng & Điền tự động
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Action buttons -->
+                    <div class="flex gap-3 pt-3 border-t border-slate-100">
+                        <button type="button" @click="showUpdatePassModal = false" class="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold py-3.5 rounded-full text-xs transition-colors">
+                            Hủy
+                        </button>
+                        <button type="submit" class="flex-1 bg-primary hover:bg-primary-dark text-white font-bold py-3.5 rounded-full text-xs transition-all shadow-md">
+                            Lưu thay đổi
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
     <!-- AVATAR UPDATE MODAL OVERLAY -->
     <div x-show="showUpdateAvatarModal" 
          x-transition:enter="transition ease-out duration-300"
@@ -1579,6 +1757,15 @@
             showUpdateAvatarModal: false,
             passwordCurrent: '',
             passwordNew: '',
+            passwordConfirm: '',
+            showPasswordGenerator: false,
+            genLength: 12,
+            genUpper: true,
+            genLower: true,
+            genNumbers: true,
+            genSpecial: true,
+            generatedPass: '',
+            hasSavedGenPass: false,
             cccdNumberInput: '',
             cccdDateInput: '',
             cccdPlaceInput: '',
@@ -2234,15 +2421,103 @@
                 }
             },
             
-            updatePassword() {
-                if (!this.passwordCurrent || !this.passwordNew) {
-                    alert('Vui lòng điền mật khẩu hiện tại và mật khẩu mới.');
+            async updatePassword() {
+                if (!this.passwordCurrent || !this.passwordNew || !this.passwordConfirm) {
+                    alert('Vui lòng nhập đầy đủ mật khẩu hiện tại, mật khẩu mới và xác nhận mật khẩu.');
                     return;
                 }
                 
-                alert('Cập nhật mật khẩu thành công!');
-                this.passwordCurrent = '';
-                this.passwordNew = '';
+                if (this.passwordNew !== this.passwordConfirm) {
+                    alert('Mật khẩu mới và mật khẩu xác nhận không trùng khớp.');
+                    return;
+                }
+                
+                try {
+                    const res = await fetch('/nks-api/nks/user/updatePass', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Accept': 'application/json',
+                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                        },
+                        body: JSON.stringify({
+                            access_token: localStorage.getItem('nks_access_token') || '',
+                            old_password: this.passwordCurrent,
+                            password: this.passwordNew
+                        })
+                    });
+                    
+                    if (res.ok) {
+                        alert('Cập nhật mật khẩu thành công!');
+                        this.passwordCurrent = '';
+                        this.passwordNew = '';
+                        this.passwordConfirm = '';
+                        this.generatedPass = '';
+                        this.showPasswordGenerator = false;
+                        this.showUpdatePassModal = false;
+                    } else {
+                        const err = await res.json();
+                        alert(err.message || 'Lỗi khi cập nhật mật khẩu.');
+                    }
+                } catch (e) {
+                    alert('Lỗi kết nối máy chủ.');
+                }
+            },
+
+            generateRandomPassword() {
+                const upperChars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+                const lowerChars = 'abcdefghijklmnopqrstuvwxyz';
+                const numChars = '0123456789';
+                const specChars = '!@#$%^&*()_+~`|}{[]:;?><,./-=';
+                
+                let allowed = '';
+                let password = '';
+                
+                if (this.genUpper) {
+                    allowed += upperChars;
+                    password += upperChars.charAt(Math.floor(Math.random() * upperChars.length));
+                }
+                if (this.genLower) {
+                    allowed += lowerChars;
+                    password += lowerChars.charAt(Math.floor(Math.random() * lowerChars.length));
+                }
+                if (this.genNumbers) {
+                    allowed += numChars;
+                    password += numChars.charAt(Math.floor(Math.random() * numChars.length));
+                }
+                if (this.genSpecial) {
+                    allowed += specChars;
+                    password += specChars.charAt(Math.floor(Math.random() * specChars.length));
+                }
+                
+                if (allowed === '') {
+                    alert('Vui lòng chọn ít nhất một tiêu chí ký tự.');
+                    return;
+                }
+                
+                const remainingLength = this.genLength - password.length;
+                for (let i = 0; i < remainingLength; i++) {
+                    const idx = Math.floor(Math.random() * allowed.length);
+                    password += allowed.charAt(idx);
+                }
+                
+                // Shuffle characters
+                this.generatedPass = password.split('').sort(() => 0.5 - Math.random()).join('');
+                this.hasSavedGenPass = false;
+            },
+            
+            applyGeneratedPassword() {
+                if (!this.generatedPass) {
+                    alert('Vui lòng bấm tạo mật khẩu trước.');
+                    return;
+                }
+                if (!this.hasSavedGenPass) {
+                    alert('Vui lòng tích chọn "Tôi đã lưu mật khẩu mới này" để kích hoạt áp dụng.');
+                    return;
+                }
+                this.passwordNew = this.generatedPass;
+                this.passwordConfirm = this.generatedPass;
+                this.showPasswordGenerator = false;
             },
             
             async registerHost() {
