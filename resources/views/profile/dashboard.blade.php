@@ -1736,7 +1736,7 @@
 
 @section('scripts')
 <script>
-    document.addEventListener('alpine:init', () => {
+    function initMemberDashboard() {
         Alpine.data('memberDashboard', () => ({
             activeTab: 'info',
             isLoggedIn: false,
@@ -2999,6 +2999,11 @@
                 }, 5000);
             }
         }));
-    });
+    }
+    if (window.Alpine) {
+        initMemberDashboard();
+    } else {
+        document.addEventListener('alpine:init', initMemberDashboard);
+    }
 </script>
 @endsection

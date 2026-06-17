@@ -424,7 +424,7 @@
 </script>
 
 <script>
-    document.addEventListener('alpine:init', () => {
+    function initPropertiesMap() {
         Alpine.data('propertiesMap', () => ({
             properties: [],
             filteredProperties: [],
@@ -887,6 +887,11 @@
                 }
             }
         }));
-    });
+    }
+    if (window.Alpine) {
+        initPropertiesMap();
+    } else {
+        document.addEventListener('alpine:init', initPropertiesMap);
+    }
 </script>
 @endsection

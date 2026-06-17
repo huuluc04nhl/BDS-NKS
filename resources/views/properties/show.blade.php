@@ -265,7 +265,7 @@
 
 @section('scripts')
 <script>
-    document.addEventListener('alpine:init', () => {
+    function initPropertyDetail() {
         Alpine.data('propertyDetail', (propertyData) => ({
             property: propertyData,
             favorites: [],
@@ -471,6 +471,11 @@
                     .addTo(map);
             }
         }));
-    });
+    }
+    if (window.Alpine) {
+        initPropertyDetail();
+    } else {
+        document.addEventListener('alpine:init', initPropertyDetail);
+    }
 </script>
 @endsection
