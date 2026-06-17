@@ -125,7 +125,7 @@
                          x-cloak class="space-y-8">
                         <!-- User Header Card -->
                         <div class="flex flex-col sm:flex-row items-center gap-6 pb-6 border-b border-slate-100 mb-6">
-                            <div class="relative group cursor-pointer w-24 h-24 rounded-full overflow-hidden border-4 border-primary/10 shadow-sm" @click="showUpdateAvatarModal = true">
+                            <div class="relative group cursor-pointer w-24 h-24 rounded-full overflow-hidden border-4 border-primary/10 shadow-sm" @click="activeStep = 3">
                                 <img :src="user && user.avatar ? user.avatar : 'https://api.dicebear.com/7.x/adventurer/svg?seed=' + (user ? user.name : 'nks')" alt="Avatar" class="w-full h-full object-cover">
                                 <div class="absolute inset-0 bg-slate-900/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-all duration-200">
                                     <span class="text-[10px] text-white font-extrabold uppercase tracking-wider">Đổi ảnh</span>
@@ -143,13 +143,13 @@
                                 </div>
                                 <p class="text-xs text-slate-400 font-medium" x-text="user ? user.email : ''"></p>
                                 <div class="flex items-center justify-center sm:justify-start gap-3 mt-3 pt-2">
-                                    <button type="button" @click="showUpdatePassModal = true" class="inline-flex items-center gap-1 text-slate-500 hover:text-primary transition-all text-xs font-bold bg-white border border-slate-200 px-3.5 py-2 rounded-2xl shadow-xs hover:shadow-sm">
+                                    <button type="button" @click="activeStep = 2" class="inline-flex items-center gap-1 text-slate-500 hover:text-primary transition-all text-xs font-bold bg-white border border-slate-200 px-3.5 py-2 rounded-2xl shadow-xs hover:shadow-sm">
                                         <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2">
                                             <path stroke-linecap="round" stroke-linejoin="round" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
                                         </svg>
                                         Mật khẩu
                                     </button>
-                                    <button type="button" @click="cccdNumberInput = idNumberInput; cccdDateInput = idDateInput; cccdPlaceInput = idPlaceInput; showUpdateCccdModal = true" class="inline-flex items-center gap-1 text-slate-500 hover:text-primary transition-all text-xs font-bold bg-white border border-slate-200 px-3.5 py-2 rounded-2xl shadow-xs hover:shadow-sm">
+                                    <button type="button" @click="cccdNumberInput = idNumberInput; cccdDateInput = idDateInput; cccdPlaceInput = idPlaceInput; activeStep = 4" class="inline-flex items-center gap-1 text-slate-500 hover:text-primary transition-all text-xs font-bold bg-white border border-slate-200 px-3.5 py-2 rounded-2xl shadow-xs hover:shadow-sm">
                                         <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2">
                                             <path stroke-linecap="round" stroke-linejoin="round" d="M10 6H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V8a2 2 0 00-2-2h-5m-4 0V5a2 2 0 114 0v1m-4 0a2 2 0 104 0m-5 8a2 2 0 100-4 2 2 0 000 4zm0 0c1.378 0 2.5-1.122 2.5-2.5S10.378 9 9 9m9 2h-3m3 4h-3" />
                                         </svg>
@@ -159,64 +159,536 @@
                             </div>
                         </div>
 
-                        <!-- Profile Info Form -->
-                        <form @submit.prevent="updateProfile()" class="space-y-6 max-w-2xl">
-                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                <div>
-                                    <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Họ</label>
-                                    <input type="text" x-model="firstnameInput" placeholder="Ví dụ: Nguyễn" class="w-full bg-slate-50 border border-slate-200 rounded-2xl px-4 py-3.5 text-sm focus:outline-none focus:border-primary focus:bg-white transition-all text-slate-700">
+                        <!-- Stepper Progress Bar -->
+                        <div class="mb-8 bg-slate-50 border border-slate-200/60 rounded-3xl p-6">
+                            <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                                <!-- Step 1 Indicator -->
+                                <div class="flex items-center gap-3 cursor-pointer" @click="activeStep = 1">
+                                    <div class="w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs transition-all duration-300"
+                                         :class="activeStep === 1 ? 'bg-primary text-white ring-4 ring-primary/20' : (activeStep > 1 ? 'bg-emerald-500 text-white' : 'bg-slate-200 text-slate-500')">
+                                        <template x-if="activeStep > 1">
+                                            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3">
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+                                            </svg>
+                                        </template>
+                                        <template x-if="activeStep <= 1">
+                                            <span>1</span>
+                                        </template>
+                                    </div>
+                                    <div>
+                                        <p class="text-xs font-black" :class="activeStep === 1 ? 'text-primary' : 'text-slate-700'">Cập nhật thông tin</p>
+                                        <p class="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Bước 1</p>
+                                    </div>
                                 </div>
-                                <div>
-                                    <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Tên</label>
-                                    <input type="text" x-model="lastnameInput" placeholder="Ví dụ: Văn A" class="w-full bg-slate-50 border border-slate-200 rounded-2xl px-4 py-3.5 text-sm focus:outline-none focus:border-primary focus:bg-white transition-all text-slate-700">
+                                <div class="hidden md:block flex-grow h-0.5 bg-slate-200 mx-2" :class="activeStep > 1 ? 'bg-emerald-500' : 'bg-slate-200'"></div>
+
+                                <!-- Step 2 Indicator -->
+                                <div class="flex items-center gap-3 cursor-pointer" @click="activeStep = 2">
+                                    <div class="w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs transition-all duration-300"
+                                         :class="activeStep === 2 ? 'bg-primary text-white ring-4 ring-primary/20' : (activeStep > 2 ? 'bg-emerald-500 text-white' : 'bg-slate-200 text-slate-500')">
+                                        <template x-if="activeStep > 2">
+                                            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3">
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+                                            </svg>
+                                        </template>
+                                        <template x-if="activeStep <= 2">
+                                            <span>2</span>
+                                        </template>
+                                    </div>
+                                    <div>
+                                        <p class="text-xs font-black" :class="activeStep === 2 ? 'text-primary' : 'text-slate-700'">Đổi mật khẩu</p>
+                                        <p class="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Bước 2</p>
+                                    </div>
                                 </div>
+                                <div class="hidden md:block flex-grow h-0.5 bg-slate-200 mx-2" :class="activeStep > 2 ? 'bg-emerald-500' : 'bg-slate-200'"></div>
+
+                                <!-- Step 3 Indicator -->
+                                <div class="flex items-center gap-3 cursor-pointer" @click="activeStep = 3">
+                                    <div class="w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs transition-all duration-300"
+                                         :class="activeStep === 3 ? 'bg-primary text-white ring-4 ring-primary/20' : (activeStep > 3 ? 'bg-emerald-500 text-white' : 'bg-slate-200 text-slate-500')">
+                                        <template x-if="activeStep > 3">
+                                            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3">
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+                                            </svg>
+                                        </template>
+                                        <template x-if="activeStep <= 3">
+                                            <span>3</span>
+                                        </template>
+                                    </div>
+                                    <div>
+                                        <p class="text-xs font-black" :class="activeStep === 3 ? 'text-primary' : 'text-slate-700'">Đổi Avatar</p>
+                                        <p class="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Bước 3</p>
+                                    </div>
+                                </div>
+                                <div class="hidden md:block flex-grow h-0.5 bg-slate-200 mx-2" :class="activeStep > 3 ? 'bg-emerald-500' : 'bg-slate-200'"></div>
+
+                                <!-- Step 4 Indicator -->
+                                <div class="flex items-center gap-3 cursor-pointer" @click="cccdNumberInput = idNumberInput; cccdDateInput = idDateInput; cccdPlaceInput = idPlaceInput; activeStep = 4">
+                                    <div class="w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs transition-all duration-300"
+                                         :class="activeStep === 4 ? 'bg-primary text-white ring-4 ring-primary/20' : (user && idNumberInput ? 'bg-emerald-500 text-white' : 'bg-slate-200 text-slate-500')">
+                                        <span>4</span>
+                                    </div>
+                                    <div>
+                                        <p class="text-xs font-black" :class="activeStep === 4 ? 'text-primary' : 'text-slate-700'">Xác thực CCCD</p>
+                                        <p class="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Bước 4</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Step 1: Cập nhật thông tin -->
+                        <div x-show="activeStep === 1"
+                             x-transition:enter="transition ease-out duration-300 transform"
+                             x-transition:enter-start="opacity-0 translate-y-4"
+                             x-transition:enter-end="opacity-100 translate-y-0"
+                             class="space-y-6">
+                            <div>
+                                <h3 class="text-lg font-black text-slate-800">Cập nhật thông tin cá nhân</h3>
+                                <p class="text-xs text-slate-400 font-medium">Cập nhật các thông tin cơ bản của tài khoản (không bao gồm mật khẩu và CCCD)</p>
+                            </div>
+                            <form @submit.prevent="updateProfile();" class="space-y-6 max-w-2xl">
+                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                    <div>
+                                        <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Họ</label>
+                                        <input type="text" x-model="firstnameInput" placeholder="Ví dụ: Nguyễn" class="w-full bg-slate-50 border border-slate-200 rounded-2xl px-4 py-3.5 text-sm focus:outline-none focus:border-primary focus:bg-white transition-all text-slate-700">
+                                    </div>
+                                    <div>
+                                        <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Tên</label>
+                                        <input type="text" x-model="lastnameInput" placeholder="Ví dụ: Văn A" class="w-full bg-slate-50 border border-slate-200 rounded-2xl px-4 py-3.5 text-sm focus:outline-none focus:border-primary focus:bg-white transition-all text-slate-700">
+                                    </div>
+                                </div>
+                                
+                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                    <div>
+                                        <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Số điện thoại</label>
+                                        <input type="tel" x-model="phoneInput" placeholder="Số điện thoại" class="w-full bg-slate-50 border border-slate-200 rounded-2xl px-4 py-3.5 text-sm focus:outline-none focus:border-primary focus:bg-white transition-all text-slate-700">
+                                    </div>
+                                    <div>
+                                        <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Website cá nhân</label>
+                                        <input type="url" x-model="websiteInput" placeholder="https://example.com" class="w-full bg-slate-50 border border-slate-200 rounded-2xl px-4 py-3.5 text-sm focus:outline-none focus:border-primary focus:bg-white transition-all text-slate-700">
+                                    </div>
+                                </div>
+
+                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                    <div>
+                                        <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Giới tính</label>
+                                        <select x-model="genderInput" class="w-full bg-slate-50 border border-slate-200 rounded-2xl px-4 py-3.5 text-sm focus:outline-none focus:border-primary focus:bg-white text-slate-700">
+                                            <option value="0">Nam</option>
+                                            <option value="1">Nữ</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Tỉnh / Thành phố</label>
+                                        <select x-model="provinceInput" class="w-full bg-slate-50 border border-slate-200 rounded-2xl px-4 py-3.5 text-sm focus:outline-none focus:border-primary focus:bg-white text-slate-700">
+                                            <option value="">Chọn Tỉnh / Thành phố</option>
+                                            <template x-for="p in provinces" :key="p.id || p.name">
+                                                <option :value="p.id || p.name" x-text="p.name" :selected="provinceInput == p.id || provinceInput == p.name"></option>
+                                            </template>
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                    <div>
+                                        <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Ngày sinh</label>
+                                        <input type="date" x-model="dobInput" class="w-full bg-slate-50 border border-slate-200 rounded-2xl px-4 py-3.5 text-sm focus:outline-none focus:border-primary focus:bg-white transition-all text-slate-700">
+                                    </div>
+                                    <div>
+                                        <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Nơi sinh</label>
+                                        <input type="text" x-model="pobInput" placeholder="Ví dụ: Hà Nội" class="w-full bg-slate-50 border border-slate-200 rounded-2xl px-4 py-3.5 text-sm focus:outline-none focus:border-primary focus:bg-white transition-all text-slate-700">
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Tiểu sử / Giới thiệu bản thân</label>
+                                    <textarea rows="3" x-model="introInput" placeholder="Giới thiệu ngắn gọn về bản thân..." class="w-full bg-slate-50 border border-slate-200 rounded-2xl px-4 py-3.5 text-sm focus:outline-none focus:border-primary focus:bg-white transition-all text-slate-700"></textarea>
+                                </div>
+                                
+                                <div class="flex items-center gap-3 pt-4 border-t border-slate-100">
+                                    <button type="submit" class="bg-primary text-white font-bold px-8 py-3.5 rounded-full text-xs shadow-md btn-hover-premium transition-all hover:scale-[1.02]">
+                                        Cập nhật & Lưu thông tin
+                                    </button>
+                                    <button type="button" @click="activeStep = 2" class="bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold px-6 py-3.5 rounded-full text-xs transition-colors flex items-center gap-1">
+                                        Tiếp theo
+                                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" />
+                                        </svg>
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+
+                        <!-- Step 2: Đổi mật khẩu -->
+                        <div x-show="activeStep === 2"
+                             x-transition:enter="transition ease-out duration-300 transform"
+                             x-transition:enter-start="opacity-0 translate-y-4"
+                             x-transition:enter-end="opacity-100 translate-y-0"
+                             x-cloak class="space-y-6 max-w-2xl">
+                            <div>
+                                <h3 class="text-lg font-black text-slate-800">Đổi mật khẩu tài khoản</h3>
+                                <p class="text-xs text-slate-400 font-medium">Cập nhật mật khẩu bảo mật tài khoản thành viên NKS</p>
                             </div>
                             
-                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <form @submit.prevent="updatePassword" class="space-y-4">
+                                <!-- Old Password -->
                                 <div>
-                                    <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Số điện thoại</label>
-                                    <input type="tel" x-model="phoneInput" placeholder="Số điện thoại" class="w-full bg-slate-50 border border-slate-200 rounded-2xl px-4 py-3.5 text-sm focus:outline-none focus:border-primary focus:bg-white transition-all text-slate-700">
+                                    <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-2">Mật khẩu hiện tại</label>
+                                    <input type="password" 
+                                           x-model="passwordCurrent" 
+                                           placeholder="••••••••" 
+                                           class="w-full bg-slate-50 border border-slate-200 rounded-2xl px-4 py-3 text-sm focus:outline-none focus:border-primary focus:bg-white transition-all text-slate-700 font-semibold">
                                 </div>
+
+                                <!-- New Password -->
                                 <div>
-                                    <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Website cá nhân</label>
-                                    <input type="url" x-model="websiteInput" placeholder="https://example.com" class="w-full bg-slate-50 border border-slate-200 rounded-2xl px-4 py-3.5 text-sm focus:outline-none focus:border-primary focus:bg-white transition-all text-slate-700">
+                                    <div class="flex justify-between items-center mb-2">
+                                        <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider">Mật khẩu mới</label>
+                                        <!-- Collapsible Generator trigger -->
+                                        <button type="button" 
+                                                @click="showPasswordGenerator = !showPasswordGenerator"
+                                                class="text-[10px] text-primary hover:text-primary-dark font-extrabold flex items-center gap-1 transition-colors uppercase tracking-wider">
+                                            <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />
+                                            </svg>
+                                            <span x-text="showPasswordGenerator ? 'Đóng bộ tạo' : 'Tạo ngẫu nhiên'"></span>
+                                        </button>
+                                    </div>
+                                    <input type="password" 
+                                           x-model="passwordNew" 
+                                           placeholder="••••••••" 
+                                           class="w-full bg-slate-50 border border-slate-200 rounded-2xl px-4 py-3 text-sm focus:outline-none focus:border-primary focus:bg-white transition-all text-slate-700 font-semibold">
+                                </div>
+
+                                <!-- Confirm Password -->
+                                <div>
+                                    <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-2">Xác nhận mật khẩu mới</label>
+                                    <input type="password" 
+                                           x-model="passwordConfirm" 
+                                           placeholder="••••••••" 
+                                           class="w-full bg-slate-50 border border-slate-200 rounded-2xl px-4 py-3 text-sm focus:outline-none focus:border-primary focus:bg-white transition-all text-slate-700 font-semibold">
+                                </div>
+
+                                <!-- Collapsible Random Password Generator Card -->
+                                <div x-show="showPasswordGenerator" 
+                                     x-collapse 
+                                     x-cloak 
+                                     class="bg-slate-50 rounded-2xl p-4 border border-slate-200/60 space-y-4">
+                                    <div class="flex items-center justify-between border-b border-slate-200/60 pb-2">
+                                        <span class="text-xs font-extrabold text-slate-700 flex items-center gap-1">
+                                            <svg class="w-4 h-4 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                                            </svg>
+                                            Tạo mật khẩu an toàn
+                                        </span>
+                                    </div>
+
+                                    <!-- Length Slider -->
+                                    <div class="space-y-1">
+                                        <div class="flex justify-between items-center text-[10px] font-bold text-slate-500 uppercase tracking-wider">
+                                            <span>Độ dài mật khẩu</span>
+                                            <span class="text-primary" x-text="genLength + ' ký tự'"></span>
+                                        </div>
+                                        <input type="range" 
+                                               min="6" 
+                                               max="32" 
+                                               step="1" 
+                                               x-model="genLength" 
+                                               class="w-full h-1.5 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-primary">
+                                    </div>
+
+                                    <!-- Checkboxes Grid -->
+                                    <div class="grid grid-cols-2 gap-2.5">
+                                        <label class="flex items-center gap-2 cursor-pointer text-xs font-bold text-slate-600">
+                                            <input type="checkbox" x-model="genUpper" class="rounded border-slate-300 text-primary focus:ring-primary w-4 h-4">
+                                            Chữ HOA
+                                        </label>
+                                        <label class="flex items-center gap-2 cursor-pointer text-xs font-bold text-slate-600">
+                                            <input type="checkbox" x-model="genLower" class="rounded border-slate-300 text-primary focus:ring-primary w-4 h-4">
+                                            Chữ thường
+                                        </label>
+                                        <label class="flex items-center gap-2 cursor-pointer text-xs font-bold text-slate-600">
+                                            <input type="checkbox" x-model="genNumbers" class="rounded border-slate-300 text-primary focus:ring-primary w-4 h-4">
+                                            Chữ số (0-9)
+                                        </label>
+                                        <label class="flex items-center gap-2 cursor-pointer text-xs font-bold text-slate-600">
+                                            <input type="checkbox" x-model="genSpecial" class="rounded border-slate-300 text-primary focus:ring-primary w-4 h-4">
+                                            Ký tự đặc biệt
+                                        </label>
+                                    </div>
+
+                                    <!-- Generate button -->
+                                    <button type="button" 
+                                            @click="generateRandomPassword" 
+                                            class="w-full bg-slate-200 hover:bg-slate-300/80 text-slate-700 font-extrabold py-2 rounded-xl text-xs transition-colors">
+                                        Tự động sinh mật khẩu
+                                    </button>
+
+                                    <!-- Generated password display and copy -->
+                                    <div x-show="generatedPass" class="space-y-3 pt-2 border-t border-slate-200/60" x-cloak>
+                                        <div class="relative">
+                                            <input type="text" 
+                                                   readonly 
+                                                   :value="generatedPass" 
+                                                   class="w-full bg-white border border-slate-200 rounded-xl pl-3 pr-10 py-2.5 text-xs text-slate-700 font-mono font-bold focus:outline-none select-all">
+                                            <button type="button" 
+                                                    @click="navigator.clipboard.writeText(generatedPass); alert('Đã sao chép mật khẩu mới vào bộ nhớ tạm!');" 
+                                                    class="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-primary transition-colors"
+                                                    title="Sao chép">
+                                                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" />
+                                                </svg>
+                                            </button>
+                                        </div>
+
+                                        <!-- "Tôi đã lưu mật khẩu này" checkbox -->
+                                        <label class="flex items-start gap-2.5 cursor-pointer text-[11px] text-amber-700 font-extrabold leading-relaxed">
+                                            <input type="checkbox" x-model="hasSavedGenPass" class="rounded border-amber-300 text-amber-600 focus:ring-amber-500 w-4 h-4 mt-0.5">
+                                            <span>Tôi đã lưu mật khẩu mới này vào nơi an toàn (ghi chú, quản lý mật khẩu...)</span>
+                                        </label>
+
+                                        <!-- Apply button -->
+                                        <button type="button" 
+                                                @click="applyGeneratedPassword" 
+                                                :disabled="!hasSavedGenPass"
+                                                class="w-full bg-primary hover:bg-primary-dark disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold py-2 rounded-xl text-xs transition-all shadow-md">
+                                            Áp dụng & Điền tự động
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <!-- Action buttons -->
+                                <div class="flex gap-3 pt-4 border-t border-slate-100">
+                                    <button type="button" @click="activeStep = 1" class="bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold px-6 py-3.5 rounded-full text-xs transition-colors flex items-center gap-1">
+                                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
+                                        </svg>
+                                        Quay lại
+                                    </button>
+                                    <button type="submit" class="bg-primary hover:bg-primary-dark text-white font-bold px-8 py-3.5 rounded-full text-xs transition-all shadow-md">
+                                        Cập nhật mật khẩu
+                                    </button>
+                                    <button type="button" @click="activeStep = 3" class="bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold px-6 py-3.5 rounded-full text-xs transition-colors flex items-center gap-1 ml-auto">
+                                        Tiếp theo
+                                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" />
+                                        </svg>
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+
+                        <!-- Step 3: Đổi Avatar -->
+                        <div x-show="activeStep === 3"
+                             x-transition:enter="transition ease-out duration-300 transform"
+                             x-transition:enter-start="opacity-0 translate-y-4"
+                             x-transition:enter-end="opacity-100 translate-y-0"
+                             x-cloak class="space-y-6 max-w-2xl">
+                            <div>
+                                <h3 class="text-lg font-black text-slate-800">Cập nhật ảnh đại diện</h3>
+                                <p class="text-xs text-slate-400 font-medium">Tải lên, thu phóng và xoay ảnh đại diện của bạn</p>
+                            </div>
+
+                            <!-- Avatar Preview Area -->
+                            <div class="flex flex-col items-center justify-center space-y-4 py-6 bg-slate-50 rounded-3xl border border-dashed border-slate-200 relative">
+                                <template x-if="!avatarImgSrc">
+                                    <label class="cursor-pointer flex flex-col items-center justify-center p-6 text-center space-y-2 w-full">
+                                        <div class="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center text-primary transition-all hover:scale-105">
+                                            <svg class="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                            </svg>
+                                        </div>
+                                        <span class="text-xs font-bold text-slate-600">Nhấp để chọn file ảnh</span>
+                                        <span class="text-[10px] text-slate-400 font-medium">Hỗ trợ JPG, PNG, GIF</span>
+                                        <input type="file" class="hidden" accept="image/*" @change="handleAvatarSelect">
+                                    </label>
+                                </template>
+
+                                <template x-if="avatarImgSrc">
+                                    <div class="w-full flex flex-col items-center space-y-6">
+                                        <!-- Circular Mask container -->
+                                        <div class="w-44 h-44 rounded-full overflow-hidden border-4 border-white shadow-xl relative bg-slate-100 flex items-center justify-center">
+                                            <img :src="avatarImgSrc" 
+                                                 alt="Crop Preview" 
+                                                 class="w-full h-full object-cover transition-transform duration-75"
+                                                 :style="`transform: scale(${avatarZoom}) rotate(${avatarRotate}deg);`" />
+                                        </div>
+
+                                        <!-- Controls -->
+                                        <div class="w-full px-6 space-y-4 max-w-sm">
+                                            <!-- Zoom Slider -->
+                                            <div class="space-y-1">
+                                                <div class="flex justify-between items-center text-[10px] font-bold text-slate-500 uppercase tracking-wider">
+                                                    <span>Thu phóng</span>
+                                                    <span x-text="Math.round(avatarZoom * 100) + '%'"></span>
+                                                </div>
+                                                <input type="range" 
+                                                       min="1" 
+                                                       max="3" 
+                                                       step="0.05" 
+                                                       x-model="avatarZoom" 
+                                                       class="w-full h-1.5 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-primary">
+                                            </div>
+
+                                            <!-- Rotation Slider -->
+                                            <div class="space-y-1">
+                                                <div class="flex justify-between items-center text-[10px] font-bold text-slate-500 uppercase tracking-wider">
+                                                    <span>Xoay ảnh</span>
+                                                    <span x-text="avatarRotate + '°'"></span>
+                                                </div>
+                                                <input type="range" 
+                                                       min="0" 
+                                                       max="360" 
+                                                       step="1" 
+                                                       x-model="avatarRotate" 
+                                                       class="w-full h-1.5 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-primary">
+                                            </div>
+                                        </div>
+
+                                        <!-- Retake button -->
+                                        <label class="cursor-pointer text-xs font-bold text-primary hover:text-primary-dark transition-colors flex items-center gap-1">
+                                            <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 1121.21 7.89M9 11l3-3 3 3m-3-3v12" />
+                                            </svg>
+                                            Chọn ảnh khác
+                                            <input type="file" class="hidden" accept="image/*" @change="handleAvatarSelect">
+                                        </label>
+                                    </div>
+                                </template>
+                            </div>
+
+                            <!-- Action buttons -->
+                            <div class="flex gap-3 pt-4 border-t border-slate-100">
+                                <button type="button" @click="activeStep = 2" class="bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold px-6 py-3.5 rounded-full text-xs transition-colors flex items-center gap-1">
+                                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
+                                    </svg>
+                                    Quay lại
+                                </button>
+                                <button @click="saveAvatar" :disabled="!avatarImgSrc" class="bg-primary hover:bg-primary-dark disabled:opacity-50 text-white font-bold px-8 py-3.5 rounded-full text-xs transition-all shadow-md">
+                                    Lưu ảnh đại diện
+                                </button>
+                                <button type="button" @click="cccdNumberInput = idNumberInput; cccdDateInput = idDateInput; cccdPlaceInput = idPlaceInput; activeStep = 4" class="bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold px-6 py-3.5 rounded-full text-xs transition-colors flex items-center gap-1 ml-auto">
+                                    Tiếp theo
+                                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" />
+                                    </svg>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Step 4: Xác thực CCCD -->
+                        <div x-show="activeStep === 4"
+                             x-transition:enter="transition ease-out duration-300 transform"
+                             x-transition:enter-start="opacity-0 translate-y-4"
+                             x-transition:enter-end="opacity-100 translate-y-0"
+                             x-cloak class="space-y-6 max-w-2xl">
+                            <div>
+                                <h3 class="text-lg font-black text-slate-800">Xác thực CCCD / CMND</h3>
+                                <p class="text-xs text-slate-400 font-medium">Tải lên hình ảnh CCCD 2 mặt và cập nhật thông tin giấy tờ</p>
+                            </div>
+
+                            <!-- Info banner -->
+                            <div class="bg-amber-50 border border-amber-100 rounded-2xl p-4 flex gap-3 text-xs text-amber-700 leading-relaxed">
+                                <svg class="w-5 h-5 flex-shrink-0 text-amber-500 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                                </svg>
+                                <div>
+                                    <p class="font-extrabold mb-0.5">Yêu cầu hình ảnh:</p>
+                                    <p>Ảnh chụp rõ nét, không bị lóa sáng, không mất góc và không bị che khuất các thông tin cá nhân quan trọng.</p>
                                 </div>
                             </div>
 
+                            <!-- Image Selectors side-by-side -->
                             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                <div>
-                                    <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Giới tính</label>
-                                    <select x-model="genderInput" class="w-full bg-slate-50 border border-slate-200 rounded-2xl px-4 py-3.5 text-sm focus:outline-none focus:border-primary focus:bg-white text-slate-700">
-                                        <option value="0">Nam</option>
-                                        <option value="1">Nữ</option>
-                                    </select>
-                                </div>
-                                <div>
-                                    <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Tỉnh / Thành phố</label>
-                                    <select x-model="provinceInput" class="w-full bg-slate-50 border border-slate-200 rounded-2xl px-4 py-3.5 text-sm focus:outline-none focus:border-primary focus:bg-white text-slate-700">
-                                        <option value="">Chọn Tỉnh / Thành phố</option>
-                                        <template x-for="p in provinces" :key="p.id || p.name">
-                                            <option :value="p.id || p.name" x-text="p.name" :selected="provinceInput == p.id || provinceInput == p.name"></option>
+                                <!-- Front Side Card -->
+                                <div class="space-y-2">
+                                    <span class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider">Mặt trước CCCD</span>
+                                    <div class="h-40 border-2 border-dashed border-slate-200 hover:border-primary/50 bg-slate-50/50 rounded-2xl overflow-hidden relative flex flex-col items-center justify-center p-4 transition-all group cursor-pointer">
+                                        <template x-if="!cccdFrontSrc">
+                                            <label class="w-full h-full flex flex-col items-center justify-center cursor-pointer text-center space-y-1.5">
+                                                <svg class="w-7 h-7 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                                                </svg>
+                                                <span class="text-xs font-bold text-slate-600">Chọn ảnh mặt trước</span>
+                                                <span class="text-[9px] text-slate-400 font-medium">Nhấp để tải lên</span>
+                                                <input type="file" class="hidden" accept="image/*" @change="handleCccdSelect($event, 'front')">
+                                            </label>
                                         </template>
-                                    </select>
+                                        <template x-if="cccdFrontSrc">
+                                            <div class="w-full h-full relative group">
+                                                <img :src="cccdFrontSrc" alt="CCCD Front" class="w-full h-full object-cover rounded-xl">
+                                                <div class="absolute inset-0 bg-slate-900/50 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-all duration-200 rounded-xl">
+                                                    <label class="cursor-pointer bg-white text-slate-800 text-[10px] font-bold px-3 py-1.5 rounded-xl shadow-md hover:scale-105 transition-all">
+                                                        Thay đổi
+                                                        <input type="file" class="hidden" accept="image/*" @change="handleCccdSelect($event, 'front')">
+                                                    </label>
+                                                </div>
+                                            </div>
+                                        </template>
+                                    </div>
+                                </div>
+
+                                <!-- Back Side Card -->
+                                <div class="space-y-2">
+                                    <span class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider">Mặt sau CCCD</span>
+                                    <div class="h-40 border-2 border-dashed border-slate-200 hover:border-primary/50 bg-slate-50/50 rounded-2xl overflow-hidden relative flex flex-col items-center justify-center p-4 transition-all group cursor-pointer">
+                                        <template x-if="!cccdBackSrc">
+                                            <label class="w-full h-full flex flex-col items-center justify-center cursor-pointer text-center space-y-1.5">
+                                                <svg class="w-7 h-7 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                                                </svg>
+                                                <span class="text-xs font-bold text-slate-600">Chọn ảnh mặt sau</span>
+                                                <span class="text-[9px] text-slate-400 font-medium">Nhấp để tải lên</span>
+                                                <input type="file" class="hidden" accept="image/*" @change="handleCccdSelect($event, 'back')">
+                                            </label>
+                                        </template>
+                                        <template x-if="cccdBackSrc">
+                                            <div class="w-full h-full relative group">
+                                                <img :src="cccdBackSrc" alt="CCCD Back" class="w-full h-full object-cover rounded-xl">
+                                                <div class="absolute inset-0 bg-slate-900/50 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-all duration-200 rounded-xl">
+                                                    <label class="cursor-pointer bg-white text-slate-800 text-[10px] font-bold px-3 py-1.5 rounded-xl shadow-md hover:scale-105 transition-all">
+                                                        Thay đổi
+                                                        <input type="file" class="hidden" accept="image/*" @change="handleCccdSelect($event, 'back')">
+                                                    </label>
+                                                </div>
+                                            </div>
+                                        </template>
+                                    </div>
                                 </div>
                             </div>
 
-                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <!-- Input Fields Grid -->
+                            <div class="space-y-4 pt-2 border-t border-slate-100">
                                 <div>
-                                    <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Ngày sinh</label>
-                                    <input type="date" x-model="dobInput" class="w-full bg-slate-50 border border-slate-200 rounded-2xl px-4 py-3.5 text-sm focus:outline-none focus:border-primary focus:bg-white transition-all text-slate-700">
+                                    <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-2">Số CCCD / CMND (12 số)</label>
+                                    <input type="text" 
+                                           x-model="cccdNumberInput" 
+                                           maxlength="12"
+                                           placeholder="Ví dụ: 012345678901" 
+                                           class="w-full bg-slate-50 border border-slate-200 rounded-2xl px-4 py-3 text-sm focus:outline-none focus:border-primary focus:bg-white transition-all text-slate-700 font-semibold">
                                 </div>
-                                <div>
-                                    <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Nơi sinh</label>
-                                    <input type="text" x-model="pobInput" placeholder="Ví dụ: Hà Nội" class="w-full bg-slate-50 border border-slate-200 rounded-2xl px-4 py-3.5 text-sm focus:outline-none focus:border-primary focus:bg-white transition-all text-slate-700">
+
+                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                    <div>
+                                        <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-2">Ngày cấp</label>
+                                        <input type="date" 
+                                               x-model="cccdDateInput" 
+                                               class="w-full bg-slate-50 border border-slate-200 rounded-2xl px-4 py-3 text-sm focus:outline-none focus:border-primary focus:bg-white transition-all text-slate-700">
+                                    </div>
+                                    <div>
+                                        <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-2">Nơi cấp</label>
+                                        <input type="text" 
+                                               x-model="cccdPlaceInput" 
+                                               placeholder="Ví dụ: Cục Cảnh sát QLHC về TTXH" 
+                                               class="w-full bg-slate-50 border border-slate-200 rounded-2xl px-4 py-3 text-sm focus:outline-none focus:border-primary focus:bg-white transition-all text-slate-700">
+                                    </div>
                                 </div>
                             </div>
 
-                            <!-- ID Info (Read-only as per CCCD workflow requirement) -->
+                            <!-- Read-only Display of current info if present -->
                             <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 bg-slate-50/50 p-4 rounded-3xl border border-slate-100">
                                 <div>
-                                    <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Số CCCD / CMND</label>
+                                    <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Số CCCD đã lưu</label>
                                     <div class="text-xs font-semibold text-slate-600 py-1" x-text="idNumberInput || 'Chưa cập nhật'"></div>
                                 </div>
                                 <div>
@@ -229,13 +701,19 @@
                                 </div>
                             </div>
 
-                            <div>
-                                <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Tiểu sử / Giới thiệu bản thân</label>
-                                <textarea rows="3" x-model="introInput" placeholder="Giới thiệu ngắn gọn về bản thân..." class="w-full bg-slate-50 border border-slate-200 rounded-2xl px-4 py-3.5 text-sm focus:outline-none focus:border-primary focus:bg-white transition-all text-slate-700"></textarea>
+                            <!-- Action buttons -->
+                            <div class="flex gap-3 pt-4 border-t border-slate-100">
+                                <button type="button" @click="activeStep = 3" class="bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold px-6 py-3.5 rounded-full text-xs transition-colors flex items-center gap-1">
+                                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
+                                    </svg>
+                                    Quay lại
+                                </button>
+                                <button @click="saveCccd" :disabled="!cccdFrontSrc || !cccdBackSrc || !cccdNumberInput" class="bg-primary hover:bg-primary-dark disabled:opacity-50 text-white font-bold px-8 py-3.5 rounded-full text-xs transition-all shadow-md">
+                                    Xác thực & Lưu
+                                </button>
                             </div>
-                            
-                            <button type="submit" class="bg-primary text-white font-bold px-8 py-3.5 rounded-full text-sm shadow-md btn-hover-premium transition-all hover:scale-[1.02]">Cập nhật thông tin</button>
-                        </form>
+                        </div>
                     </div>
                     
                     <!-- TAB: FAVORITES -->
@@ -1252,444 +1730,7 @@
         </div>
     </div>
 
-    <!-- PASSWORD UPDATE MODAL OVERLAY -->
-    <div x-show="showUpdatePassModal" 
-         x-transition:enter="transition ease-out duration-300"
-         x-transition:enter-start="opacity-0"
-         x-transition:enter-end="opacity-100"
-         x-transition:leave="transition ease-in duration-200"
-         x-transition:leave-start="opacity-100"
-         x-transition:leave-end="opacity-0"
-         class="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm"
-         style="display: none;"
-         x-cloak>
-        
-        <div @click.away="showUpdatePassModal = false" 
-             x-show="showUpdatePassModal"
-             x-transition:enter="transition ease-out duration-300 transform"
-             x-transition:enter-start="opacity-0 scale-95 translate-y-4"
-             x-transition:enter-end="opacity-100 scale-100 translate-y-0"
-             x-transition:leave="transition ease-in duration-200 transform"
-             x-transition:leave-start="opacity-100 scale-100 translate-y-0"
-             x-transition:leave-end="opacity-0 scale-95 translate-y-4"
-             class="bg-white rounded-[32px] shadow-2xl max-w-md w-full overflow-hidden border border-slate-100 flex flex-col relative">
-            
-            <button @click="showUpdatePassModal = false" class="absolute top-4 right-4 z-50 w-9 h-9 rounded-full bg-white/95 hover:bg-white text-slate-500 hover:text-slate-800 shadow-md flex items-center justify-center transition-all active:scale-95 border border-slate-100">
-                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
-            </button>
 
-            <div class="p-6 sm:p-8 space-y-6 overflow-y-auto max-h-[85vh]">
-                <div class="text-center">
-                    <span class="inline-flex p-3 rounded-full bg-primary/10 text-primary mb-3">
-                        <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
-                        </svg>
-                    </span>
-                    <h2 class="text-xl font-black text-slate-900 leading-snug">Cập nhật mật khẩu</h2>
-                    <p class="text-xs text-slate-400 mt-1">Cập nhật mật khẩu bảo mật tài khoản thành viên NKS</p>
-                </div>
-
-                <form @submit.prevent="updatePassword" class="space-y-4">
-                    <!-- Old Password -->
-                    <div>
-                        <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-2">Mật khẩu hiện tại</label>
-                        <input type="password" 
-                               x-model="passwordCurrent" 
-                               placeholder="••••••••" 
-                               class="w-full bg-slate-50 border border-slate-200 rounded-2xl px-4 py-3 text-sm focus:outline-none focus:border-primary focus:bg-white transition-all text-slate-700 font-semibold">
-                    </div>
-
-                    <!-- New Password -->
-                    <div>
-                        <div class="flex justify-between items-center mb-2">
-                            <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider">Mật khẩu mới</label>
-                            <!-- Collapsible Generator trigger -->
-                            <button type="button" 
-                                    @click="showPasswordGenerator = !showPasswordGenerator"
-                                    class="text-[10px] text-primary hover:text-primary-dark font-extrabold flex items-center gap-1 transition-colors uppercase tracking-wider">
-                                <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />
-                                </svg>
-                                <span x-text="showPasswordGenerator ? 'Đóng bộ tạo' : 'Tạo ngẫu nhiên'"></span>
-                            </button>
-                        </div>
-                        <input type="password" 
-                               x-model="passwordNew" 
-                               placeholder="••••••••" 
-                               class="w-full bg-slate-50 border border-slate-200 rounded-2xl px-4 py-3 text-sm focus:outline-none focus:border-primary focus:bg-white transition-all text-slate-700 font-semibold">
-                    </div>
-
-                    <!-- Confirm Password -->
-                    <div>
-                        <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-2">Xác nhận mật khẩu mới</label>
-                        <input type="password" 
-                               x-model="passwordConfirm" 
-                               placeholder="••••••••" 
-                               class="w-full bg-slate-50 border border-slate-200 rounded-2xl px-4 py-3 text-sm focus:outline-none focus:border-primary focus:bg-white transition-all text-slate-700 font-semibold">
-                    </div>
-
-                    <!-- Collapsible Random Password Generator Card -->
-                    <div x-show="showPasswordGenerator" 
-                         x-collapse 
-                         x-cloak 
-                         class="bg-slate-50 rounded-2xl p-4 border border-slate-200/60 space-y-4">
-                        <div class="flex items-center justify-between border-b border-slate-200/60 pb-2">
-                            <span class="text-xs font-extrabold text-slate-700 flex items-center gap-1">
-                                <svg class="w-4 h-4 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-                                </svg>
-                                Tạo mật khẩu an toàn
-                            </span>
-                        </div>
-
-                        <!-- Length Slider -->
-                        <div class="space-y-1">
-                            <div class="flex justify-between items-center text-[10px] font-bold text-slate-500 uppercase tracking-wider">
-                                <span>Độ dài mật khẩu</span>
-                                <span class="text-primary" x-text="genLength + ' ký tự'"></span>
-                            </div>
-                            <input type="range" 
-                                   min="6" 
-                                   max="32" 
-                                   step="1" 
-                                   x-model="genLength" 
-                                   class="w-full h-1.5 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-primary">
-                        </div>
-
-                        <!-- Checkboxes Grid -->
-                        <div class="grid grid-cols-2 gap-2.5">
-                            <label class="flex items-center gap-2 cursor-pointer text-xs font-bold text-slate-600">
-                                <input type="checkbox" x-model="genUpper" class="rounded border-slate-300 text-primary focus:ring-primary w-4 h-4">
-                                Chữ HOA
-                            </label>
-                            <label class="flex items-center gap-2 cursor-pointer text-xs font-bold text-slate-600">
-                                <input type="checkbox" x-model="genLower" class="rounded border-slate-300 text-primary focus:ring-primary w-4 h-4">
-                                Chữ thường
-                            </label>
-                            <label class="flex items-center gap-2 cursor-pointer text-xs font-bold text-slate-600">
-                                <input type="checkbox" x-model="genNumbers" class="rounded border-slate-300 text-primary focus:ring-primary w-4 h-4">
-                                Chữ số (0-9)
-                            </label>
-                            <label class="flex items-center gap-2 cursor-pointer text-xs font-bold text-slate-600">
-                                <input type="checkbox" x-model="genSpecial" class="rounded border-slate-300 text-primary focus:ring-primary w-4 h-4">
-                                Ký tự đặc biệt
-                            </label>
-                        </div>
-
-                        <!-- Generate button -->
-                        <button type="button" 
-                                @click="generateRandomPassword" 
-                                class="w-full bg-slate-200 hover:bg-slate-300/80 text-slate-700 font-extrabold py-2 rounded-xl text-xs transition-colors">
-                            Tự động sinh mật khẩu
-                        </button>
-
-                        <!-- Generated password display and copy -->
-                        <div x-show="generatedPass" class="space-y-3 pt-2 border-t border-slate-200/60" x-cloak>
-                            <div class="relative">
-                                <input type="text" 
-                                       readonly 
-                                       :value="generatedPass" 
-                                       class="w-full bg-white border border-slate-200 rounded-xl pl-3 pr-10 py-2.5 text-xs text-slate-700 font-mono font-bold focus:outline-none select-all">
-                                <button type="button" 
-                                        @click="navigator.clipboard.writeText(generatedPass); alert('Đã sao chép mật khẩu mới vào bộ nhớ tạm!');" 
-                                        class="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-primary transition-colors"
-                                        title="Sao chép">
-                                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                                        <path stroke-linecap="round" stroke-linejoin="round" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" />
-                                    </svg>
-                                </button>
-                            </div>
-
-                            <!-- "Tôi đã lưu mật khẩu này" checkbox -->
-                            <label class="flex items-start gap-2.5 cursor-pointer text-[11px] text-amber-700 font-extrabold leading-relaxed">
-                                <input type="checkbox" x-model="hasSavedGenPass" class="rounded border-amber-300 text-amber-600 focus:ring-amber-500 w-4 h-4 mt-0.5">
-                                <span>Tôi đã lưu mật khẩu mới này vào nơi an toàn (ghi chú, quản lý mật khẩu...)</span>
-                            </label>
-
-                            <!-- Apply button -->
-                            <button type="button" 
-                                    @click="applyGeneratedPassword" 
-                                    :disabled="!hasSavedGenPass"
-                                    class="w-full bg-primary hover:bg-primary-dark disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold py-2 rounded-xl text-xs transition-all shadow-md">
-                                Áp dụng & Điền tự động
-                            </button>
-                        </div>
-                    </div>
-
-                    <!-- Action buttons -->
-                    <div class="flex gap-3 pt-3 border-t border-slate-100">
-                        <button type="button" @click="showUpdatePassModal = false" class="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold py-3.5 rounded-full text-xs transition-colors">
-                            Hủy
-                        </button>
-                        <button type="submit" class="flex-1 bg-primary hover:bg-primary-dark text-white font-bold py-3.5 rounded-full text-xs transition-all shadow-md">
-                            Lưu thay đổi
-                        </button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
-
-    <!-- AVATAR UPDATE MODAL OVERLAY -->
-    <div x-show="showUpdateAvatarModal" 
-         x-transition:enter="transition ease-out duration-300"
-         x-transition:enter-start="opacity-0"
-         x-transition:enter-end="opacity-100"
-         x-transition:leave="transition ease-in duration-200"
-         x-transition:leave-start="opacity-100"
-         x-transition:leave-end="opacity-0"
-         class="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm"
-         style="display: none;"
-         x-cloak>
-        
-        <div @click.away="showUpdateAvatarModal = false" 
-             x-show="showUpdateAvatarModal"
-             x-transition:enter="transition ease-out duration-300 transform"
-             x-transition:enter-start="opacity-0 scale-95 translate-y-4"
-             x-transition:enter-end="opacity-100 scale-100 translate-y-0"
-             x-transition:leave="transition ease-in duration-200 transform"
-             x-transition:leave-start="opacity-100 scale-100 translate-y-0"
-             x-transition:leave-end="opacity-0 scale-95 translate-y-4"
-             class="bg-white rounded-[32px] shadow-2xl max-w-md w-full overflow-hidden border border-slate-100 flex flex-col relative">
-            
-            <button @click="showUpdateAvatarModal = false" class="absolute top-4 right-4 z-50 w-9 h-9 rounded-full bg-white/95 hover:bg-white text-slate-500 hover:text-slate-800 shadow-md flex items-center justify-center transition-all active:scale-95 border border-slate-100">
-                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
-            </button>
-
-            <div class="p-6 sm:p-8 space-y-6">
-                <div class="text-center">
-                    <h2 class="text-xl font-black text-slate-900 leading-snug">Cập nhật ảnh đại diện</h2>
-                    <p class="text-xs text-slate-400 mt-1">Cắt và tùy chỉnh ảnh đại diện của bạn</p>
-                </div>
-
-                <!-- Avatar Preview Area -->
-                <div class="flex flex-col items-center justify-center space-y-4 py-4 bg-slate-50 rounded-3xl border border-dashed border-slate-200 relative">
-                    <template x-if="!avatarImgSrc">
-                        <label class="cursor-pointer flex flex-col items-center justify-center p-6 text-center space-y-2 w-full">
-                            <div class="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center text-primary transition-all group-hover:scale-105">
-                                <svg class="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                                    <path stroke-linecap="round" stroke-linejoin="round" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                                </svg>
-                            </div>
-                            <span class="text-xs font-bold text-slate-600">Nhấp để chọn file ảnh</span>
-                            <span class="text-[10px] text-slate-400 font-medium">Hỗ trợ JPG, PNG, GIF</span>
-                            <input type="file" class="hidden" accept="image/*" @change="handleAvatarSelect">
-                        </label>
-                    </template>
-
-                    <template x-if="avatarImgSrc">
-                        <div class="w-full flex flex-col items-center space-y-6">
-                            <!-- Circular Mask container -->
-                            <div class="w-44 h-44 rounded-full overflow-hidden border-4 border-white shadow-xl relative bg-slate-100 flex items-center justify-center">
-                                <img :src="avatarImgSrc" 
-                                     alt="Crop Preview" 
-                                     class="w-full h-full object-cover transition-transform duration-75"
-                                     :style="`transform: scale(${avatarZoom}) rotate(${avatarRotate}deg);`" />
-                            </div>
-
-                            <!-- Controls -->
-                            <div class="w-full px-6 space-y-4">
-                                <!-- Zoom Slider -->
-                                <div class="space-y-1">
-                                    <div class="flex justify-between items-center text-[10px] font-bold text-slate-500 uppercase tracking-wider">
-                                        <span>Thu phóng</span>
-                                        <span x-text="Math.round(avatarZoom * 100) + '%'"></span>
-                                    </div>
-                                    <input type="range" 
-                                           min="1" 
-                                           max="3" 
-                                           step="0.05" 
-                                           x-model="avatarZoom" 
-                                           class="w-full h-1.5 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-primary">
-                                </div>
-
-                                <!-- Rotation Slider -->
-                                <div class="space-y-1">
-                                    <div class="flex justify-between items-center text-[10px] font-bold text-slate-500 uppercase tracking-wider">
-                                        <span>Xoay ảnh</span>
-                                        <span x-text="avatarRotate + '°'"></span>
-                                    </div>
-                                    <input type="range" 
-                                           min="0" 
-                                           max="360" 
-                                           step="1" 
-                                           x-model="avatarRotate" 
-                                           class="w-full h-1.5 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-primary">
-                                </div>
-                            </div>
-
-                            <!-- Retake button -->
-                            <label class="cursor-pointer text-xs font-bold text-primary hover:text-primary-dark transition-colors flex items-center gap-1">
-                                <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                                    <path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 1121.21 7.89M9 11l3-3 3 3m-3-3v12" />
-                                </svg>
-                                Chọn ảnh khác
-                                <input type="file" class="hidden" accept="image/*" @change="handleAvatarSelect">
-                            </label>
-                        </div>
-                    </template>
-                </div>
-
-                <!-- Action buttons -->
-                <div class="flex gap-3 pt-2">
-                    <button @click="showUpdateAvatarModal = false" class="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold py-3.5 rounded-full text-xs transition-colors">
-                        Hủy
-                    </button>
-                    <button @click="saveAvatar" :disabled="!avatarImgSrc" class="flex-1 bg-primary hover:bg-primary-dark disabled:opacity-50 text-white font-bold py-3.5 rounded-full text-xs transition-all shadow-md">
-                        Cập nhật
-                    </button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- CCCD / CMND UPDATE MODAL OVERLAY -->
-    <div x-show="showUpdateCccdModal" 
-         x-transition:enter="transition ease-out duration-300"
-         x-transition:enter-start="opacity-0"
-         x-transition:enter-end="opacity-100"
-         x-transition:leave="transition ease-in duration-200"
-         x-transition:leave-start="opacity-100"
-         x-transition:leave-end="opacity-0"
-         class="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm"
-         style="display: none;"
-         x-cloak>
-        
-        <div @click.away="showUpdateCccdModal = false" 
-             x-show="showUpdateCccdModal"
-             x-transition:enter="transition ease-out duration-300 transform"
-             x-transition:enter-start="opacity-0 scale-95 translate-y-4"
-             x-transition:enter-end="opacity-100 scale-100 translate-y-0"
-             x-transition:leave="transition ease-in duration-200 transform"
-             x-transition:leave-start="opacity-100 scale-100 translate-y-0"
-             x-transition:leave-end="opacity-0 scale-95 translate-y-4"
-             class="bg-white rounded-[32px] shadow-2xl max-w-xl w-full overflow-hidden border border-slate-100 flex flex-col relative">
-            
-            <button @click="showUpdateCccdModal = false" class="absolute top-4 right-4 z-50 w-9 h-9 rounded-full bg-white/95 hover:bg-white text-slate-500 hover:text-slate-800 shadow-md flex items-center justify-center transition-all active:scale-95 border border-slate-100">
-                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
-            </button>
-
-            <div class="p-6 sm:p-8 space-y-5 overflow-y-auto max-h-[90vh]">
-                <div class="text-center">
-                    <span class="inline-flex p-3 rounded-full bg-primary/10 text-primary mb-3">
-                        <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M10 6H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V8a2 2 0 00-2-2h-5m-4 0V5a2 2 0 114 0v1m-4 0a2 2 0 104 0m-5 8a2 2 0 100-4 2 2 0 000 4zm0 0c1.378 0 2.5-1.122 2.5-2.5S10.378 9 9 9m9 2h-3m3 4h-3" />
-                        </svg>
-                    </span>
-                    <h2 class="text-xl font-black text-slate-900 leading-snug">Xác thực CCCD / CMND</h2>
-                    <p class="text-xs text-slate-400 mt-1">Cung cấp ảnh mặt trước & sau cùng thông tin giấy tờ</p>
-                </div>
-
-                <!-- Info banner -->
-                <div class="bg-amber-50 border border-amber-100 rounded-2xl p-4 flex gap-3 text-xs text-amber-700 leading-relaxed">
-                    <svg class="w-5 h-5 flex-shrink-0 text-amber-500 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                    </svg>
-                    <div>
-                        <p class="font-extrabold mb-0.5">Yêu cầu hình ảnh:</p>
-                        <p>Ảnh chụp rõ nét, không bị lóa sáng, không mất góc và không bị che khuất các thông tin cá nhân quan trọng.</p>
-                    </div>
-                </div>
-
-                <!-- Image Selectors side-by-side -->
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <!-- Front Side Card -->
-                    <div class="space-y-2">
-                        <span class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider">Mặt trước CCCD</span>
-                        <div class="h-40 border-2 border-dashed border-slate-200 hover:border-primary/50 bg-slate-50/50 rounded-2xl overflow-hidden relative flex flex-col items-center justify-center p-4 transition-all group cursor-pointer">
-                            <template x-if="!cccdFrontSrc">
-                                <label class="w-full h-full flex flex-col items-center justify-center cursor-pointer text-center space-y-1.5">
-                                    <svg class="w-7 h-7 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                                        <path stroke-linecap="round" stroke-linejoin="round" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
-                                    </svg>
-                                    <span class="text-xs font-bold text-slate-600">Chọn ảnh mặt trước</span>
-                                    <span class="text-[9px] text-slate-400 font-medium">Nhấp để tải lên</span>
-                                    <input type="file" class="hidden" accept="image/*" @change="handleCccdSelect($event, 'front')">
-                                </label>
-                            </template>
-                            <template x-if="cccdFrontSrc">
-                                <div class="w-full h-full relative group">
-                                    <img :src="cccdFrontSrc" alt="CCCD Front" class="w-full h-full object-cover rounded-xl">
-                                    <div class="absolute inset-0 bg-slate-900/50 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-all duration-200 rounded-xl">
-                                        <label class="cursor-pointer bg-white text-slate-800 text-[10px] font-bold px-3 py-1.5 rounded-xl shadow-md hover:scale-105 transition-all">
-                                            Thay đổi
-                                            <input type="file" class="hidden" accept="image/*" @change="handleCccdSelect($event, 'front')">
-                                        </label>
-                                    </div>
-                                </div>
-                            </template>
-                        </div>
-                    </div>
-
-                    <!-- Back Side Card -->
-                    <div class="space-y-2">
-                        <span class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider">Mặt sau CCCD</span>
-                        <div class="h-40 border-2 border-dashed border-slate-200 hover:border-primary/50 bg-slate-50/50 rounded-2xl overflow-hidden relative flex flex-col items-center justify-center p-4 transition-all group cursor-pointer">
-                            <template x-if="!cccdBackSrc">
-                                <label class="w-full h-full flex flex-col items-center justify-center cursor-pointer text-center space-y-1.5">
-                                    <svg class="w-7 h-7 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                                        <path stroke-linecap="round" stroke-linejoin="round" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
-                                    </svg>
-                                    <span class="text-xs font-bold text-slate-600">Chọn ảnh mặt sau</span>
-                                    <span class="text-[9px] text-slate-400 font-medium">Nhấp để tải lên</span>
-                                    <input type="file" class="hidden" accept="image/*" @change="handleCccdSelect($event, 'back')">
-                                </label>
-                            </template>
-                            <template x-if="cccdBackSrc">
-                                <div class="w-full h-full relative group">
-                                    <img :src="cccdBackSrc" alt="CCCD Back" class="w-full h-full object-cover rounded-xl">
-                                    <div class="absolute inset-0 bg-slate-900/50 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-all duration-200 rounded-xl">
-                                        <label class="cursor-pointer bg-white text-slate-800 text-[10px] font-bold px-3 py-1.5 rounded-xl shadow-md hover:scale-105 transition-all">
-                                            Thay đổi
-                                            <input type="file" class="hidden" accept="image/*" @change="handleCccdSelect($event, 'back')">
-                                        </label>
-                                    </div>
-                                </div>
-                            </template>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Input Fields Grid -->
-                <div class="space-y-4 pt-2 border-t border-slate-100">
-                    <div>
-                        <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-2">Số CCCD / CMND (12 số)</label>
-                        <input type="text" 
-                               x-model="cccdNumberInput" 
-                               maxlength="12"
-                               placeholder="Ví dụ: 012345678901" 
-                               class="w-full bg-slate-50 border border-slate-200 rounded-2xl px-4 py-3 text-sm focus:outline-none focus:border-primary focus:bg-white transition-all text-slate-700 font-semibold">
-                    </div>
-
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        <div>
-                            <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-2">Ngày cấp</label>
-                            <input type="date" 
-                                   x-model="cccdDateInput" 
-                                   class="w-full bg-slate-50 border border-slate-200 rounded-2xl px-4 py-3 text-sm focus:outline-none focus:border-primary focus:bg-white transition-all text-slate-700">
-                        </div>
-                        <div>
-                            <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-2">Nơi cấp</label>
-                            <input type="text" 
-                                   x-model="cccdPlaceInput" 
-                                   placeholder="Ví dụ: Cục Cảnh sát QLHC về TTXH" 
-                                   class="w-full bg-slate-50 border border-slate-200 rounded-2xl px-4 py-3 text-sm focus:outline-none focus:border-primary focus:bg-white transition-all text-slate-700">
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Action buttons -->
-                <div class="flex gap-3 pt-3">
-                    <button @click="showUpdateCccdModal = false" class="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold py-3.5 rounded-full text-xs transition-colors">
-                        Đóng
-                    </button>
-                    <button @click="saveCccd" :disabled="!cccdFrontSrc || !cccdBackSrc || !cccdNumberInput" class="flex-1 bg-primary hover:bg-primary-dark disabled:opacity-50 text-white font-bold py-3.5 rounded-full text-xs transition-all shadow-md">
-                        Xác thực & Lưu
-                    </button>
-                </div>
-            </div>
-        </div>
-    </div>
 </div>
 @endsection
 
@@ -1750,6 +1791,7 @@
             provinceInput: '',
             point: 0,
             provinces: [],
+            activeStep: 1,
             
             // Edit password & CCCD Modals State
             showUpdatePassModal: false,
@@ -2247,6 +2289,7 @@
                         localStorage.setItem('nks_user', JSON.stringify(this.user));
                         window.dispatchEvent(new CustomEvent('nks-login-change'));
                         alert('Cập nhật thông tin cá nhân thành công!');
+                        this.activeStep = 2;
                     } else {
                         const err = await res.json();
                         alert(err.message || 'Cập nhật thất bại.');
@@ -2344,6 +2387,7 @@
                             this.showUpdateAvatarModal = false;
                             this.avatarImgSrc = '';
                             alert('Cập nhật ảnh đại diện thành công!');
+                            this.activeStep = 4;
                         } else {
                             const err = await res.json();
                             alert(err.message || 'Lỗi khi cập nhật avatar.');
@@ -2455,6 +2499,7 @@
                         this.generatedPass = '';
                         this.showPasswordGenerator = false;
                         this.showUpdatePassModal = false;
+                        this.activeStep = 3;
                     } else {
                         const err = await res.json();
                         alert(err.message || 'Lỗi khi cập nhật mật khẩu.');
