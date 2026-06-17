@@ -639,7 +639,19 @@ class PropertyController extends Controller
                         'role' => $user->role,
                         'status' => $user->status,
                         'avatar' => $user->avatar,
-                        'point' => $user->point
+                        'point' => $user->point,
+                        
+                        'firstname' => $remoteUser['firstname'] ?? '',
+                        'lastname' => $remoteUser['lastname'] ?? '',
+                        'intro' => $remoteUser['intro'] ?? '',
+                        'gender' => $remoteUser['gender'] ?? 0,
+                        'website' => $remoteUser['website'] ?? '',
+                        'dob' => $remoteUser['dob'] ?? '',
+                        'pob' => $remoteUser['pob'] ?? '',
+                        'id_number' => $remoteUser['id_number'] ?? '',
+                        'id_date' => $remoteUser['id_date'] ?? '',
+                        'id_place' => $remoteUser['id_place'] ?? '',
+                        'province' => $remoteUser['province'] ?? $remoteUser['add_province'] ?? ''
                     ]
                 ]);
             }
@@ -1029,17 +1041,33 @@ class PropertyController extends Controller
                 }
             }
 
+            $resUser = [
+                'id' => $user->id,
+                'name' => $user->name,
+                'email' => $user->email,
+                'phone' => $user->phone,
+                'role' => $user->role,
+                'avatar' => $user->avatar,
+                'point' => $user->point
+            ];
+
+            if ($remoteUser) {
+                $resUser['firstname'] = $remoteUser['firstname'] ?? '';
+                $resUser['lastname'] = $remoteUser['lastname'] ?? '';
+                $resUser['intro'] = $remoteUser['intro'] ?? '';
+                $resUser['gender'] = $remoteUser['gender'] ?? 0;
+                $resUser['website'] = $remoteUser['website'] ?? '';
+                $resUser['dob'] = $remoteUser['dob'] ?? '';
+                $resUser['pob'] = $remoteUser['pob'] ?? '';
+                $resUser['id_number'] = $remoteUser['id_number'] ?? '';
+                $resUser['id_date'] = $remoteUser['id_date'] ?? '';
+                $resUser['id_place'] = $remoteUser['id_place'] ?? '';
+                $resUser['province'] = $remoteUser['province'] ?? $remoteUser['add_province'] ?? '';
+            }
+
             return response()->json([
                 'success' => true,
-                'user' => [
-                    'id' => $user->id,
-                    'name' => $user->name,
-                    'email' => $user->email,
-                    'phone' => $user->phone,
-                    'role' => $user->role,
-                    'avatar' => $user->avatar,
-                    'point' => $user->point
-                ],
+                'user' => $resUser,
                 'favorites' => $resolvedFavorites,
                 'appointments' => $resolvedAppointments,
                 'properties' => $resolvedProperties,
@@ -1064,21 +1092,39 @@ class PropertyController extends Controller
             
             if ($accessToken && strpos($accessToken, 'mock_token_for_local_') === false) {
                 try {
-                    $response = Http::timeout(5)->withoutVerifying()->post('https://account.nks.vn/api/nks/user/updateInfo', [
+                    $params = [
                         'access_token' => $accessToken,
                         'firstname' => $request->input('firstname'),
                         'lastname' => $request->input('lastname'),
                         'intro' => $request->input('intro'),
                         'phone' => $request->input('phone'),
-                        'gender' => $request->input('gender'),
                         'website' => $request->input('website'),
-                        'dob' => $request->input('dob'),
                         'pob' => $request->input('pob'),
                         'id_number' => $request->input('id_number'),
-                        'id_date' => $request->input('id_date'),
-                        'id_place' => $request->input('id_place'),
-                        'province' => $request->input('province')
-                    ]);
+                        'id_place' => $request->input('id_place')
+                    ];
+
+                    $gender = $request->input('gender');
+                    if (is_numeric($gender)) {
+                        $params['gender'] = (int)$gender;
+                    }
+
+                    $province = $request->input('province');
+                    if (is_numeric($province)) {
+                        $params['province'] = (int)$province;
+                    }
+
+                    $dob = $request->input('dob');
+                    if (!empty($dob)) {
+                        $params['dob'] = $dob;
+                    }
+
+                    $idDate = $request->input('id_date');
+                    if (!empty($idDate)) {
+                        $params['id_date'] = $idDate;
+                    }
+
+                    $response = Http::timeout(5)->withoutVerifying()->post('https://account.nks.vn/api/nks/user/updateInfo', $params);
                     
                     if ($response->successful()) {
                         $data = $response->json();
@@ -1107,7 +1153,19 @@ class PropertyController extends Controller
                                     'phone' => $remoteUser['phone'] ?? null,
                                     'role' => is_array($remoteUser['role'] ?? null) ? ($remoteUser['role']['name'] ?? 'renter') : ($remoteUser['role'] ?? 'renter'),
                                     'avatar' => $remoteUser['avatar'] ?? null,
-                                    'point' => intval($remoteUser['point'] ?? 0)
+                                    'point' => intval($remoteUser['point'] ?? 0),
+                                    
+                                    'firstname' => $remoteUser['firstname'] ?? '',
+                                    'lastname' => $remoteUser['lastname'] ?? '',
+                                    'intro' => $remoteUser['intro'] ?? '',
+                                    'gender' => $remoteUser['gender'] ?? 0,
+                                    'website' => $remoteUser['website'] ?? '',
+                                    'dob' => $remoteUser['dob'] ?? '',
+                                    'pob' => $remoteUser['pob'] ?? '',
+                                    'id_number' => $remoteUser['id_number'] ?? '',
+                                    'id_date' => $remoteUser['id_date'] ?? '',
+                                    'id_place' => $remoteUser['id_place'] ?? '',
+                                    'province' => $remoteUser['province'] ?? $remoteUser['add_province'] ?? ''
                                 ]
                             ]);
                         }
@@ -1144,7 +1202,18 @@ class PropertyController extends Controller
                     'phone' => $user->phone,
                     'role' => $user->role,
                     'avatar' => $user->avatar,
-                    'point' => $user->point
+                    'point' => $user->point,
+                    'firstname' => $request->input('firstname') ?? '',
+                    'lastname' => $request->input('lastname') ?? '',
+                    'intro' => $request->input('intro') ?? '',
+                    'gender' => $request->input('gender') ?? 0,
+                    'website' => $request->input('website') ?? '',
+                    'dob' => $request->input('dob') ?? '',
+                    'pob' => $request->input('pob') ?? '',
+                    'id_number' => $request->input('id_number') ?? '',
+                    'id_date' => $request->input('id_date') ?? '',
+                    'id_place' => $request->input('id_place') ?? '',
+                    'province' => $request->input('province') ?? ''
                 ]
             ]);
         } catch (\Illuminate\Validation\ValidationException $e) {
