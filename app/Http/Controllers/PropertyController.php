@@ -528,7 +528,8 @@ class PropertyController extends Controller
     }
 
     /**
-     * API: User Login
+     * API: User Login - Xác thực hoàn toàn qua NKS API
+     * Mọi tài khoản NKS hợp lệ đều có thể đăng nhập
      */
     public function apiLogin(Request $request)
     {
@@ -538,25 +539,22 @@ class PropertyController extends Controller
                 'password' => 'required|string'
             ]);
 
-            $remoteUser = null;
-            $accessToken = null;
-            $apiError = null;
-            
+            // === Bước 1: Gọi API NKS để xác thực ===
+            $ip = $request->ip();
+            if ($ip && strpos($ip, ',') !== false) {
+                $ip = trim(explode(',', $ip)[0]);
+            }
+            if (!$ip || !filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4)) {
+                $ip = '127.0.0.1';
+            }
+
+            $device = $request->header('User-Agent') ?? 'web browser';
+            if (strlen($device) > 250) {
+                $device = substr($device, 0, 250);
+            }
+
             try {
-                $ip = $request->ip();
-                if ($ip && strpos($ip, ',') !== false) {
-                    $ip = trim(explode(',', $ip)[0]);
-                }
-                if (!$ip || !filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4)) {
-                    $ip = '127.0.0.1';
-                }
-
-                $device = $request->header('User-Agent') ?? 'web browser';
-                if (strlen($device) > 250) {
-                    $device = substr($device, 0, 250);
-                }
-
-                $response = Http::timeout(5)->withoutVerifying()->post('https://account.nks.vn/api/nks/user/login', [
+                $response = Http::timeout(10)->withoutVerifying()->post('https://account.nks.vn/api/nks/user/login', [
                     'username' => $request->email,
                     'password' => $request->password,
                     'fbtoken' => 'web_default_token',
@@ -565,53 +563,77 @@ class PropertyController extends Controller
                     'ip_address' => $ip,
                     'location' => ''
                 ]);
-
-                if ($response->successful()) {
-                    $data = $response->json();
-                    Log::info('NKS Login Response: ' . json_encode($data));
-                    
-                    if (isset($data['success']) && !$data['success']) {
-                        $apiError = $data['error'] ?? $data['message'] ?? 'Đăng nhập không thành công.';
-                    } else {
-                        $accessToken = $data['data']['access_token'] ?? $data['access_token'] ?? null;
-                        $remoteUser = $data['data']['user'] ?? $data['data']['user_info'] ?? $data['user'] ?? $data['user_info'] ?? $data['data'] ?? null;
-                    }
-                } else {
-                    Log::warning('NKS Login HTTP Error: ' . $response->status() . ' - ' . $response->body());
-                    $apiError = 'Máy chủ xác thực NKS phản hồi lỗi (HTTP ' . $response->status() . ').';
-                }
             } catch (\Exception $e) {
-                Log::error('NKS Login API Exception: ' . $e->getMessage());
-                $apiError = 'Không thể kết nối đến máy chủ xác thực NKS.';
+                Log::error('NKS Login API Connection Error: ' . $e->getMessage());
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Không thể kết nối đến máy chủ xác thực NKS. Vui lòng thử lại.'
+                ], 503);
             }
 
-            if ($remoteUser && $accessToken) {
-                $email = $remoteUser['email'] ?? $request->email;
-                $name = $remoteUser['name'] ?? $remoteUser['username'] ?? $remoteUser['fullname'] ?? 'Thành viên NKS';
-                $phone = $remoteUser['phone'] ?? null;
-                $avatar = $remoteUser['avatar'] ?? null;
-                $roleRaw = $remoteUser['role'] ?? 'renter';
-                $role = 'renter';
-                if (is_array($roleRaw)) {
-                    $role = $roleRaw['name'] ?? 'renter';
-                } elseif (is_string($roleRaw)) {
-                    $role = $roleRaw;
-                }
-                $role = strtolower($role);
-                if ($role === 'admin') {
-                    $role = 'admin';
-                } elseif ($role === 'owner') {
-                    $role = 'owner';
-                } else {
-                    $role = 'renter';
-                }
-                $status = $remoteUser['status'] ?? 'active';
-                $point = intval($remoteUser['point'] ?? 0);
+            // === Bước 2: Xử lý response từ NKS API ===
+            if (!$response->successful()) {
+                Log::warning('NKS Login HTTP Error: ' . $response->status() . ' - ' . $response->body());
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Máy chủ xác thực NKS phản hồi lỗi (HTTP ' . $response->status() . ').'
+                ], 401);
+            }
 
-                if (!$avatar) {
-                    $avatar = 'https://api.dicebear.com/7.x/adventurer/svg?seed=' . urlencode($name);
-                }
+            $data = $response->json();
+            Log::info('NKS Login API Response for [' . $request->email . ']: success=' . ($data['success'] ?? 'null'));
 
+            // API trả về success: false → sai tài khoản/mật khẩu
+            if (isset($data['success']) && !$data['success']) {
+                return response()->json([
+                    'success' => false,
+                    'message' => $data['error'] ?? $data['message'] ?? 'Tên đăng nhập hoặc mật khẩu không chính xác.'
+                ], 401);
+            }
+
+            // === Bước 3: Trích xuất thông tin user từ API response ===
+            $accessToken = $data['data']['access_token'] ?? $data['access_token'] ?? null;
+            $remoteUser = $data['data']['user'] ?? $data['data']['user_info'] ?? $data['user'] ?? $data['user_info'] ?? $data['data'] ?? null;
+
+            if (!$remoteUser || !$accessToken) {
+                Log::error('NKS Login: API trả về success nhưng thiếu user/token. Response: ' . json_encode($data));
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Dữ liệu xác thực từ NKS không hợp lệ. Vui lòng thử lại.'
+                ], 500);
+            }
+
+            // === Bước 4: Map dữ liệu user từ NKS API ===
+            $email = $remoteUser['email'] ?? $request->email;
+            $name = $remoteUser['name'] ?? $remoteUser['username'] ?? $remoteUser['fullname'] ?? 'Thành viên NKS';
+            $phone = $remoteUser['phone'] ?? null;
+            $avatar = $remoteUser['avatar'] ?? null;
+            
+            // Map role
+            $roleRaw = $remoteUser['role'] ?? 'renter';
+            $role = 'renter';
+            if (is_array($roleRaw)) {
+                $roleName = strtolower($roleRaw['name'] ?? 'user');
+                if ($roleName === 'admin') $role = 'admin';
+                elseif ($roleName === 'owner') $role = 'owner';
+            } elseif (is_string($roleRaw)) {
+                $roleName = strtolower($roleRaw);
+                if ($roleName === 'admin') $role = 'admin';
+                elseif ($roleName === 'owner') $role = 'owner';
+            }
+
+            // Map status: NKS API dùng "active" (1/0), không dùng "status"
+            $active = $remoteUser['active'] ?? $remoteUser['status'] ?? 1;
+            $status = ($active == 1 || $active === 'active') ? 'active' : 'blocked';
+            
+            $point = intval($remoteUser['point'] ?? 0);
+
+            if (!$avatar) {
+                $avatar = 'https://api.dicebear.com/7.x/adventurer/svg?seed=' . urlencode($name);
+            }
+
+            // === Bước 5: Lưu/cập nhật user vào DB local ===
+            try {
                 $user = \App\Models\User::updateOrCreate(
                     ['email' => $email],
                     [
@@ -624,29 +646,21 @@ class PropertyController extends Controller
                         'password' => bcrypt($request->password)
                     ]
                 );
-
-                if ($user->status === 'blocked') {
-                    return response()->json([
-                        'success' => false,
-                        'message' => 'Tài khoản của bạn đã bị khóa tạm thời. Vui lòng liên hệ quản trị viên.'
-                    ], 403);
-                }
-
-                \Illuminate\Support\Facades\Auth::login($user, true);
-
+            } catch (\Exception $dbEx) {
+                Log::error('NKS Login DB Error for [' . $email . ']: ' . $dbEx->getMessage());
+                // DB lỗi nhưng API xác thực thành công → vẫn trả về user info từ API
                 return response()->json([
                     'success' => true,
                     'access_token' => $accessToken,
                     'user' => [
-                        'id' => $user->id,
-                        'name' => $user->name,
-                        'email' => $user->email,
-                        'phone' => $user->phone,
-                        'role' => $user->role,
-                        'status' => $user->status,
-                        'avatar' => $user->avatar,
-                        'point' => $user->point,
-                        
+                        'id' => $remoteUser['id'] ?? 0,
+                        'name' => $name,
+                        'email' => $email,
+                        'phone' => $phone,
+                        'role' => $role,
+                        'status' => $status,
+                        'avatar' => $avatar,
+                        'point' => $point,
                         'firstname' => $remoteUser['firstname'] ?? '',
                         'lastname' => $remoteUser['lastname'] ?? '',
                         'intro' => $remoteUser['intro'] ?? '',
@@ -662,26 +676,6 @@ class PropertyController extends Controller
                 ]);
             }
 
-            // Return the NKS API error directly in production
-            if ($apiError && !app()->environment('testing')) {
-                return response()->json([
-                    'success' => false,
-                    'message' => $apiError
-                ], 401);
-            }
-
-            // Fallback check on local DB (only for testing / offline execution)
-            $user = \App\Models\User::where('email', $request->email)
-                ->orWhere('phone', $request->email)
-                ->first();
-
-            if (!$user || !\Illuminate\Support\Facades\Hash::check($request->password, $user->password)) {
-                return response()->json([
-                    'success' => false,
-                    'message' => $apiError ?: 'Tên đăng nhập hoặc mật khẩu không chính xác.'
-                ], 401);
-            }
-
             if ($user->status === 'blocked') {
                 return response()->json([
                     'success' => false,
@@ -689,11 +683,12 @@ class PropertyController extends Controller
                 ], 403);
             }
 
+            // === Bước 6: Đăng nhập session local ===
             \Illuminate\Support\Facades\Auth::login($user, true);
 
             return response()->json([
                 'success' => true,
-                'access_token' => 'mock_token_for_local_' . $user->id,
+                'access_token' => $accessToken,
                 'user' => [
                     'id' => $user->id,
                     'name' => $user->name,
@@ -702,18 +697,31 @@ class PropertyController extends Controller
                     'role' => $user->role,
                     'status' => $user->status,
                     'avatar' => $user->avatar,
-                    'point' => $user->point
+                    'point' => $user->point,
+                    'firstname' => $remoteUser['firstname'] ?? '',
+                    'lastname' => $remoteUser['lastname'] ?? '',
+                    'intro' => $remoteUser['intro'] ?? '',
+                    'gender' => $remoteUser['gender'] ?? 0,
+                    'website' => $remoteUser['website'] ?? '',
+                    'dob' => $remoteUser['dob'] ?? '',
+                    'pob' => $remoteUser['pob'] ?? '',
+                    'id_number' => $remoteUser['id_number'] ?? '',
+                    'id_date' => $remoteUser['id_date'] ?? '',
+                    'id_place' => $remoteUser['id_place'] ?? '',
+                    'province' => $remoteUser['province'] ?? $remoteUser['add_province'] ?? ''
                 ]
             ]);
+
         } catch (\Illuminate\Validation\ValidationException $e) {
             return response()->json([
                 'success' => false,
                 'message' => implode(' ', \Illuminate\Support\Arr::flatten($e->errors()))
             ], 422);
         } catch (\Exception $e) {
+            Log::error('NKS Login Unexpected Error: ' . $e->getMessage() . ' | Trace: ' . $e->getTraceAsString());
             return response()->json([
                 'success' => false,
-                'message' => 'Lỗi CSDL: ' . $e->getMessage()
+                'message' => 'Lỗi hệ thống: ' . $e->getMessage()
             ], 500);
         }
     }
