@@ -543,13 +543,26 @@ class PropertyController extends Controller
             $apiError = null;
             
             try {
+                $ip = $request->ip();
+                if ($ip && strpos($ip, ',') !== false) {
+                    $ip = trim(explode(',', $ip)[0]);
+                }
+                if (!$ip || !filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4)) {
+                    $ip = '127.0.0.1';
+                }
+
+                $device = $request->header('User-Agent') ?? 'web browser';
+                if (strlen($device) > 250) {
+                    $device = substr($device, 0, 250);
+                }
+
                 $response = Http::timeout(5)->withoutVerifying()->post('https://account.nks.vn/api/nks/user/login', [
                     'username' => $request->email,
                     'password' => $request->password,
                     'fbtoken' => 'web_default_token',
                     'system' => 'NKS',
-                    'device' => $request->header('User-Agent') ?? 'web browser',
-                    'ip_address' => $request->ip(),
+                    'device' => $device,
+                    'ip_address' => $ip,
                     'location' => ''
                 ]);
 
