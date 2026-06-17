@@ -539,6 +539,19 @@ class PropertyController extends Controller
                 'password' => 'required|string'
             ]);
 
+            $username = trim($request->email);
+
+            // Check if user is blocked locally
+            $localUser = \App\Models\User::where('email', $username)
+                ->orWhere('phone', $username)
+                ->first();
+            if ($localUser && $localUser->status === 'blocked') {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Tài khoản của bạn đã bị khóa tạm thời. Vui lòng liên hệ quản trị viên.'
+                ], 403);
+            }
+
             // === Bước 1: Gọi API NKS để xác thực ===
             $ip = $request->ip();
             if ($ip && strpos($ip, ',') !== false) {
@@ -555,7 +568,7 @@ class PropertyController extends Controller
 
             try {
                 $response = Http::timeout(10)->withoutVerifying()->post('https://account.nks.vn/api/nks/user/login', [
-                    'username' => $request->email,
+                    'username' => $username,
                     'password' => $request->password,
                     'fbtoken' => 'web_default_token',
                     'system' => 'NKS',
@@ -805,6 +818,7 @@ class PropertyController extends Controller
                 }
                 $status = $remoteUser['status'] ?? ($userData['status'] ?? 'active');
                 $point = intval($remoteUser['point'] ?? 0);
+                $avatar = $remoteUser['avatar'] ?? ($userData['avatar'] ?? null);
 
                 if (!$avatar) {
                     $avatar = 'https://api.dicebear.com/7.x/adventurer/svg?seed=' . urlencode($name);

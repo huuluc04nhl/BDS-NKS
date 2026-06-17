@@ -64,6 +64,8 @@
               localStorage.removeItem('nks_appointments');
               localStorage.removeItem('nks_favorites');
               localStorage.removeItem('nks_owner_properties');
+              localStorage.removeItem('nks_last_username');
+              localStorage.removeItem('nks_access_token');
               this.isLoggedIn = false;
               this.user = null;
               window.dispatchEvent(new CustomEvent('nks-login-change'));
