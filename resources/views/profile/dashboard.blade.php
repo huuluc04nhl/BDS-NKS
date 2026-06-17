@@ -1792,6 +1792,8 @@
             point: 0,
             provinces: [],
             activeStep: 1,
+            nameInput: '',
+            avatarInput: '',
             
             // Edit password & CCCD Modals State
             showUpdatePassModal: false,
