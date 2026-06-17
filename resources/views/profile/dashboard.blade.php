@@ -1357,7 +1357,7 @@
                                             </div>
                                         </div>
                                     </div>
-                                </div>
+
 
     <!-- EDIT PROPERTY MODAL OVERLAY -->
     <div x-show="showEditPropertyModal" 
@@ -1736,7 +1736,7 @@
 
 @section('scripts')
 <script>
-    function initMemberDashboard() {
+    document.addEventListener('alpine:init', () => {
         Alpine.data('memberDashboard', () => ({
             activeTab: 'info',
             isLoggedIn: false,
@@ -1792,8 +1792,6 @@
             point: 0,
             provinces: [],
             activeStep: 1,
-            nameInput: '',
-            avatarInput: '',
             
             // Edit password & CCCD Modals State
             showUpdatePassModal: false,
@@ -2999,11 +2997,6 @@
                 }, 5000);
             }
         }));
-    }
-    if (window.Alpine) {
-        initMemberDashboard();
-    } else {
-        document.addEventListener('alpine:init', initMemberDashboard);
-    }
+    });
 </script>
 @endsection
