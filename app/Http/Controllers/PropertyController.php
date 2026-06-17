@@ -2367,6 +2367,10 @@ class PropertyController extends Controller
             ]);
             
             if ($response->successful()) {
+                $user = \Illuminate\Support\Facades\Auth::user();
+                if ($user && $request->input('password')) {
+                    $user->update(['password' => bcrypt($request->input('password'))]);
+                }
                 return response()->json($response->json());
             }
             
@@ -2411,6 +2415,7 @@ class PropertyController extends Controller
             if ($response->successful()) {
                 $data = $response->json();
                 $remoteUser = $data['data']['user'] ?? $data['data']['user_info'] ?? $data['data'] ?? $data['user'] ?? $data['user_info'] ?? $data ?? null;
+                $user = null;
                 if ($remoteUser) {
                     $email = $remoteUser['email'] ?? null;
                     if ($email) {
@@ -2420,7 +2425,30 @@ class PropertyController extends Controller
                         }
                     }
                 }
-                return response()->json($data);
+                return response()->json([
+                    'success' => true,
+                    'user' => [
+                        'id' => $user ? $user->id : null,
+                        'name' => $user ? $user->name : ($remoteUser['name'] ?? ''),
+                        'email' => $user ? $user->email : ($remoteUser['email'] ?? ''),
+                        'phone' => $user ? $user->phone : ($remoteUser['phone'] ?? null),
+                        'role' => $user ? $user->role : 'renter',
+                        'avatar' => $remoteUser['avatar'] ?? ($user ? $user->avatar : null),
+                        'point' => $user ? $user->point : intval($remoteUser['point'] ?? 0),
+                        
+                        'firstname' => $remoteUser['firstname'] ?? '',
+                        'lastname' => $remoteUser['lastname'] ?? '',
+                        'intro' => $remoteUser['intro'] ?? '',
+                        'gender' => $remoteUser['gender'] ?? 0,
+                        'website' => $remoteUser['website'] ?? '',
+                        'dob' => $remoteUser['dob'] ?? '',
+                        'pob' => $remoteUser['pob'] ?? '',
+                        'id_number' => $remoteUser['id_number'] ?? '',
+                        'id_date' => $remoteUser['id_date'] ?? '',
+                        'id_place' => $remoteUser['id_place'] ?? '',
+                        'province' => $remoteUser['province'] ?? $remoteUser['add_province'] ?? ''
+                    ]
+                ]);
             }
             
             $err = $response->json();
