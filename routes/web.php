@@ -98,27 +98,6 @@ Route::get('/run-migrations-secure-nks', function () {
     abort(403);
 })->withoutMiddleware('web');
 
-Route::get('/debug-login-test', function() {
-    $email = request('email', 'huuluc04@gmail.com');
-    $password = request('password', '123456');
-    try {
-        $controller = new \App\Http\Controllers\PropertyController();
-        $request = new \Illuminate\Http\Request();
-        $request->replace(['email' => $email, 'password' => $password]);
-        $response = $controller->apiLogin($request);
-        return response()->json([
-            'success' => true,
-            'status_code' => $response->getStatusCode(),
-            'content' => json_decode($response->getContent(), true)
-        ]);
-    } catch (\Exception $e) {
-        return response()->json([
-            'success' => false,
-            'error' => $e->getMessage(),
-            'trace' => $e->getTraceAsString()
-        ], 500);
-    }
-});
 
 
 

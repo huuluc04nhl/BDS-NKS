@@ -540,6 +540,7 @@ class PropertyController extends Controller
 
             $remoteUser = null;
             $accessToken = null;
+            $apiError = null;
             
             try {
                 $response = Http::timeout(5)->withoutVerifying()->post('https://account.nks.vn/api/nks/user/login', [
@@ -557,26 +558,18 @@ class PropertyController extends Controller
                     Log::info('NKS Login Response: ' . json_encode($data));
                     
                     if (isset($data['success']) && !$data['success']) {
-                        $errorMsg = $data['error'] ?? $data['message'] ?? '';
-                        // If the account does not exist on NKS, it might be a local mock user (like in tests).
-                        // In this case, we don't return 401 immediately, but fall back to the local DB.
-                        // Otherwise (e.g. wrong password for an existing NKS account), we fail immediately.
-                        if (strpos(strtolower($errorMsg), 'không tồn tại') === false && 
-                            strpos(strtolower($errorMsg), 'not found') === false) {
-                            return response()->json([
-                                'success' => false,
-                                'message' => $errorMsg ?: 'Tên đăng nhập hoặc mật khẩu không chính xác.'
-                            ], 401);
-                        }
+                        $apiError = $data['error'] ?? $data['message'] ?? 'Đăng nhập không thành công.';
                     } else {
                         $accessToken = $data['data']['access_token'] ?? $data['access_token'] ?? null;
                         $remoteUser = $data['data']['user'] ?? $data['data']['user_info'] ?? $data['user'] ?? $data['user_info'] ?? $data['data'] ?? null;
                     }
                 } else {
                     Log::warning('NKS Login HTTP Error: ' . $response->status() . ' - ' . $response->body());
+                    $apiError = 'Máy chủ xác thực NKS phản hồi lỗi (HTTP ' . $response->status() . ').';
                 }
             } catch (\Exception $e) {
-                Log::warning('NKS Login API unavailable, falling back to local DB check: ' . $e->getMessage());
+                Log::error('NKS Login API Exception: ' . $e->getMessage());
+                $apiError = 'Không thể kết nối đến máy chủ xác thực NKS.';
             }
 
             if ($remoteUser && $accessToken) {
@@ -656,13 +649,23 @@ class PropertyController extends Controller
                 ]);
             }
 
-            // Fallback check on local DB (offline / test execution)
-            $user = \App\Models\User::where('email', $request->email)->first();
+            // Return the NKS API error directly in production
+            if ($apiError && !app()->environment('testing')) {
+                return response()->json([
+                    'success' => false,
+                    'message' => $apiError
+                ], 401);
+            }
+
+            // Fallback check on local DB (only for testing / offline execution)
+            $user = \App\Models\User::where('email', $request->email)
+                ->orWhere('phone', $request->email)
+                ->first();
 
             if (!$user || !\Illuminate\Support\Facades\Hash::check($request->password, $user->password)) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Email hoặc Mật khẩu không chính xác.'
+                    'message' => $apiError ?: 'Tên đăng nhập hoặc mật khẩu không chính xác.'
                 ], 401);
             }
 
