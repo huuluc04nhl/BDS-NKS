@@ -572,24 +572,23 @@ class PropertyController extends Controller
             }
 
             // === Bước 2: Xử lý response từ NKS API ===
-            if (!$response->successful()) {
-                Log::warning('NKS Login HTTP Error: ' . $response->status() . ' - ' . $response->body());
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Máy chủ xác thực NKS phản hồi lỗi (HTTP ' . $response->status() . ').'
-                ], 401);
-            }
-
+            // NKS API trả HTTP 500 khi login thất bại nhưng body vẫn có JSON
             $data = $response->json();
-            Log::info('NKS Login API Response for [' . $request->email . ']: success=' . ($data['success'] ?? 'null'));
 
-            // API trả về success: false → sai tài khoản/mật khẩu
-            if (isset($data['success']) && !$data['success']) {
+            // Nếu response không thành công HOẶC success = false
+            if (!$response->successful() || (isset($data['success']) && !$data['success'])) {
+                $errorMsg = $data['error'] ?? $data['message'] ?? null;
+                if (!$errorMsg) {
+                    $errorMsg = 'Máy chủ xác thực NKS phản hồi lỗi (HTTP ' . $response->status() . ').';
+                }
+                Log::info('NKS Login Failed for [' . $request->email . ']: ' . $errorMsg);
                 return response()->json([
                     'success' => false,
-                    'message' => $data['error'] ?? $data['message'] ?? 'Tên đăng nhập hoặc mật khẩu không chính xác.'
+                    'message' => $errorMsg
                 ], 401);
             }
+
+            Log::info('NKS Login API Response for [' . $request->email . ']: success=true');
 
             // === Bước 3: Trích xuất thông tin user từ API response ===
             $accessToken = $data['data']['access_token'] ?? $data['access_token'] ?? null;
