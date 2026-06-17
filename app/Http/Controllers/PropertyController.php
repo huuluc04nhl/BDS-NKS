@@ -2279,7 +2279,20 @@ class PropertyController extends Controller
             ]);
             
             if ($response->successful()) {
-                return response()->json($response->json());
+                $data = $response->json();
+                if (is_array($data)) {
+                    $list = $data['data'] ?? $data;
+                    if (is_array($list)) {
+                        $mapped = array_map(function($item) {
+                            if (isset($item['title']) && !isset($item['name'])) {
+                                $item['name'] = $item['title'];
+                            }
+                            return $item;
+                        }, $list);
+                        return response()->json($mapped);
+                    }
+                }
+                return response()->json($data);
             }
             
             return response()->json(['success' => false, 'message' => 'Lỗi kết nối NKS provinces.'], $response->status());
@@ -2306,7 +2319,20 @@ class PropertyController extends Controller
             ]);
             
             if ($response->successful()) {
-                return response()->json($response->json());
+                $data = $response->json();
+                if (is_array($data)) {
+                    $list = $data['data'] ?? $data;
+                    if (is_array($list)) {
+                        $mapped = array_map(function($item) {
+                            if (isset($item['title']) && !isset($item['name'])) {
+                                $item['name'] = $item['title'];
+                            }
+                            return $item;
+                        }, $list);
+                        return response()->json($mapped);
+                    }
+                }
+                return response()->json($data);
             }
             
             return response()->json(['success' => false, 'message' => 'Lỗi kết nối NKS administratives.'], $response->status());
