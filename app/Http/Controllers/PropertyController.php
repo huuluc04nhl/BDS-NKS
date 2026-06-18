@@ -590,11 +590,11 @@ class PropertyController extends Controller
 
             // Nếu response không thành công HOẶC success = false
             if (!$response->successful() || (isset($data['success']) && !$data['success'])) {
-                $errorMsg = $data['error'] ?? $data['message'] ?? null;
+                $errorMsg = $data['error'] ?? $data['message'] ?? $data['msg'] ?? $data['err'] ?? null;
                 if (!$errorMsg) {
                     $errorMsg = 'Máy chủ xác thực NKS phản hồi lỗi (HTTP ' . $response->status() . ').';
                 }
-                Log::info('NKS Login Failed for [' . $request->email . ']: ' . $errorMsg);
+                Log::warning('NKS Login Failed for [' . $request->email . '] | Status: ' . $response->status() . ' | Body: ' . $response->body());
                 return response()->json([
                     'success' => false,
                     'message' => $errorMsg
