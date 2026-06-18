@@ -598,7 +598,7 @@ class PropertyController extends Controller
                 return response()->json([
                     'success' => false,
                     'message' => $errorMsg
-                ], 401);
+                ], 200);
             }
 
             Log::info('NKS Login API Response for [' . $request->email . ']: success=true');

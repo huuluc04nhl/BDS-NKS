@@ -2203,16 +2203,20 @@
 
                     if (res.ok) {
                         const data = await res.json();
-                        localStorage.setItem('nks_user', JSON.stringify(data.user));
-                        localStorage.setItem('nks_last_username', email);
-                        if (data.access_token) {
-                            localStorage.setItem('nks_access_token', data.access_token);
+                        if (data.success) {
+                            localStorage.setItem('nks_user', JSON.stringify(data.user));
+                            localStorage.setItem('nks_last_username', email);
+                            if (data.access_token) {
+                                localStorage.setItem('nks_access_token', data.access_token);
+                            }
+                            this.lastUsername = email;
+                            this.showSecondLogin = true;
+                            window.dispatchEvent(new CustomEvent('nks-login-change'));
+                            this.activeTab = 'info';
+                            this.loadMockData();
+                        } else {
+                            alert(data.message || 'Đăng nhập không thành công.');
                         }
-                        this.lastUsername = email;
-                        this.showSecondLogin = true;
-                        window.dispatchEvent(new CustomEvent('nks-login-change'));
-                        this.activeTab = 'info';
-                        this.loadMockData();
                     } else {
                         const err = await res.json();
                         alert(err.message || 'Đăng nhập không thành công.');
