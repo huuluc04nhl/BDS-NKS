@@ -51,20 +51,30 @@ class PropertyApiTest extends TestCase
                     ]
                 ]
             ], 200),
-            'account.nks.vn/api/nks/user/login' => Http::response([
-                'success' => true,
-                'access_token' => 'mock_nks_access_token_123',
-                'user' => [
-                    'id' => 999,
-                    'name' => 'Nguyen Van Owner',
-                    'username' => 'owner_username',
-                    'email' => 'owner@nks.vn',
-                    'phone' => '0987654321',
-                    'role' => 'owner',
-                    'status' => 'active',
-                    'point' => 100
-                ]
-            ], 200),
+            'account.nks.vn/api/nks/user/login' => function ($request) {
+                $body = json_decode($request->body(), true);
+                if (isset($body['username']) && $body['username'] === 'local_user@nks.vn') {
+                    return Http::response([
+                        'success' => false,
+                        'error' => 'Tài khoản không tồn tại',
+                        'message' => 'Unauthorized'
+                    ], 401);
+                }
+                return Http::response([
+                    'success' => true,
+                    'access_token' => 'mock_nks_access_token_123',
+                    'user' => [
+                        'id' => 999,
+                        'name' => 'Nguyen Van Owner',
+                        'username' => 'owner_username',
+                        'email' => 'owner@nks.vn',
+                        'phone' => '0987654321',
+                        'role' => 'owner',
+                        'status' => 'active',
+                        'point' => 100
+                    ]
+                ], 200);
+            },
             'account.nks.vn/api/nks/user' => Http::response([
                 'success' => true,
                 'user' => [
@@ -141,6 +151,47 @@ class PropertyApiTest extends TestCase
                 'user' => [
                     'email' => 'owner@nks.vn'
                 ]
+            ]);
+    }
+
+    /**
+     * Test parallel login fallback when NKS API fails
+     */
+    public function test_parallel_login_fallback()
+    {
+        // 1. Create a user locally
+        $localUser = User::factory()->create([
+            'email' => 'local_user@nks.vn',
+            'password' => bcrypt('localpassword123'),
+            'status' => 'active'
+        ]);
+
+        // 3. Attempt to log in with correct local password but failing NKS API
+        $response = $this->postJson('/nks-api/login', [
+            'email' => 'local_user@nks.vn',
+            'password' => 'localpassword123'
+        ]);
+
+        $response->assertStatus(200)
+            ->assertJson([
+                'success' => true,
+                'user' => [
+                    'email' => 'local_user@nks.vn'
+                ]
+            ]);
+        
+        $this->assertStringContainsString('mock_token_for_local_', $response->json('access_token'));
+
+        // 4. Attempt login with wrong local password when API is also failing
+        $responseWrong = $this->postJson('/nks-api/login', [
+            'email' => 'local_user@nks.vn',
+            'password' => 'wrongpassword'
+        ]);
+
+        $responseWrong->assertStatus(200)
+            ->assertJson([
+                'success' => false,
+                'message' => 'Tài khoản không tồn tại'
             ]);
     }
 
