@@ -561,10 +561,7 @@ class PropertyController extends Controller
                 $ip = '127.0.0.1';
             }
 
-            $device = $request->header('User-Agent') ?? 'web browser';
-            if (strlen($device) > 250) {
-                $device = substr($device, 0, 250);
-            }
+            $device = 'web browser';
 
             $apiSuccess = false;
             $apiError = null;
