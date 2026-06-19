@@ -670,6 +670,7 @@ class PropertyController extends Controller
                     return response()->json([
                         'success' => true,
                         'access_token' => $accessToken,
+                        'db_error' => $dbEx->getMessage(),
                         'user' => [
                             'id' => $remoteUser['id'] ?? 0,
                             'name' => $name,
