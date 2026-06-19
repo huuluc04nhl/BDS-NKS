@@ -650,15 +650,48 @@ class PropertyController extends Controller
                             'role' => $role,
                             'status' => $status,
                             'point' => $point,
-                            'password' => bcrypt($request->password)
+                            'password' => bcrypt($request->password),
+                            'firstname' => $remoteUser['firstname'] ?? '',
+                            'lastname' => $remoteUser['lastname'] ?? '',
+                            'intro' => $remoteUser['intro'] ?? '',
+                            'gender' => intval($remoteUser['gender'] ?? 0),
+                            'website' => $remoteUser['website'] ?? '',
+                            'dob' => $remoteUser['dob'] ?? '',
+                            'pob' => $remoteUser['pob'] ?? '',
+                            'id_number' => $remoteUser['id_number'] ?? '',
+                            'id_date' => $remoteUser['id_date'] ?? '',
+                            'id_place' => $remoteUser['id_place'] ?? '',
+                            'province' => $remoteUser['province'] ?? $remoteUser['add_province'] ?? ''
                         ]
                     );
                 } catch (\Exception $dbEx) {
                     Log::error('NKS Login DB Error for [' . $email . ']: ' . $dbEx->getMessage());
+                    // DB lỗi nhưng API xác thực thành công → vẫn trả về user info từ API
                     return response()->json([
-                        'success' => false,
-                        'message' => 'Lỗi lưu CSDL cục bộ: ' . $dbEx->getMessage()
-                    ], 200);
+                        'success' => true,
+                        'access_token' => $accessToken,
+                        'user' => [
+                            'id' => $remoteUser['id'] ?? 0,
+                            'name' => $name,
+                            'email' => $email,
+                            'phone' => $phone,
+                            'role' => $role,
+                            'status' => $status,
+                            'avatar' => $avatar,
+                            'point' => $point,
+                            'firstname' => $remoteUser['firstname'] ?? '',
+                            'lastname' => $remoteUser['lastname'] ?? '',
+                            'intro' => $remoteUser['intro'] ?? '',
+                            'gender' => $remoteUser['gender'] ?? 0,
+                            'website' => $remoteUser['website'] ?? '',
+                            'dob' => $remoteUser['dob'] ?? '',
+                            'pob' => $remoteUser['pob'] ?? '',
+                            'id_number' => $remoteUser['id_number'] ?? '',
+                            'id_date' => $remoteUser['id_date'] ?? '',
+                            'id_place' => $remoteUser['id_place'] ?? '',
+                            'province' => $remoteUser['province'] ?? $remoteUser['add_province'] ?? ''
+                        ]
+                    ]);
                 }
 
                 if ($user->status === 'blocked') {
@@ -683,17 +716,17 @@ class PropertyController extends Controller
                         'status' => $user->status,
                         'avatar' => $user->avatar,
                         'point' => $user->point,
-                        'firstname' => $remoteUser['firstname'] ?? '',
-                        'lastname' => $remoteUser['lastname'] ?? '',
-                        'intro' => $remoteUser['intro'] ?? '',
-                        'gender' => $remoteUser['gender'] ?? 0,
-                        'website' => $remoteUser['website'] ?? '',
-                        'dob' => $remoteUser['dob'] ?? '',
-                        'pob' => $remoteUser['pob'] ?? '',
-                        'id_number' => $remoteUser['id_number'] ?? '',
-                        'id_date' => $remoteUser['id_date'] ?? '',
-                        'id_place' => $remoteUser['id_place'] ?? '',
-                        'province' => $remoteUser['province'] ?? $remoteUser['add_province'] ?? ''
+                        'firstname' => $user->firstname ?? '',
+                        'lastname' => $user->lastname ?? '',
+                        'intro' => $user->intro ?? '',
+                        'gender' => $user->gender ?? 0,
+                        'website' => $user->website ?? '',
+                        'dob' => $user->dob ?? '',
+                        'pob' => $user->pob ?? '',
+                        'id_number' => $user->id_number ?? '',
+                        'id_date' => $user->id_date ?? '',
+                        'id_place' => $user->id_place ?? '',
+                        'province' => $user->province ?? ''
                     ]
                 ]);
             } else {
@@ -726,17 +759,17 @@ class PropertyController extends Controller
                             'status' => $localUser->status,
                             'avatar' => $localUser->avatar,
                             'point' => $localUser->point,
-                            'firstname' => '',
-                            'lastname' => '',
-                            'intro' => '',
-                            'gender' => 0,
-                            'website' => '',
-                            'dob' => '',
-                            'pob' => '',
-                            'id_number' => '',
-                            'id_date' => '',
-                            'id_place' => '',
-                            'province' => ''
+                            'firstname' => $localUser->firstname ?? '',
+                            'lastname' => $localUser->lastname ?? '',
+                            'intro' => $localUser->intro ?? '',
+                            'gender' => $localUser->gender ?? 0,
+                            'website' => $localUser->website ?? '',
+                            'dob' => $localUser->dob ?? '',
+                            'pob' => $localUser->pob ?? '',
+                            'id_number' => $localUser->id_number ?? '',
+                            'id_date' => $localUser->id_date ?? '',
+                            'id_place' => $localUser->id_place ?? '',
+                            'province' => $localUser->province ?? ''
                         ]
                     ]);
                 }
@@ -857,7 +890,18 @@ class PropertyController extends Controller
                         'avatar' => $avatar,
                         'role' => $role,
                         'status' => $status,
-                        'point' => $point
+                        'point' => $point,
+                        'firstname' => $remoteUser['firstname'] ?? ($userData['firstname'] ?? ''),
+                        'lastname' => $remoteUser['lastname'] ?? ($userData['lastname'] ?? ''),
+                        'intro' => $remoteUser['intro'] ?? ($userData['intro'] ?? ''),
+                        'gender' => intval($remoteUser['gender'] ?? ($userData['gender'] ?? 0)),
+                        'website' => $remoteUser['website'] ?? ($userData['website'] ?? ''),
+                        'dob' => $remoteUser['dob'] ?? ($userData['dob'] ?? ''),
+                        'pob' => $remoteUser['pob'] ?? ($userData['pob'] ?? ''),
+                        'id_number' => $remoteUser['id_number'] ?? ($userData['id_number'] ?? ''),
+                        'id_date' => $remoteUser['id_date'] ?? ($userData['id_date'] ?? ''),
+                        'id_place' => $remoteUser['id_place'] ?? ($userData['id_place'] ?? ''),
+                        'province' => $remoteUser['province'] ?? $remoteUser['add_province'] ?? ($userData['province'] ?? '')
                     ]);
                     $isRecreated = true;
                 } else {
@@ -867,7 +911,18 @@ class PropertyController extends Controller
                         'avatar' => $avatar,
                         'role' => $role,
                         'status' => $status,
-                        'point' => $point
+                        'point' => $point,
+                        'firstname' => $remoteUser['firstname'] ?? ($userData['firstname'] ?? $user->firstname),
+                        'lastname' => $remoteUser['lastname'] ?? ($userData['lastname'] ?? $user->lastname),
+                        'intro' => $remoteUser['intro'] ?? ($userData['intro'] ?? $user->intro),
+                        'gender' => intval($remoteUser['gender'] ?? ($userData['gender'] ?? $user->gender)),
+                        'website' => $remoteUser['website'] ?? ($userData['website'] ?? $user->website),
+                        'dob' => $remoteUser['dob'] ?? ($userData['dob'] ?? $user->dob),
+                        'pob' => $remoteUser['pob'] ?? ($userData['pob'] ?? $user->pob),
+                        'id_number' => $remoteUser['id_number'] ?? ($userData['id_number'] ?? $user->id_number),
+                        'id_date' => $remoteUser['id_date'] ?? ($userData['id_date'] ?? $user->id_date),
+                        'id_place' => $remoteUser['id_place'] ?? ($userData['id_place'] ?? $user->id_place),
+                        'province' => $remoteUser['province'] ?? $remoteUser['add_province'] ?? ($userData['province'] ?? $user->province)
                     ]);
                 }
             } else {
@@ -880,7 +935,18 @@ class PropertyController extends Controller
                         'avatar' => $userData['avatar'] ?? 'https://api.dicebear.com/7.x/adventurer/svg?seed=' . urlencode($userData['name'] ?? 'nks'),
                         'role' => $userData['role'] ?? 'renter',
                         'status' => $userData['status'] ?? 'active',
-                        'point' => intval($userData['point'] ?? 0)
+                        'point' => intval($userData['point'] ?? 0),
+                        'firstname' => $userData['firstname'] ?? '',
+                        'lastname' => $userData['lastname'] ?? '',
+                        'intro' => $userData['intro'] ?? '',
+                        'gender' => intval($userData['gender'] ?? 0),
+                        'website' => $userData['website'] ?? '',
+                        'dob' => $userData['dob'] ?? '',
+                        'pob' => $userData['pob'] ?? '',
+                        'id_number' => $userData['id_number'] ?? '',
+                        'id_date' => $userData['id_date'] ?? '',
+                        'id_place' => $userData['id_place'] ?? '',
+                        'province' => $userData['province'] ?? ''
                     ]);
                     $isRecreated = true;
                 } else {
@@ -890,7 +956,18 @@ class PropertyController extends Controller
                         'role' => $userData['role'] ?? $user->role,
                         'status' => $userData['status'] ?? $user->status,
                         'avatar' => $userData['avatar'] ?? $user->avatar,
-                        'point' => intval($userData['point'] ?? $user->point)
+                        'point' => intval($userData['point'] ?? $user->point),
+                        'firstname' => $userData['firstname'] ?? $user->firstname,
+                        'lastname' => $userData['lastname'] ?? $user->lastname,
+                        'intro' => $userData['intro'] ?? $user->intro,
+                        'gender' => intval($userData['gender'] ?? $user->gender),
+                        'website' => $userData['website'] ?? $user->website,
+                        'dob' => $userData['dob'] ?? $user->dob,
+                        'pob' => $userData['pob'] ?? $user->pob,
+                        'id_number' => $userData['id_number'] ?? $user->id_number,
+                        'id_date' => $userData['id_date'] ?? $user->id_date,
+                        'id_place' => $userData['id_place'] ?? $user->id_place,
+                        'province' => $userData['province'] ?? $user->province
                     ]);
                 }
             }
@@ -1109,22 +1186,19 @@ class PropertyController extends Controller
                 'phone' => $user->phone,
                 'role' => $user->role,
                 'avatar' => $user->avatar,
-                'point' => $user->point
+                'point' => $user->point,
+                'firstname' => $user->firstname ?? '',
+                'lastname' => $user->lastname ?? '',
+                'intro' => $user->intro ?? '',
+                'gender' => $user->gender ?? 0,
+                'website' => $user->website ?? '',
+                'dob' => $user->dob ?? '',
+                'pob' => $user->pob ?? '',
+                'id_number' => $user->id_number ?? '',
+                'id_date' => $user->id_date ?? '',
+                'id_place' => $user->id_place ?? '',
+                'province' => $user->province ?? ''
             ];
-
-            if ($remoteUser) {
-                $resUser['firstname'] = $remoteUser['firstname'] ?? '';
-                $resUser['lastname'] = $remoteUser['lastname'] ?? '';
-                $resUser['intro'] = $remoteUser['intro'] ?? '';
-                $resUser['gender'] = $remoteUser['gender'] ?? 0;
-                $resUser['website'] = $remoteUser['website'] ?? '';
-                $resUser['dob'] = $remoteUser['dob'] ?? '';
-                $resUser['pob'] = $remoteUser['pob'] ?? '';
-                $resUser['id_number'] = $remoteUser['id_number'] ?? '';
-                $resUser['id_date'] = $remoteUser['id_date'] ?? '';
-                $resUser['id_place'] = $remoteUser['id_place'] ?? '';
-                $resUser['province'] = $remoteUser['province'] ?? $remoteUser['add_province'] ?? '';
-            }
 
             return response()->json([
                 'success' => true,
@@ -1201,7 +1275,18 @@ class PropertyController extends Controller
                                     'phone' => $remoteUser['phone'] ?? $user->phone,
                                     'avatar' => $remoteUser['avatar'] ?? $user->avatar,
                                     'point' => intval($remoteUser['point'] ?? $user->point),
-                                    'role' => is_array($remoteUser['role'] ?? null) ? ($remoteUser['role']['name'] ?? 'renter') : ($remoteUser['role'] ?? 'renter')
+                                    'role' => is_array($remoteUser['role'] ?? null) ? ($remoteUser['role']['name'] ?? 'renter') : ($remoteUser['role'] ?? 'renter'),
+                                    'firstname' => $remoteUser['firstname'] ?? $user->firstname,
+                                    'lastname' => $remoteUser['lastname'] ?? $user->lastname,
+                                    'intro' => $remoteUser['intro'] ?? $user->intro,
+                                    'gender' => intval($remoteUser['gender'] ?? $user->gender),
+                                    'website' => $remoteUser['website'] ?? $user->website,
+                                    'dob' => $remoteUser['dob'] ?? $user->dob,
+                                    'pob' => $remoteUser['pob'] ?? $user->pob,
+                                    'id_number' => $remoteUser['id_number'] ?? $user->id_number,
+                                    'id_date' => $remoteUser['id_date'] ?? $user->id_date,
+                                    'id_place' => $remoteUser['id_place'] ?? $user->id_place,
+                                    'province' => $remoteUser['province'] ?? $remoteUser['add_province'] ?? $user->province
                                 ]);
                             }
                             
@@ -1251,7 +1336,18 @@ class PropertyController extends Controller
             $user->update([
                 'name' => $request->name,
                 'phone' => $request->phone,
-                'avatar' => $request->avatar ?: $user->avatar
+                'avatar' => $request->avatar ?: $user->avatar,
+                'firstname' => $request->input('firstname') ?? $user->firstname,
+                'lastname' => $request->input('lastname') ?? $user->lastname,
+                'intro' => $request->input('intro') ?? $user->intro,
+                'gender' => intval($request->input('gender') ?? $user->gender),
+                'website' => $request->input('website') ?? $user->website,
+                'dob' => $request->input('dob') ?? $user->dob,
+                'pob' => $request->input('pob') ?? $user->pob,
+                'id_number' => $request->input('id_number') ?? $user->id_number,
+                'id_date' => $request->input('id_date') ?? $user->id_date,
+                'id_place' => $request->input('id_place') ?? $user->id_place,
+                'province' => $request->input('province') ?? $user->province
             ]);
 
             return response()->json([
@@ -1264,17 +1360,17 @@ class PropertyController extends Controller
                     'role' => $user->role,
                     'avatar' => $user->avatar,
                     'point' => $user->point,
-                    'firstname' => $request->input('firstname') ?? '',
-                    'lastname' => $request->input('lastname') ?? '',
-                    'intro' => $request->input('intro') ?? '',
-                    'gender' => $request->input('gender') ?? 0,
-                    'website' => $request->input('website') ?? '',
-                    'dob' => $request->input('dob') ?? '',
-                    'pob' => $request->input('pob') ?? '',
-                    'id_number' => $request->input('id_number') ?? '',
-                    'id_date' => $request->input('id_date') ?? '',
-                    'id_place' => $request->input('id_place') ?? '',
-                    'province' => $request->input('province') ?? ''
+                    'firstname' => $user->firstname ?? '',
+                    'lastname' => $user->lastname ?? '',
+                    'intro' => $user->intro ?? '',
+                    'gender' => $user->gender ?? 0,
+                    'website' => $user->website ?? '',
+                    'dob' => $user->dob ?? '',
+                    'pob' => $user->pob ?? '',
+                    'id_number' => $user->id_number ?? '',
+                    'id_date' => $user->id_date ?? '',
+                    'id_place' => $user->id_place ?? '',
+                    'province' => $user->province ?? ''
                 ]
             ]);
         } catch (\Illuminate\Validation\ValidationException $e) {
