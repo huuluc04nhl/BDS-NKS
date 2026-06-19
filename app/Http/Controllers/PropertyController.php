@@ -1444,6 +1444,8 @@ class PropertyController extends Controller
                 'property_id' => 'required|string',
                 'appt_name' => 'required|string',
                 'appt_phone' => 'required|string',
+                'email' => 'nullable|string|email',
+                'note' => 'nullable|string',
                 'appointment_date' => 'required|date',
                 'appointment_time' => 'required'
             ]);
@@ -1459,6 +1461,8 @@ class PropertyController extends Controller
                 'property_id' => $request->property_id,
                 'appt_name' => $request->appt_name,
                 'appt_phone' => $request->appt_phone,
+                'email' => $request->email,
+                'note' => $request->note,
                 'appointment_date' => $request->appointment_date,
                 'appointment_time' => $request->appointment_time,
                 'status' => 'confirmed' // Auto-confirm for interactive feel
@@ -1481,30 +1485,96 @@ class PropertyController extends Controller
                 $hostName = $property['sale']['name'] ?? $hostName;
             }
 
-            // Log email to renter
-            $renterEmail = $request->appt_phone . '@nks-sms.vn';
-            if ($userId) {
+            // Determine customer email
+            $renterEmail = $request->email;
+            if (empty($renterEmail) && $userId) {
                 $u = \App\Models\User::find($userId);
                 if ($u) {
                     $renterEmail = $u->email;
                 }
             }
+            if (empty($renterEmail)) {
+                $renterEmail = $request->appt_phone . '@nks-sms.vn';
+            }
 
-            $this->logSystemEmail(
-                $userId,
-                $renterEmail,
-                'Xác nhận lịch hẹn xem nhà thành công',
-                "Xin chào {$request->appt_name},\n\nLịch hẹn của bạn xem BDS \"{$propertyTitle}\" đã được xác nhận thành công.\nThời gian: {$request->appointment_date} lúc {$request->appointment_time}.\nChủ nhà liên hệ: {$hostName} ({$hostEmail}).\n\nCảm ơn bạn đã sử dụng BDS NKS!"
-            );
+            $noteContent = $request->note ? $request->note : 'Không có ghi chú.';
 
-            // Log email to host
+            // 1. Send/Log Email to Customer (Renter)
+            $renterSubject = '[NKS] Xác nhận lịch hẹn xem nhà thành công';
+            $renterBody = "Xin chào {$request->appt_name},\n\nYêu cầu đặt lịch hẹn xem nhà của bạn đã được xác nhận thành công.\n\n" .
+                          "Chi tiết lịch hẹn:\n" .
+                          "- Bất động sản: \"{$propertyTitle}\"\n" .
+                          "- Thời gian: {$request->appointment_date} lúc {$request->appointment_time}\n" .
+                          "- Họ tên: {$request->appt_name}\n" .
+                          "- Số điện thoại: {$request->appt_phone}\n" .
+                          "- Email: " . ($request->email ?? 'Không cung cấp') . "\n" .
+                          "- Ghi chú: {$noteContent}\n\n" .
+                          "Thông tin liên hệ người đại diện chủ nhà:\n" .
+                          "- Họ tên: {$hostName}\n" .
+                          "- Email: {$hostEmail}\n\n" .
+                          "Cảm ơn bạn đã sử dụng dịch vụ của Bất động sản NKS!";
+
+            $this->logSystemEmail($userId, $renterEmail, $renterSubject, $renterBody);
+            try {
+                \Illuminate\Support\Facades\Mail::raw($renterBody, function ($message) use ($renterEmail, $renterSubject) {
+                    $message->to($renterEmail)->subject($renterSubject);
+                });
+            } catch (\Exception $e) {
+                Log::warning('Mail::raw to Customer failed: ' . $e->getMessage());
+            }
+
+            // 2. Send/Log Email to Host/Owner
+            $hostSubject = 'Yêu cầu lịch hẹn mới cho tin đăng của bạn';
+            $hostBody = "Xin chào {$hostName},\n\nBạn nhận được yêu cầu lịch hẹn xem nhà mới từ khách hàng:\n" .
+                        "- Họ tên: {$request->appt_name}\n" .
+                        "- Số điện thoại: {$request->appt_phone}\n" .
+                        "- Email: " . ($request->email ?? 'Không cung cấp') . "\n" .
+                        "- Ghi chú: {$noteContent}\n\n" .
+                        "Bất động sản: \"{$propertyTitle}\"\n" .
+                        "Thời gian hẹn: {$request->appointment_date} lúc {$request->appointment_time}.\n\n" .
+                        "Vui lòng chuẩn bị đón tiếp khách hàng.";
+
             $hostUser = \App\Models\User::where('email', $hostEmail)->first();
-            $this->logSystemEmail(
-                $hostUser ? $hostUser->id : null,
-                $hostEmail,
-                'Yêu cầu lịch hẹn mới cho tin đăng của bạn',
-                "Xin chào {$hostName},\n\nBạn nhận được yêu cầu lịch hẹn xem nhà mới từ khách hàng {$request->appt_name} (SĐT: {$request->appt_phone}).\nBất động sản: \"{$propertyTitle}\"\nThời gian hẹn: {$request->appointment_date} lúc {$request->appointment_time}.\n\nVui lòng chuẩn bị đón tiếp khách hàng."
-            );
+            $this->logSystemEmail($hostUser ? $hostUser->id : null, $hostEmail, $hostSubject, $hostBody);
+            try {
+                \Illuminate\Support\Facades\Mail::raw($hostBody, function ($message) use ($hostEmail, $hostSubject) {
+                    $message->to($hostEmail)->subject($hostSubject);
+                });
+            } catch (\Exception $e) {
+                Log::warning('Mail::raw to Host failed: ' . $e->getMessage());
+            }
+
+            // 3. Send/Log Email to Admin
+            $adminSubject = '[NKS - ADMIN] Có yêu cầu đặt lịch hẹn xem nhà mới';
+            $adminBody = "Xin chào Admin,\n\nHệ thống vừa nhận được yêu cầu đặt lịch hẹn xem nhà mới từ khách hàng:\n" .
+                         "- Họ tên: {$request->appt_name}\n" .
+                         "- Số điện thoại: {$request->appt_phone}\n" .
+                         "- Email: " . ($request->email ?? 'Không cung cấp') . "\n" .
+                         "- Ghi chú: {$noteContent}\n\n" .
+                         "Thông tin bất động sản:\n" .
+                         "- Bất động sản: \"{$propertyTitle}\" (ID: {$request->property_id})\n" .
+                         "- Thời gian hẹn: {$request->appointment_date} lúc {$request->appointment_time}\n\n" .
+                         "Thông tin người đại diện chủ nhà/Host:\n" .
+                         "- Họ tên: {$hostName}\n" .
+                         "- Email: {$hostEmail}\n\n" .
+                         "Vui lòng theo dõi và cập nhật tiến độ liên hệ.";
+
+            $adminEmails = \App\Models\User::where('role', 'admin')->pluck('email')->toArray();
+            if (empty($adminEmails)) {
+                $adminEmails = ['admin@nks.vn'];
+            }
+
+            foreach ($adminEmails as $adminEmail) {
+                $adminUser = \App\Models\User::where('email', $adminEmail)->first();
+                $this->logSystemEmail($adminUser ? $adminUser->id : null, $adminEmail, $adminSubject, $adminBody);
+                try {
+                    \Illuminate\Support\Facades\Mail::raw($adminBody, function ($message) use ($adminEmail, $adminSubject) {
+                        $message->to($adminEmail)->subject($adminSubject);
+                    });
+                } catch (\Exception $e) {
+                    Log::warning("Mail::raw to Admin ({$adminEmail}) failed: " . $e->getMessage());
+                }
+            }
 
             return response()->json([
                 'success' => true,

@@ -247,6 +247,8 @@
                             <div class="space-y-3 pt-1">
                                 <input type="text" x-model="apptName" placeholder="Họ và tên của bạn" required class="w-full bg-slate-50 border border-slate-200/50 rounded-xl px-3.5 py-3 text-xs font-semibold focus:outline-none focus:border-primary focus:bg-white transition-all">
                                 <input type="tel" x-model="apptPhone" placeholder="Số điện thoại của bạn" required class="w-full bg-slate-50 border border-slate-200/50 rounded-xl px-3.5 py-3 text-xs font-semibold focus:outline-none focus:border-primary focus:bg-white transition-all">
+                                <input type="email" x-model="apptEmail" placeholder="Email của bạn (không bắt buộc)" class="w-full bg-slate-50 border border-slate-200/50 rounded-xl px-3.5 py-3 text-xs font-semibold focus:outline-none focus:border-primary focus:bg-white transition-all">
+                                <textarea x-model="apptNote" placeholder="Ghi chú thêm (ví dụ: giờ xem cụ thể, số lượng người...)" rows="3" class="w-full bg-slate-50 border border-slate-200/50 rounded-xl px-3.5 py-3 text-xs font-semibold focus:outline-none focus:border-primary focus:bg-white transition-all resize-none"></textarea>
                             </div>
 
                             <button type="submit" class="w-full bg-primary text-white font-extrabold py-4 rounded-2xl shadow-md btn-hover-premium text-xs">
@@ -277,9 +279,20 @@
             apptTime: '',
             apptName: '',
             apptPhone: '',
+            apptEmail: '',
+            apptNote: '',
             isApptSuccess: false,
             
             init() {
+                // Prefill user details if logged in
+                const savedUser = localStorage.getItem('nks_user');
+                if (savedUser) {
+                    const u = JSON.parse(savedUser);
+                    this.apptName = u.name || '';
+                    this.apptPhone = u.phone || '';
+                    this.apptEmail = u.email || '';
+                }
+
                 // Load favorites
                 const savedFavs = localStorage.getItem('nks_favorites');
                 if (savedFavs) {
@@ -386,6 +399,8 @@
                             property_id: String(this.property.id),
                             appt_name: this.apptName,
                             appt_phone: this.apptPhone,
+                            email: this.apptEmail,
+                            note: this.apptNote,
                             appointment_date: this.apptDate,
                             appointment_time: this.apptTime
                         })
@@ -404,6 +419,8 @@
                             time: this.apptTime,
                             name: this.apptName,
                             phone: this.apptPhone,
+                            email: this.apptEmail,
+                            note: this.apptNote,
                             status: 'confirmed',
                             host_name: this.property.sale?.name || 'Anh Minh',
                             host_phone: this.property.sale?.phone || '0932030958'
@@ -415,6 +432,7 @@
                         this.isApptSuccess = true;
                         this.apptDate = '';
                         this.apptTime = '';
+                        this.apptNote = '';
                         
                         setTimeout(() => {
                             this.isApptSuccess = false;

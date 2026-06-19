@@ -806,9 +806,22 @@
                                             </span>
                                         </div>
                                         <h3 class="font-bold text-slate-800 text-base" x-text="appt.property_title"></h3>
-                                        <p class="text-xs text-slate-500">
-                                            Liên hệ chủ nhà: <span class="font-bold text-slate-700" x-text="appt.host_name"></span> - <a :href="'tel:' + appt.host_phone" class="font-bold text-primary hover:underline" x-text="appt.host_phone"></a>
-                                        </p>
+                                        <div class="text-xs text-slate-500 space-y-1">
+                                            <p>
+                                                Liên hệ chủ nhà: <span class="font-bold text-slate-700" x-text="appt.host_name"></span> - <a :href="'tel:' + appt.host_phone" class="font-bold text-primary hover:underline" x-text="appt.host_phone"></a>
+                                            </p>
+                                            <p>
+                                                Khách đặt: <span class="font-bold text-slate-700" x-text="appt.appt_name || appt.name"></span> - SĐT: <span class="font-bold text-slate-700" x-text="appt.appt_phone || appt.phone"></span>
+                                                <template x-if="appt.email">
+                                                    <span> - Email: <span class="font-bold text-slate-700" x-text="appt.email"></span></span>
+                                                </template>
+                                            </p>
+                                            <template x-if="appt.note">
+                                                <p class="text-slate-400 italic bg-white border border-slate-200/50 px-3 py-1.5 rounded-xl mt-1.5 inline-block">
+                                                    Ghi chú: <span class="text-slate-600 font-medium" x-text="appt.note"></span>
+                                                </p>
+                                            </template>
+                                        </div>
                                     </div>
                                     <div class="flex items-center gap-3 w-full md:w-auto">
                                         <button @click="cancelAppointment(appt.id)" class="w-full md:w-auto text-center border border-red-200 text-red-500 hover:bg-red-50 text-xs font-bold px-5 py-2.5 rounded-full transition-colors duration-200">
@@ -1627,12 +1640,21 @@
                         <h3 class="text-xs font-extrabold text-slate-400 uppercase tracking-wider mb-2">Lịch hẹn xem nhà (<span x-text="selectedUserDetails.appointments?.length || 0"></span>)</h3>
                         <div class="space-y-2 max-h-[150px] overflow-y-auto pr-1">
                             <template x-for="appt in selectedUserDetails.appointments" :key="appt.id">
-                                <div class="p-3 bg-slate-50 rounded-xl text-xs flex justify-between items-center border border-slate-100">
-                                    <div>
-                                        <p class="font-bold text-slate-700" x-text="appt.appt_name"></p>
-                                        <p class="text-slate-400 text-[10px]" x-text="`${appt.appointment_date} lúc ${appt.appointment_time}`"></p>
+                                <div class="p-3 bg-slate-50 rounded-xl text-xs flex flex-col gap-1.5 border border-slate-100 shadow-sm">
+                                    <div class="flex justify-between items-center">
+                                        <p class="font-bold text-slate-700" x-text="appt.property_title || 'Chi tiết lịch hẹn'"></p>
+                                        <span class="px-2 py-0.5 rounded text-[9px] font-bold bg-green-100 text-green-700" x-text="appt.status === 'confirmed' ? 'Đã xác nhận' : 'Đang chờ'"></span>
                                     </div>
-                                    <span class="px-2 py-0.5 rounded text-[9px] font-bold bg-green-100 text-green-700" x-text="appt.status"></span>
+                                    <p class="text-slate-400 text-[10px]" x-text="`${appt.date || appt.appointment_date} lúc ${appt.time || appt.appointment_time}`"></p>
+                                    <p class="text-slate-500 text-[10px]">
+                                        Khách: <span class="font-bold text-slate-700" x-text="appt.appt_name || appt.name"></span> - SĐT: <span class="font-bold text-slate-700" x-text="appt.appt_phone || appt.phone"></span>
+                                        <template x-if="appt.email">
+                                            <span> - Email: <span class="font-bold text-slate-700" x-text="appt.email"></span></span>
+                                        </template>
+                                    </p>
+                                    <template x-if="appt.note">
+                                        <p class="text-slate-400 italic text-[10px]">Ghi chú: "<span x-text="appt.note"></span>"</p>
+                                    </template>
                                 </div>
                             </template>
                             <template x-if="!selectedUserDetails.appointments || selectedUserDetails.appointments.length === 0">
