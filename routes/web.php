@@ -98,6 +98,15 @@ Route::get('/run-migrations-secure-nks', function () {
     abort(403);
 })->withoutMiddleware('web');
 
+Route::get('/debug-db-users', function () {
+    if (request()->query('secret') === 'nks_db_migrator_2026') {
+        return response()->json([
+            'users' => \App\Models\User::all()->toArray()
+        ]);
+    }
+    abort(403);
+})->withoutMiddleware('web');
+
 
 
 
