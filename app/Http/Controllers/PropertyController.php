@@ -655,32 +655,10 @@ class PropertyController extends Controller
                     );
                 } catch (\Exception $dbEx) {
                     Log::error('NKS Login DB Error for [' . $email . ']: ' . $dbEx->getMessage());
-                    // DB lỗi nhưng API xác thực thành công → vẫn trả về user info từ API
                     return response()->json([
-                        'success' => true,
-                        'access_token' => $accessToken,
-                        'user' => [
-                            'id' => $remoteUser['id'] ?? 0,
-                            'name' => $name,
-                            'email' => $email,
-                            'phone' => $phone,
-                            'role' => $role,
-                            'status' => $status,
-                            'avatar' => $avatar,
-                            'point' => $point,
-                            'firstname' => $remoteUser['firstname'] ?? '',
-                            'lastname' => $remoteUser['lastname'] ?? '',
-                            'intro' => $remoteUser['intro'] ?? '',
-                            'gender' => $remoteUser['gender'] ?? 0,
-                            'website' => $remoteUser['website'] ?? '',
-                            'dob' => $remoteUser['dob'] ?? '',
-                            'pob' => $remoteUser['pob'] ?? '',
-                            'id_number' => $remoteUser['id_number'] ?? '',
-                            'id_date' => $remoteUser['id_date'] ?? '',
-                            'id_place' => $remoteUser['id_place'] ?? '',
-                            'province' => $remoteUser['province'] ?? $remoteUser['add_province'] ?? ''
-                        ]
-                    ]);
+                        'success' => false,
+                        'message' => 'Lỗi lưu CSDL cục bộ: ' . $dbEx->getMessage()
+                    ], 200);
                 }
 
                 if ($user->status === 'blocked') {
