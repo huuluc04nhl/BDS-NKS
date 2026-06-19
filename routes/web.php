@@ -63,14 +63,6 @@ Route::prefix('nks-api')->group(function () {
     Route::get('/emails/list', [PropertyController::class, 'apiGetEmailLogs']);
 });
 
-Route::get('/debug-user-db-nks', function () {
-    if (request()->query('secret') === 'nks_db_migrator_2026') {
-        $user = \App\Models\User::where('email', 'huuluc04@gmail.com')->first();
-        return response()->json($user);
-    }
-    abort(403);
-})->withoutMiddleware('web');
-
 // Secure Online Database Migration Trigger for Vercel Serverless
 Route::get('/run-migrations-secure-nks', function () {
     if (request()->query('secret') === 'nks_db_migrator_2026') {
