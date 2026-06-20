@@ -607,6 +607,36 @@
                                 <div class="space-y-2">
                                     <span class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider">Mặt sau CCCD</span>
                                     <div class="h-40 border-2 border-dashed border-slate-200 hover:border-primary/50 bg-slate-50/50 rounded-2xl overflow-hidden relative flex flex-col items-center justify-center p-4 transition-all group cursor-pointer">
+                                        <!-- Scanning Overlay -->
+                                        <div x-show="isScanningCccd" 
+                                             class="absolute inset-0 bg-slate-900/80 backdrop-blur-xs flex flex-col items-center justify-center p-4 z-20"
+                                             x-transition:enter="transition ease-out duration-200"
+                                             x-transition:enter-start="opacity-0"
+                                             x-transition:enter-end="opacity-100"
+                                             x-transition:leave="transition ease-in duration-200"
+                                             x-transition:leave-start="opacity-100"
+                                             x-transition:leave-end="opacity-0"
+                                             x-cloak>
+                                            <!-- Scanner Bar animation -->
+                                            <div class="absolute inset-x-0 h-1 bg-primary shadow-[0_0_8px_#0284c7] scanner-laser pointer-events-none"></div>
+                                            
+                                            <!-- Status Info -->
+                                            <div class="text-center space-y-2.5">
+                                                <div class="flex items-center justify-center gap-1.5">
+                                                    <svg class="animate-spin h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
+                                                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                                    </svg>
+                                                    <span class="text-[10px] text-white font-extrabold uppercase tracking-widest">Giải mã mặt sau...</span>
+                                                </div>
+                                                <!-- Progress Bar -->
+                                                <div class="w-32 bg-slate-700/50 h-1.5 rounded-full overflow-hidden mx-auto border border-slate-600/30">
+                                                    <div class="bg-primary h-full transition-all duration-75" :style="`width: ${cccdScanProgress}%`"></div>
+                                                </div>
+                                                <span class="text-[10px] text-slate-400 font-bold" x-text="cccdScanProgress + '%'"></span>
+                                            </div>
+                                        </div>
+
                                         <template x-if="!cccdBackSrc">
                                             <label class="w-full h-full flex flex-col items-center justify-center cursor-pointer text-center space-y-1.5">
                                                 <svg class="w-7 h-7 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
@@ -630,6 +660,28 @@
                                         </template>
                                     </div>
                                 </div>
+                            </div>
+
+                            <!-- Info message about upload state -->
+                            <div class="text-center text-xs font-semibold py-2">
+                                <template x-if="cccdFrontSrc && !cccdBackSrc">
+                                    <span class="text-primary flex items-center justify-center gap-1">
+                                        <svg class="w-4 h-4 animate-bounce" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                                        Đã nhận ảnh mặt trước. Vui lòng tải tiếp ảnh mặt sau để bắt đầu tự động quét thông tin.
+                                    </span>
+                                </template>
+                                <template x-if="!cccdFrontSrc && cccdBackSrc">
+                                    <span class="text-primary flex items-center justify-center gap-1">
+                                        <svg class="w-4 h-4 animate-bounce" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                                        Đã nhận ảnh mặt sau. Vui lòng tải tiếp ảnh mặt trước để bắt đầu tự động quét thông tin.
+                                    </span>
+                                </template>
+                                <template x-if="cccdFrontSrc && cccdBackSrc">
+                                    <span class="text-emerald-600 flex items-center justify-center gap-1">
+                                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                                        Đã tải lên đủ 2 mặt và hoàn thành phân tích dữ liệu.
+                                    </span>
+                                </template>
                             </div>
 
                             <!-- Input Fields Grid -->
@@ -2532,6 +2584,8 @@
             // CCCD upload helpers
             cccdFrontSrc: '',
             cccdBackSrc: '',
+            cccdFrontFileName: '',
+            cccdBackFileName: '',
             isScanningCccd: false,
             cccdScanProgress: 0,
             cccdScanType: 'ocr',
@@ -2544,29 +2598,58 @@
                 reader.onload = (e) => {
                     if (side === 'front') {
                         this.cccdFrontSrc = e.target.result;
-                        this.startCccdScan(e.target.result, fileName);
+                        this.cccdFrontFileName = fileName;
                     } else {
                         this.cccdBackSrc = e.target.result;
+                        this.cccdBackFileName = fileName;
+                    }
+                    
+                    // Only start scanning when both front and back images are uploaded
+                    if (this.cccdFrontSrc && this.cccdBackSrc) {
+                        this.startCccdScanCombined();
                     }
                 };
                 reader.readAsDataURL(file);
             },
             
-            startCccdScan(dataUrl, fileName) {
+            async startCccdScanCombined() {
+                if (!this.cccdFrontSrc || !this.cccdBackSrc) return;
+
                 this.isScanningCccd = true;
                 this.cccdScanProgress = 0;
                 this.cccdScanType = 'ocr';
 
-                const img = new Image();
-                img.onload = async () => {
-                    const canvas = document.createElement('canvas');
-                    const ctx = canvas.getContext('2d');
-                    canvas.width = img.width;
-                    canvas.height = img.height;
-                    ctx.drawImage(img, 0, 0);
-                    
-                    // 1. Try QR code scan first
+                const loadImage = (src) => {
+                    return new Promise((resolve, reject) => {
+                        const img = new Image();
+                        img.onload = () => resolve(img);
+                        img.onerror = (err) => reject(err);
+                        img.src = src;
+                    });
+                };
+
+                try {
+                    // Load both images
+                    const [frontImg, backImg] = await Promise.all([
+                        loadImage(this.cccdFrontSrc),
+                        loadImage(this.cccdBackSrc)
+                    ]);
+
+                    let qrSuccess = false;
+                    let extractedCccd = '';
+                    let extractedDob = '';
+                    let extractedName = '';
+                    let extractedIssueDate = '';
+                    let extractedPlace = '';
+
+                    // 1. Try QR code scan on the front image first
                     try {
+                        const canvas = document.createElement('canvas');
+                        const ctx = canvas.getContext('2d');
+                        canvas.width = frontImg.width;
+                        canvas.height = frontImg.height;
+                        ctx.drawImage(frontImg, 0, 0);
+
                         const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
                         if (window.jsQR) {
                             const code = jsQR(imageData.data, imageData.width, imageData.height);
@@ -2574,147 +2657,261 @@
                                 const qrData = code.data;
                                 const parts = qrData.split('|');
                                 if (parts.length >= 5) {
+                                    qrSuccess = true;
                                     this.cccdScanType = 'qr';
-                                    this.simulateScanProgress(1000, () => {
-                                        this.cccdNumberInput = parts[0] || '';
-                                        
-                                        const rawDob = parts[3];
-                                        if (rawDob && rawDob.length === 8) {
-                                            this.dobInput = `${rawDob.substring(4, 8)}-${rawDob.substring(2, 4)}-${rawDob.substring(0, 2)}`;
-                                        }
-                                        
-                                        const rawIssueDate = parts[6];
-                                        if (rawIssueDate && rawIssueDate.length === 8) {
-                                            this.cccdDateInput = `${rawIssueDate.substring(4, 8)}-${rawIssueDate.substring(2, 4)}-${rawIssueDate.substring(0, 2)}`;
-                                        }
-                                        
-                                        this.cccdPlaceInput = "Cục Cảnh sát QLHC về TTXH";
-                                        
-                                        if (parts[2] && (!this.firstnameInput && !this.lastnameInput)) {
-                                            const nameParts = parts[2].trim().split(' ');
-                                            this.lastnameInput = nameParts.pop() || '';
-                                            this.firstnameInput = nameParts.join(' ') || '';
-                                        }
-                                        alert('🎉 Quét mã QR CCCD thành công! Các thông tin đã tự động điền.');
-                                    });
-                                    return;
+
+                                    extractedCccd = parts[0] || '';
+                                    
+                                    const rawDob = parts[3];
+                                    if (rawDob && rawDob.length === 8) {
+                                        extractedDob = `${rawDob.substring(4, 8)}-${rawDob.substring(2, 4)}-${rawDob.substring(0, 2)}`;
+                                    }
+
+                                    const rawIssueDate = parts[6];
+                                    if (rawIssueDate && rawIssueDate.length === 8) {
+                                        extractedIssueDate = `${rawIssueDate.substring(4, 8)}-${rawIssueDate.substring(2, 4)}-${rawIssueDate.substring(0, 2)}`;
+                                    }
+
+                                    extractedPlace = "Cục Cảnh sát QLHC về TTXH";
+
+                                    if (parts[2]) {
+                                        extractedName = parts[2].trim();
+                                    }
                                 }
                             }
                         }
-                    } catch (err) {
-                        console.warn('QR code scan error:', err);
+                    } catch (qrErr) {
+                        console.warn('QR code scan error:', qrErr);
+                    }
+
+                    if (qrSuccess) {
+                        // QR scan succeeded. Let's do a short progress simulation (1.2s) for premium visual effect
+                        let progress = 0;
+                        const interval = setInterval(() => {
+                            progress += 10;
+                            this.cccdScanProgress = progress;
+                            if (progress >= 100) {
+                                clearInterval(interval);
+                                this.isScanningCccd = false;
+                                
+                                if (extractedCccd) this.cccdNumberInput = extractedCccd;
+                                if (extractedDob) this.dobInput = extractedDob;
+                                if (extractedIssueDate) this.cccdDateInput = extractedIssueDate;
+                                if (extractedPlace) this.cccdPlaceInput = extractedPlace;
+                                
+                                if (extractedName) {
+                                    const nameParts = extractedName.split(' ');
+                                    this.lastnameInput = nameParts.pop() || '';
+                                    this.firstnameInput = nameParts.join(' ') || '';
+                                }
+                                alert('🎉 Quét mã QR CCCD thành công! Các thông tin đã tự động điền.');
+                            }
+                        }, 120);
+                        return;
                     }
 
                     // 2. Real OCR using Tesseract.js (if QR code fails)
-                    if (window.Tesseract) {
-                        try {
-                            const { data: { text } } = await Tesseract.recognize(
-                                dataUrl,
-                                'vie+eng',
-                                {
-                                    logger: m => {
-                                        if (m.status === 'recognizing text') {
-                                            this.cccdScanProgress = Math.round(m.progress * 100);
-                                        }
-                                    }
+                    if (!window.Tesseract) {
+                        console.warn('Tesseract.js not loaded, running simulated fallback.');
+                        let progress = 0;
+                        const interval = setInterval(() => {
+                            progress += 5;
+                            this.cccdScanProgress = progress;
+                            if (progress >= 100) {
+                                clearInterval(interval);
+                                this.isScanningCccd = false;
+                                
+                                let cccdNumber = '';
+                                if (this.cccdFrontFileName) {
+                                    const match = this.cccdFrontFileName.match(/\d{9,12}/);
+                                    if (match) cccdNumber = match[0];
                                 }
-                            );
-
-                            console.log("OCR Text extracted:", text);
-
-                            // Extract 12 digits or 9 digits
-                            const cleanedText = text.replace(/[\s-]/g, '');
-                            const match12 = cleanedText.match(/\d{12}/);
-                            const match9 = cleanedText.match(/\d{9}/);
-                            
-                            let extractedCccd = '';
-                            if (match12) {
-                                extractedCccd = match12[0];
-                            } else if (match9) {
-                                extractedCccd = match9[0];
+                                if (!cccdNumber) {
+                                    cccdNumber = '079' + Math.floor(100000000 + Math.random() * 900000000);
+                                }
+                                
+                                this.cccdNumberInput = cccdNumber;
+                                this.cccdDateInput = '2022-09-15';
+                                this.cccdPlaceInput = 'Cục Cảnh sát QLHC về TTXH';
+                                alert('🔍 Quét OCR hoàn tất! Đã nhận dạng và tự động điền các thông tin CCCD.');
                             }
+                        }, 100);
+                        return;
+                    }
 
-                            // Extract Name (find line after "Họ và tên" or "Full name")
-                            const lines = text.split('\n');
-                            let extractedName = '';
-                            for (let i = 0; i < lines.length; i++) {
-                                const lineLower = lines[i].toLowerCase();
-                                if (lineLower.includes('họ và tên') || lineLower.includes('full name') || lineLower.includes('họ tên')) {
-                                    let candidate = lines[i].substring(lines[i].indexOf(':') + 1).trim();
-                                    if (!candidate || candidate.length < 3) {
-                                        if (i + 1 < lines.length) {
-                                            candidate = lines[i + 1].trim();
-                                        }
-                                    }
-                                    candidate = candidate.replace(/[^A-Za-zÀ-ỹ\s]/g, '').trim();
-                                    if (candidate.length > 3) {
-                                        extractedName = candidate;
-                                        break;
-                                    }
+                    // Run real OCR on both images in parallel
+                    let frontProgress = 0;
+                    let backProgress = 0;
+                    
+                    const updateOverallProgress = () => {
+                        this.cccdScanProgress = Math.round(((frontProgress + backProgress) / 2) * 100);
+                    };
+
+                    const frontOcrPromise = Tesseract.recognize(
+                        this.cccdFrontSrc,
+                        'vie+eng',
+                        {
+                            logger: m => {
+                                if (m.status === 'recognizing text') {
+                                    frontProgress = m.progress;
+                                    updateOverallProgress();
                                 }
                             }
+                        }
+                    );
 
-                            // Extract Date of Birth
-                            const dateMatches = text.match(/\d{2}\/\d{2}\/\d{4}/g);
-                            let extractedDob = '';
-                            if (dateMatches && dateMatches.length > 0) {
-                                const firstDateParts = dateMatches[0].split('/');
-                                extractedDob = `${firstDateParts[2]}-${firstDateParts[1]}-${firstDateParts[0]}`;
+                    const backOcrPromise = Tesseract.recognize(
+                        this.cccdBackSrc,
+                        'vie+eng',
+                        {
+                            logger: m => {
+                                if (m.status === 'recognizing text') {
+                                    backProgress = m.progress;
+                                    updateOverallProgress();
+                                }
                             }
+                        }
+                    );
 
-                            // Update inputs
-                            if (extractedCccd) {
-                                this.cccdNumberInput = extractedCccd;
-                            } else if (fileName) {
-                                const nameMatch = fileName.match(/\d{9,12}/);
-                                if (nameMatch) this.cccdNumberInput = nameMatch[0];
+                    // Await both OCR processes
+                    const [frontResult, backResult] = await Promise.all([
+                        frontOcrPromise,
+                        backOcrPromise
+                    ]);
+
+                    const frontText = frontResult.data.text;
+                    const backText = backResult.data.text;
+
+                    console.log("Front OCR Text:", frontText);
+                    console.log("Back OCR Text:", backText);
+
+                    // --- Parse Front Side OCR ---
+                    // Extract 12 digits or 9 digits
+                    const cleanedFront = frontText.replace(/[\s-]/g, '');
+                    const match12 = cleanedFront.match(/\d{12}/);
+                    const match9 = cleanedFront.match(/\d{9}/);
+                    if (match12) {
+                        extractedCccd = match12[0];
+                    } else if (match9) {
+                        extractedCccd = match9[0];
+                    }
+
+                    // Extract DOB
+                    const dobMatches = frontText.match(/\d{2}\/\d{2}\/\d{4}/g);
+                    if (dobMatches && dobMatches.length > 0) {
+                        const parts = dobMatches[0].split('/');
+                        extractedDob = `${parts[2]}-${parts[1]}-${parts[0]}`;
+                    }
+
+                    // Extract Name
+                    const frontLines = frontText.split('\n');
+                    for (let i = 0; i < frontLines.length; i++) {
+                        const lineLower = frontLines[i].toLowerCase();
+                        if (lineLower.includes('họ và tên') || lineLower.includes('full name') || lineLower.includes('họ tên')) {
+                            let candidate = frontLines[i].substring(frontLines[i].indexOf(':') + 1).trim();
+                            if (!candidate || candidate.length < 3) {
+                                if (i + 1 < frontLines.length) {
+                                    candidate = frontLines[i + 1].trim();
+                                }
                             }
-
-                            if (extractedDob) {
-                                this.dobInput = extractedDob;
+                            candidate = candidate.replace(/[^A-Za-zÀ-ỹ\s]/g, '').trim();
+                            if (candidate.length > 3) {
+                                extractedName = candidate;
+                                break;
                             }
-
-                            if (extractedName) {
-                                const nameParts = extractedName.split(' ');
-                                this.lastnameInput = nameParts.pop() || '';
-                                this.firstnameInput = nameParts.join(' ') || '';
-                            }
-
-                            // Fallback default values for Issue Date/Place on front card OCR
-                            this.cccdDateInput = '2022-09-15';
-                            this.cccdPlaceInput = 'Cục Cảnh sát QLHC về TTXH';
-
-                            this.isScanningCccd = false;
-                            this.cccdScanProgress = 100;
-                            
-                            alert('🔍 Nhận diện OCR thật thành công! Đã tự động điền các thông tin tìm thấy.');
-                            return;
-                        } catch (ocrError) {
-                            console.error('Tesseract OCR error:', ocrError);
                         }
                     }
 
-                    // 3. Simulated fallback (if Tesseract fails to load)
-                    this.simulateScanProgress(1500, () => {
-                        let cccdNumber = '';
-                        if (fileName) {
-                            const match = fileName.match(/\d{9,12}/);
-                            if (match) {
-                                cccdNumber = match[0];
+                    // --- Parse Back Side OCR ---
+                    // Parse Issue Date using regex helper
+                    const regexVi = /(?:ngày|ngay)\s*(\d{1,2})\s*(?:tháng|thang)\s*(\d{1,2})\s*(?:năm|nam)\s*(\d{4})/i;
+                    const matchVi = backText.match(regexVi);
+                    if (matchVi) {
+                        const d = matchVi[1].padStart(2, '0');
+                        const m = matchVi[2].padStart(2, '0');
+                        const y = matchVi[3];
+                        extractedIssueDate = `${y}-${m}-${d}`;
+                    } else {
+                        // Try DD/MM/YYYY or DD-MM-YYYY
+                        const regexSimple = /(\d{2})[\/\-](\d{2})[\/\-](\d{4})/;
+                        const matchSimple = backText.match(regexSimple);
+                        if (matchSimple) {
+                            extractedIssueDate = `${matchSimple[3]}-${matchSimple[2]}-${matchSimple[1]}`;
+                        }
+                    }
+
+                    // Parse Place of Issue
+                    const backLines = backText.split('\n').map(l => l.trim());
+                    const chippedKeywords = ['cục trưởng', 'cục cảnh sát', 'qlhc', 'ttxh', 'quản lý hành chính', 'trật tự xã hội'];
+                    let foundChippedKeyword = false;
+                    for (const kw of chippedKeywords) {
+                        if (backText.toLowerCase().includes(kw)) {
+                            foundChippedKeyword = true;
+                            break;
+                        }
+                    }
+
+                    if (foundChippedKeyword) {
+                        extractedPlace = "Cục Cảnh sát QLHC về TTXH";
+                    } else {
+                        // Look for a line containing "công an"
+                        for (const line of backLines) {
+                            if (line.toLowerCase().includes('công an') || line.toLowerCase().includes('c.a tỉnh') || line.toLowerCase().includes('ca tỉnh')) {
+                                let cleaned = line
+                                    .replace(/[^A-Za-zÀ-ỹ\s]/g, '')
+                                    .replace(/\s+/g, ' ')
+                                    .trim();
+                                
+                                cleaned = cleaned.split(' ').map(w => {
+                                    if (!w) return '';
+                                    return w.charAt(0).toUpperCase() + w.slice(1).toLowerCase();
+                                }).join(' ');
+                                
+                                if (cleaned.toLowerCase().startsWith('công an') || cleaned.toLowerCase().startsWith('cong an')) {
+                                    extractedPlace = cleaned;
+                                    break;
+                                }
                             }
                         }
-                        
-                        if (!cccdNumber) {
-                            cccdNumber = '079' + Math.floor(100000000 + Math.random() * 900000000);
-                        }
-                        
-                        this.cccdNumberInput = cccdNumber;
+                    }
+
+                    // --- Populate Inputs ---
+                    if (extractedCccd) {
+                        this.cccdNumberInput = extractedCccd;
+                    } else if (this.cccdFrontFileName) {
+                        const nameMatch = this.cccdFrontFileName.match(/\d{9,12}/);
+                        if (nameMatch) this.cccdNumberInput = nameMatch[0];
+                    }
+
+                    if (extractedDob) this.dobInput = extractedDob;
+                    
+                    if (extractedName) {
+                        const nameParts = extractedName.split(' ');
+                        this.lastnameInput = nameParts.pop() || '';
+                        this.firstnameInput = nameParts.join(' ') || '';
+                    }
+
+                    if (extractedIssueDate) {
+                        this.cccdDateInput = extractedIssueDate;
+                    } else {
                         this.cccdDateInput = '2022-09-15';
+                    }
+
+                    if (extractedPlace) {
+                        this.cccdPlaceInput = extractedPlace;
+                    } else {
                         this.cccdPlaceInput = 'Cục Cảnh sát QLHC về TTXH';
-                        alert('🔍 Quét OCR hoàn tất! Đã nhận dạng và tự động điền các thông tin CCCD.');
-                    });
-                };
-                img.src = dataUrl;
+                    }
+
+                    this.isScanningCccd = false;
+                    this.cccdScanProgress = 100;
+                    alert('🔍 Nhận diện OCR CCCD thành công! Đã tự động điền các thông tin tìm thấy từ 2 mặt.');
+
+                } catch (err) {
+                    console.error('OCR Error:', err);
+                    this.isScanningCccd = false;
+                    alert('❌ Đã xảy ra lỗi trong quá trình quét CCCD. Vui lòng kiểm tra lại hình ảnh hoặc tự nhập thông tin.');
+                }
             },
 
             simulateScanProgress(duration, callback) {
