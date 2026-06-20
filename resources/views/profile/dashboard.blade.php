@@ -2335,6 +2335,14 @@
                 }
             },
 
+            avatarZoom: 1,
+            avatarRotate: 0,
+            avatarImgSrc: '',
+            avatarOffsetX: 0,
+            avatarOffsetY: 0,
+            isDraggingAvatar: false,
+            dragStartX: 0,
+            dragStartY: 0,
             avatarImgWidth: 0,
             avatarImgHeight: 0,
             
