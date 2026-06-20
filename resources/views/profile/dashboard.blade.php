@@ -159,80 +159,33 @@
                             </div>
                         </div>
 
-                        <!-- Stepper Progress Bar -->
-                        <div class="mb-8 bg-slate-50 border border-slate-200/60 rounded-3xl p-6">
-                            <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-                                <!-- Step 1 Indicator -->
-                                <div class="flex items-center gap-3 cursor-pointer" @click="activeStep = 1">
-                                    <div class="w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs transition-all duration-300"
-                                         :class="activeStep === 1 ? 'bg-primary text-white ring-4 ring-primary/20' : (activeStep > 1 ? 'bg-emerald-500 text-white' : 'bg-slate-200 text-slate-500')">
-                                        <template x-if="activeStep > 1">
-                                            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3">
-                                                <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
-                                            </svg>
-                                        </template>
-                                        <template x-if="activeStep <= 1">
-                                            <span>1</span>
-                                        </template>
-                                    </div>
-                                    <div>
-                                        <p class="text-xs font-black" :class="activeStep === 1 ? 'text-primary' : 'text-slate-700'">Cập nhật thông tin</p>
-                                        <p class="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Bước 1</p>
-                                    </div>
-                                </div>
-                                <div class="hidden md:block flex-grow h-0.5 bg-slate-200 mx-2" :class="activeStep > 1 ? 'bg-emerald-500' : 'bg-slate-200'"></div>
-
-                                <!-- Step 2 Indicator -->
-                                <div class="flex items-center gap-3 cursor-pointer" @click="activeStep = 2">
-                                    <div class="w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs transition-all duration-300"
-                                         :class="activeStep === 2 ? 'bg-primary text-white ring-4 ring-primary/20' : (activeStep > 2 ? 'bg-emerald-500 text-white' : 'bg-slate-200 text-slate-500')">
-                                        <template x-if="activeStep > 2">
-                                            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3">
-                                                <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
-                                            </svg>
-                                        </template>
-                                        <template x-if="activeStep <= 2">
-                                            <span>2</span>
-                                        </template>
-                                    </div>
-                                    <div>
-                                        <p class="text-xs font-black" :class="activeStep === 2 ? 'text-primary' : 'text-slate-700'">Đổi mật khẩu</p>
-                                        <p class="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Bước 2</p>
-                                    </div>
-                                </div>
-                                <div class="hidden md:block flex-grow h-0.5 bg-slate-200 mx-2" :class="activeStep > 2 ? 'bg-emerald-500' : 'bg-slate-200'"></div>
-
-                                <!-- Step 3 Indicator -->
-                                <div class="flex items-center gap-3 cursor-pointer" @click="activeStep = 3">
-                                    <div class="w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs transition-all duration-300"
-                                         :class="activeStep === 3 ? 'bg-primary text-white ring-4 ring-primary/20' : (activeStep > 3 ? 'bg-emerald-500 text-white' : 'bg-slate-200 text-slate-500')">
-                                        <template x-if="activeStep > 3">
-                                            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3">
-                                                <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
-                                            </svg>
-                                        </template>
-                                        <template x-if="activeStep <= 3">
-                                            <span>3</span>
-                                        </template>
-                                    </div>
-                                    <div>
-                                        <p class="text-xs font-black" :class="activeStep === 3 ? 'text-primary' : 'text-slate-700'">Đổi Avatar</p>
-                                        <p class="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Bước 3</p>
-                                    </div>
-                                </div>
-                                <div class="hidden md:block flex-grow h-0.5 bg-slate-200 mx-2" :class="activeStep > 3 ? 'bg-emerald-500' : 'bg-slate-200'"></div>
-
-                                <!-- Step 4 Indicator -->
-                                <div class="flex items-center gap-3 cursor-pointer" @click="cccdNumberInput = idNumberInput; cccdDateInput = idDateInput; cccdPlaceInput = idPlaceInput; activeStep = 4">
-                                    <div class="w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs transition-all duration-300"
-                                         :class="activeStep === 4 ? 'bg-primary text-white ring-4 ring-primary/20' : (user && idNumberInput ? 'bg-emerald-500 text-white' : 'bg-slate-200 text-slate-500')">
-                                        <span>4</span>
-                                    </div>
-                                    <div>
-                                        <p class="text-xs font-black" :class="activeStep === 4 ? 'text-primary' : 'text-slate-700'">Xác thực CCCD</p>
-                                        <p class="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Bước 4</p>
-                                    </div>
-                                </div>
+                        <!-- Sub-tab Navigation (Independent sections instead of sequential steps) -->
+                        <div class="mb-8 border-b border-slate-100 pb-3 overflow-x-auto">
+                            <div class="flex gap-2 min-w-max">
+                                <button type="button" @click="activeStep = 1"
+                                        class="flex items-center gap-2 px-5 py-3 rounded-2xl font-extrabold text-xs uppercase tracking-wider transition-all duration-300 shadow-xs"
+                                        :class="activeStep === 1 ? 'bg-primary text-white shadow-md shadow-primary/20 scale-[1.02]' : 'text-slate-500 hover:bg-slate-100/80 hover:text-slate-700'">
+                                    <svg class="w-4.5 h-4.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>
+                                    Thông tin cá nhân
+                                </button>
+                                <button type="button" @click="activeStep = 2"
+                                        class="flex items-center gap-2 px-5 py-3 rounded-2xl font-extrabold text-xs uppercase tracking-wider transition-all duration-300 shadow-xs"
+                                        :class="activeStep === 2 ? 'bg-primary text-white shadow-md shadow-primary/20 scale-[1.02]' : 'text-slate-500 hover:bg-slate-100/80 hover:text-slate-700'">
+                                    <svg class="w-4.5 h-4.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" /></svg>
+                                    Đổi mật khẩu
+                                </button>
+                                <button type="button" @click="activeStep = 3"
+                                        class="flex items-center gap-2 px-5 py-3 rounded-2xl font-extrabold text-xs uppercase tracking-wider transition-all duration-300 shadow-xs"
+                                        :class="activeStep === 3 ? 'bg-primary text-white shadow-md shadow-primary/20 scale-[1.02]' : 'text-slate-500 hover:bg-slate-100/80 hover:text-slate-700'">
+                                    <svg class="w-4.5 h-4.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
+                                    Ảnh đại diện
+                                </button>
+                                <button type="button" @click="cccdNumberInput = idNumberInput; cccdDateInput = idDateInput; cccdPlaceInput = idPlaceInput; activeStep = 4"
+                                        class="flex items-center gap-2 px-5 py-3 rounded-2xl font-extrabold text-xs uppercase tracking-wider transition-all duration-300 shadow-xs"
+                                        :class="activeStep === 4 ? 'bg-primary text-white shadow-md shadow-primary/20 scale-[1.02]' : 'text-slate-500 hover:bg-slate-100/80 hover:text-slate-700'">
+                                    <svg class="w-4.5 h-4.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M10 6H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V8a2 2 0 00-2-2h-5m-4 0V5a2 2 0 114 0v1m-4 0a2 2 0 104 0m-5 8a2 2 0 100-4 2 2 0 000 4zm0 0c1.378 0 2.5-1.122 2.5-2.5S10.378 9 9 9m9 2h-3m3 4h-3" /></svg>
+                                    Xác thực CCCD
+                                </button>
                             </div>
                         </div>
 
@@ -332,12 +285,6 @@
                                 <div class="flex items-center gap-3 pt-4 border-t border-slate-100">
                                     <button type="submit" class="bg-primary text-white font-bold px-8 py-3.5 rounded-full text-xs shadow-md btn-hover-premium transition-all hover:scale-[1.02]">
                                         Cập nhật & Lưu thông tin
-                                    </button>
-                                    <button type="button" @click="activeStep = 2" class="bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold px-6 py-3.5 rounded-full text-xs transition-colors flex items-center gap-1">
-                                        Tiếp theo
-                                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
-                                            <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" />
-                                        </svg>
                                     </button>
                                 </div>
                             </form>
@@ -483,20 +430,8 @@
 
                                 <!-- Action buttons -->
                                 <div class="flex gap-3 pt-4 border-t border-slate-100">
-                                    <button type="button" @click="activeStep = 1" class="bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold px-6 py-3.5 rounded-full text-xs transition-colors flex items-center gap-1">
-                                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
-                                            <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
-                                        </svg>
-                                        Quay lại
-                                    </button>
                                     <button type="submit" class="bg-primary hover:bg-primary-dark text-white font-bold px-8 py-3.5 rounded-full text-xs transition-all shadow-md">
                                         Cập nhật mật khẩu
-                                    </button>
-                                    <button type="button" @click="activeStep = 3" class="bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold px-6 py-3.5 rounded-full text-xs transition-colors flex items-center gap-1 ml-auto">
-                                        Tiếp theo
-                                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
-                                            <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" />
-                                        </svg>
                                     </button>
                                 </div>
                             </form>
@@ -583,20 +518,8 @@
 
                             <!-- Action buttons -->
                             <div class="flex gap-3 pt-4 border-t border-slate-100">
-                                <button type="button" @click="activeStep = 2" class="bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold px-6 py-3.5 rounded-full text-xs transition-colors flex items-center gap-1">
-                                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
-                                        <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
-                                    </svg>
-                                    Quay lại
-                                </button>
                                 <button @click="saveAvatar" :disabled="!avatarImgSrc" class="bg-primary hover:bg-primary-dark disabled:opacity-50 text-white font-bold px-8 py-3.5 rounded-full text-xs transition-all shadow-md">
                                     Lưu ảnh đại diện
-                                </button>
-                                <button type="button" @click="cccdNumberInput = idNumberInput; cccdDateInput = idDateInput; cccdPlaceInput = idPlaceInput; activeStep = 4" class="bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold px-6 py-3.5 rounded-full text-xs transition-colors flex items-center gap-1 ml-auto">
-                                    Tiếp theo
-                                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
-                                        <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" />
-                                    </svg>
                                 </button>
                             </div>
                         </div>
@@ -728,12 +651,6 @@
 
                             <!-- Action buttons -->
                             <div class="flex gap-3 pt-4 border-t border-slate-100">
-                                <button type="button" @click="activeStep = 3" class="bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold px-6 py-3.5 rounded-full text-xs transition-colors flex items-center gap-1">
-                                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
-                                        <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
-                                    </svg>
-                                    Quay lại
-                                </button>
                                 <button @click="saveCccd" :disabled="!cccdFrontSrc || !cccdBackSrc || !cccdNumberInput" class="bg-primary hover:bg-primary-dark disabled:opacity-50 text-white font-bold px-8 py-3.5 rounded-full text-xs transition-all shadow-md">
                                     Xác thực & Lưu
                                 </button>
@@ -2357,7 +2274,6 @@
                         localStorage.setItem('nks_user', JSON.stringify(this.user));
                         window.dispatchEvent(new CustomEvent('nks-login-change'));
                         alert('Cập nhật thông tin cá nhân thành công!');
-                        this.activeStep = 2;
                     } else {
                         const err = await res.json();
                         alert(err.message || 'Cập nhật thất bại.');
@@ -2497,7 +2413,6 @@
                             this.showUpdateAvatarModal = false;
                             this.avatarImgSrc = '';
                             alert('Cập nhật ảnh đại diện thành công!');
-                            this.activeStep = 4;
                         } else {
                             const err = await res.json();
                             alert(err.message || 'Lỗi khi cập nhật avatar.');
@@ -2609,7 +2524,6 @@
                         this.generatedPass = '';
                         this.showPasswordGenerator = false;
                         this.showUpdatePassModal = false;
-                        this.activeStep = 3;
                     } else {
                         const err = await res.json();
                         alert(err.message || 'Lỗi khi cập nhật mật khẩu.');
