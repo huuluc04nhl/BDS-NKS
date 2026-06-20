@@ -87,7 +87,7 @@ class UserAdminChatTest extends TestCase
         // Verify status email log was created
         $this->assertDatabaseHas('email_logs', [
             'user_id' => $this->renter->id,
-            'subject' => 'Thông báo: Tài khoản của bạn đã bị khóa tạm thời'
+            'subject' => '⚠️ Thông báo quan trọng: Tài khoản BDS NKS tạm thời bị khóa'
         ]);
 
         // Attempt login while blocked
@@ -127,7 +127,7 @@ class UserAdminChatTest extends TestCase
         $this->assertDatabaseHas('email_logs', [
             'user_id' => $john->id,
             'recipient_email' => 'john@example.com',
-            'subject' => 'Chào mừng bạn đến với BDS NKS - Hệ thống Bất Động Sản Chính Chủ'
+            'subject' => '✨ Chào mừng bạn đến với BDS NKS - Ngôi nhà mới, hành trình mới!'
         ]);
     }
 

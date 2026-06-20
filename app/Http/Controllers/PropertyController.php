@@ -491,13 +491,44 @@ class PropertyController extends Controller
                 'avatar' => 'https://api.dicebear.com/7.x/adventurer/svg?seed=' . urlencode($request->name)
             ]);
 
-            // Log registration email
-            $this->logSystemEmail(
+            // Log and Send welcome email to Customer
+            $this->sendAndLogEmail(
                 $user->id,
                 $user->email,
-                'Chào mừng bạn đến với BDS NKS - Hệ thống Bất Động Sản Chính Chủ',
-                "Xin chào {$user->name},\n\nTài khoản của bạn đã được đăng ký thành công trên hệ thống BDS NKS.\nVai trò của bạn: " . ($user->role === 'owner' ? 'Chủ nhà chính chủ' : 'Khách thuê tìm nhà') . "\n\nCảm ơn bạn đã lựa chọn dịch vụ của chúng tôi!"
+                '✨ Chào mừng bạn đến với BDS NKS - Ngôi nhà mới, hành trình mới!',
+                "Chúng tôi rất vui mừng và vinh hạnh được chào đón bạn gia nhập cộng đồng BDS NKS! 🎉 Tài khoản của bạn đã được đăng ký thành công.\n\nBDS NKS luôn sẵn sàng đồng hành cùng bạn trên mọi nẻo đường để tìm kiếm, đăng tin và sở hữu những bất động sản chính chủ chất lượng hàng đầu. Hãy cùng bắt đầu trải nghiệm dịch vụ cao cấp ngay hôm nay nhé!",
+                [
+                    'Họ và tên' => $user->name,
+                    'Email tài khoản' => $user->email,
+                    'Vai trò tài khoản' => $user->role === 'owner' ? 'Chủ nhà chính chủ 🏡' : 'Khách thuê tìm nhà 🔑'
+                ],
+                'Khám phá Trang cá nhân của bạn',
+                url('/profile')
             );
+
+            // Notify Admin
+            $adminEmails = \App\Models\User::where('role', 'admin')->pluck('email')->toArray();
+            if (empty($adminEmails)) {
+                $adminEmails = ['admin@nks.vn'];
+            }
+            foreach ($adminEmails as $adminEmail) {
+                $adminUser = \App\Models\User::where('email', $adminEmail)->first();
+                $this->sendAndLogEmail(
+                    $adminUser ? $adminUser->id : null,
+                    $adminEmail,
+                    '🔔 [NKS - ADMIN] Tuyệt vời! Có thành viên mới vừa đăng ký',
+                    "Hệ thống vừa ghi nhận thêm một thành viên mới đăng ký tài khoản thành công. Hãy cùng kiểm tra và cập nhật thông tin thành viên:",
+                    [
+                        'Mã số thành viên' => '<span style="color: #d97706; font-weight: 700;">#' . $user->id . '</span>',
+                        'Họ và tên' => $user->name,
+                        'Email' => $user->email,
+                        'Vai trò đăng ký' => $user->role === 'owner' ? 'Chủ nhà chính chủ 🏡' : 'Khách thuê tìm nhà 🔑',
+                        'Thời gian đăng ký' => now()->format('d/m/Y H:i:s')
+                    ],
+                    'Quản lý thành viên',
+                    url('/profile')
+                );
+            }
 
             // Authenticate in Laravel session
             \Illuminate\Support\Facades\Auth::login($user, true);
@@ -1502,6 +1533,7 @@ class PropertyController extends Controller
             $propertyTitle = 'Bất động sản chính chủ';
             $hostEmail = 'nks.diaocchinhchu@nks.vn';
             $hostName = 'Đội ngũ NKS';
+            $hostPhone = '0932030958';
 
             $propId = $request->property_id;
             $items = $this->fetchAllItems();
@@ -1513,6 +1545,7 @@ class PropertyController extends Controller
                 $propertyTitle = $property['title'] ?? $propertyTitle;
                 $hostEmail = $property['email'] ?? $hostEmail;
                 $hostName = $property['sale']['name'] ?? $hostName;
+                $hostPhone = $property['sale']['phone'] ?? $hostPhone;
             }
 
             // Determine customer email
@@ -1530,65 +1563,43 @@ class PropertyController extends Controller
             $noteContent = $request->note ? $request->note : 'Không có ghi chú.';
 
             // 1. Send/Log Email to Customer (Renter)
-            $renterSubject = '[NKS] Xác nhận lịch hẹn xem nhà thành công';
-            $renterBody = "Xin chào {$request->appt_name},\n\nYêu cầu đặt lịch hẹn xem nhà của bạn đã được xác nhận thành công.\n\n" .
-                          "Chi tiết lịch hẹn:\n" .
-                          "- Bất động sản: \"{$propertyTitle}\"\n" .
-                          "- Thời gian: {$request->appointment_date} lúc {$request->appointment_time}\n" .
-                          "- Họ tên: {$request->appt_name}\n" .
-                          "- Số điện thoại: {$request->appt_phone}\n" .
-                          "- Email: " . ($request->email ?? 'Không cung cấp') . "\n" .
-                          "- Ghi chú: {$noteContent}\n\n" .
-                          "Thông tin liên hệ người đại diện chủ nhà:\n" .
-                          "- Họ tên: {$hostName}\n" .
-                          "- Email: {$hostEmail}\n\n" .
-                          "Cảm ơn bạn đã sử dụng dịch vụ của Bất động sản NKS!";
-
-            $this->logSystemEmail($userId, $renterEmail, $renterSubject, $renterBody);
-            try {
-                \Illuminate\Support\Facades\Mail::raw($renterBody, function ($message) use ($renterEmail, $renterSubject) {
-                    $message->to($renterEmail)->subject($renterSubject);
-                });
-            } catch (\Exception $e) {
-                Log::warning('Mail::raw to Customer failed: ' . $e->getMessage());
-            }
+            $this->sendAndLogEmail(
+                $userId,
+                $renterEmail,
+                '📅 [BDS NKS] Tuyệt vời! Lịch hẹn xem nhà của bạn đã được xác nhận',
+                "Chúc mừng bạn! Yêu cầu đặt lịch hẹn xem nhà của bạn đã được hệ thống xác nhận thành công. 🎉 Hãy cùng lưu lại mốc thời gian dưới đây và chuẩn bị tinh thần để khám phá không gian sống lý tưởng tương lai của mình nhé. Bạn có thể liên hệ trực tiếp với người đại diện chủ nhà để được hỗ trợ đón tiếp chu đáo nhất.",
+                [
+                    'Bất động sản' => $propertyTitle,
+                    'Thời gian xem nhà' => '<span style="color: #b45309; font-weight: 700;">' . $request->appointment_date . ' lúc ' . $request->appointment_time . '</span>',
+                    'Tên khách hẹn' => $request->appt_name,
+                    'Số điện thoại' => $request->appt_phone,
+                    'Đại diện chủ nhà' => $hostName,
+                    'SĐT chủ nhà' => $hostPhone,
+                    'Ghi chú bổ sung' => $noteContent
+                ],
+                'Xem chi tiết bất động sản',
+                url('/properties/' . ($property ? $property['slug'] : '#'))
+            );
 
             // 2. Send/Log Email to Host/Owner
-            $hostSubject = 'Yêu cầu lịch hẹn mới cho tin đăng của bạn';
-            $hostBody = "Xin chào {$hostName},\n\nBạn nhận được yêu cầu lịch hẹn xem nhà mới từ khách hàng:\n" .
-                        "- Họ tên: {$request->appt_name}\n" .
-                        "- Số điện thoại: {$request->appt_phone}\n" .
-                        "- Email: " . ($request->email ?? 'Không cung cấp') . "\n" .
-                        "- Ghi chú: {$noteContent}\n\n" .
-                        "Bất động sản: \"{$propertyTitle}\"\n" .
-                        "Thời gian hẹn: {$request->appointment_date} lúc {$request->appointment_time}.\n\n" .
-                        "Vui lòng chuẩn bị đón tiếp khách hàng.";
-
             $hostUser = \App\Models\User::where('email', $hostEmail)->first();
-            $this->logSystemEmail($hostUser ? $hostUser->id : null, $hostEmail, $hostSubject, $hostBody);
-            try {
-                \Illuminate\Support\Facades\Mail::raw($hostBody, function ($message) use ($hostEmail, $hostSubject) {
-                    $message->to($hostEmail)->subject($hostSubject);
-                });
-            } catch (\Exception $e) {
-                Log::warning('Mail::raw to Host failed: ' . $e->getMessage());
-            }
+            $this->sendAndLogEmail(
+                $hostUser ? $hostUser->id : null,
+                $hostEmail,
+                '🤝 [BDS NKS] Bạn có lịch hẹn xem nhà mới từ khách hàng',
+                "Tin vui từ BDS NKS! Một khách hàng tiềm năng vừa đặt lịch hẹn ghé thăm bất động sản của bạn. 🏡 Hãy chủ động chuẩn bị thông tin và sắp xếp thời gian đón tiếp để đạt hiệu quả giao dịch tốt nhất nhé.",
+                [
+                    'Bất động sản' => $propertyTitle,
+                    'Thời gian hẹn khách' => '<span style="color: #b45309; font-weight: 700;">' . $request->appointment_date . ' lúc ' . $request->appointment_time . '</span>',
+                    'Tên khách hẹn' => $request->appt_name,
+                    'Số điện thoại khách' => $request->appt_phone,
+                    'Ghi chú của khách' => $noteContent
+                ],
+                'Quản lý lịch hẹn của bạn',
+                url('/profile')
+            );
 
             // 3. Send/Log Email to Admin
-            $adminSubject = '[NKS - ADMIN] Có yêu cầu đặt lịch hẹn xem nhà mới';
-            $adminBody = "Xin chào Admin,\n\nHệ thống vừa nhận được yêu cầu đặt lịch hẹn xem nhà mới từ khách hàng:\n" .
-                         "- Họ tên: {$request->appt_name}\n" .
-                         "- Số điện thoại: {$request->appt_phone}\n" .
-                         "- Email: " . ($request->email ?? 'Không cung cấp') . "\n" .
-                         "- Ghi chú: {$noteContent}\n\n" .
-                         "Thông tin bất động sản:\n" .
-                         "- Bất động sản: \"{$propertyTitle}\" (ID: {$request->property_id})\n" .
-                         "- Thời gian hẹn: {$request->appointment_date} lúc {$request->appointment_time}\n\n" .
-                         "Thông tin người đại diện chủ nhà/Host:\n" .
-                         "- Họ tên: {$hostName}\n" .
-                         "- Email: {$hostEmail}\n\n" .
-                         "Vui lòng theo dõi và cập nhật tiến độ liên hệ.";
-
             $adminEmails = \App\Models\User::where('role', 'admin')->pluck('email')->toArray();
             if (empty($adminEmails)) {
                 $adminEmails = ['admin@nks.vn'];
@@ -1596,14 +1607,21 @@ class PropertyController extends Controller
 
             foreach ($adminEmails as $adminEmail) {
                 $adminUser = \App\Models\User::where('email', $adminEmail)->first();
-                $this->logSystemEmail($adminUser ? $adminUser->id : null, $adminEmail, $adminSubject, $adminBody);
-                try {
-                    \Illuminate\Support\Facades\Mail::raw($adminBody, function ($message) use ($adminEmail, $adminSubject) {
-                        $message->to($adminEmail)->subject($adminSubject);
-                    });
-                } catch (\Exception $e) {
-                    Log::warning("Mail::raw to Admin ({$adminEmail}) failed: " . $e->getMessage());
-                }
+                $this->sendAndLogEmail(
+                    $adminUser ? $adminUser->id : null,
+                    $adminEmail,
+                    '🔔 [NKS - ADMIN] Lịch hẹn xem nhà mới vừa được thiết lập',
+                    "Hệ thống vừa ghi nhận một giao dịch kết nối lịch hẹn xem nhà mới thành công giữa Khách thuê và Chủ nhà phụ trách:",
+                    [
+                        'Bất động sản' => $propertyTitle,
+                        'Thời gian hẹn' => $request->appointment_date . ' lúc ' . $request->appointment_time,
+                        'Khách hàng thuê' => $request->appt_name . ' (' . $request->appt_phone . ')',
+                        'Chủ nhà phụ trách' => $hostName . ' (' . $hostPhone . ')',
+                        'Ghi chú' => $noteContent
+                    ],
+                    'Quản lý lịch hẹn hệ thống',
+                    url('/profile')
+                );
             }
 
             return response()->json([
@@ -1955,6 +1973,50 @@ class PropertyController extends Controller
             $propertyArray = $property->toArray();
             $propertyArray['id'] = $property->id + 1000;
 
+            // 1. Send receipt confirmation email to the Owner
+            $this->sendAndLogEmail(
+                $user->id,
+                $user->email,
+                '🏡 [BDS NKS] Tuyệt vời! Tin đăng của bạn đã được tiếp nhận thành công',
+                "Chúc mừng bạn! Tin đăng bất động sản mới của bạn đã được ghi nhận thành công trên hệ thống BDS NKS. Đội ngũ thẩm định chuyên nghiệp của chúng tôi đang tiến hành kiểm tra thông tin để đưa tin đăng của bạn tiếp cận hàng ngàn khách thuê & đối tác tiềm năng trong thời gian sớm nhất! 🚀",
+                [
+                    'Tiêu đề tin' => $property->title,
+                    'Loại bất động sản' => $property->rstype === 'room' ? 'Phòng trọ / Căn hộ dịch vụ 🏢' : 'Nhà nguyên căn 🏠',
+                    'Hình thức' => $property->transaction_type === 'rent' ? 'Cho thuê 🔑' : 'Bán lẻ 🏷️',
+                    'Mức giá' => '<span style="color: #b45309; font-weight: 700;">' . $property->formated_price . '</span>',
+                    'Diện tích' => $property->total_area . ' m²',
+                    'Địa chỉ' => $property->address
+                ],
+                'Xem tin đăng của bạn',
+                url('/properties/' . $property->slug)
+            );
+
+            // 2. Send notification email to the Admin
+            $adminEmails = \App\Models\User::where('role', 'admin')->pluck('email')->toArray();
+            if (empty($adminEmails)) {
+                $adminEmails = ['admin@nks.vn'];
+            }
+            foreach ($adminEmails as $adminEmail) {
+                $adminUser = \App\Models\User::where('email', $adminEmail)->first();
+                $this->sendAndLogEmail(
+                    $adminUser ? $adminUser->id : null,
+                    $adminEmail,
+                    '🔔 [NKS - ADMIN] Có tin đăng bất động sản mới đang chờ duyệt',
+                    "Hệ thống vừa ghi nhận một bất động sản mới do thành viên đăng tải lên bản đồ BDS NKS. Vui lòng thẩm định thông tin và xét duyệt tin đăng:",
+                    [
+                        'Tên chủ nhà' => $user->name,
+                        'Số điện thoại' => $user->phone ?? 'Chưa cập nhật',
+                        'Tiêu đề tin' => $property->title,
+                        'Loại bất động sản' => $property->rstype === 'room' ? 'Phòng trọ / Căn hộ dịch vụ' : 'Nhà nguyên căn',
+                        'Hình thức' => $property->transaction_type === 'rent' ? 'Cho thuê' : 'Bán',
+                        'Mức giá' => $property->formated_price,
+                        'Địa chỉ' => $property->address
+                    ],
+                    'Xem và duyệt tin ngay',
+                    url('/properties/' . $property->slug)
+                );
+            }
+
             return response()->json([
                 'success' => true,
                 'property' => $propertyArray
@@ -2235,6 +2297,60 @@ class PropertyController extends Controller
     }
 
     /**
+     * Helper: Send HTML email via Blade view and log to database
+     */
+    protected function sendAndLogEmail($userId, $recipientEmail, $subject, $messageBody, array $details = null, $ctaText = null, $ctaUrl = null)
+    {
+        // 1. Log to Database first for local storage/history in Member Dashboard
+        $plainTextBody = $messageBody;
+        if (is_array($details) && count($details) > 0) {
+            $plainTextBody .= "\n\nChi tiết:";
+            foreach ($details as $k => $v) {
+                $plainTextBody .= "\n- {$k}: " . strip_tags($v);
+            }
+        }
+        if ($ctaText && $ctaUrl) {
+            $plainTextBody .= "\n\nBấm vào liên kết này: {$ctaText} ({$ctaUrl})";
+        }
+
+        $this->logSystemEmail($userId, $recipientEmail, $subject, $plainTextBody);
+
+        // 2. Dispatch HTML Email using resources/views/emails/notification.blade.php
+        try {
+            $userName = 'Khách hàng';
+            if (str_contains(strtolower($recipientEmail), 'admin')) {
+                $userName = 'Quản trị viên';
+            } elseif ($userId) {
+                $user = \App\Models\User::find($userId);
+                if ($user) {
+                    $userName = $user->name;
+                }
+            } else {
+                $user = \App\Models\User::where('email', $recipientEmail)->first();
+                if ($user) {
+                    $userName = $user->name;
+                }
+            }
+
+            $emailData = [
+                'title' => $subject,
+                'greeting' => "Xin chào {$userName},",
+                'messageBody' => $messageBody,
+                'details' => $details,
+                'ctaText' => $ctaText,
+                'ctaUrl' => $ctaUrl
+            ];
+
+            \Illuminate\Support\Facades\Mail::send('emails.notification', $emailData, function ($message) use ($recipientEmail, $subject) {
+                $message->to($recipientEmail)->subject($subject);
+            });
+        } catch (\Exception $e) {
+            Log::warning("Dispatching HTML Email to {$recipientEmail} failed: " . $e->getMessage());
+        }
+    }
+
+
+    /**
      * API: Admin Create User
      */
     public function apiAdminCreateUser(Request $request)
@@ -2265,12 +2381,19 @@ class PropertyController extends Controller
                 'avatar' => 'https://api.dicebear.com/7.x/adventurer/svg?seed=' . urlencode($request->name)
             ]);
 
-            // Log registration email
-            $this->logSystemEmail(
+            // Send welcome/credentials email to Customer
+            $this->sendAndLogEmail(
                 $user->id,
                 $user->email,
-                'Chào mừng bạn đến với BDS NKS - Hệ thống Bất Động Sản Chính Chủ',
-                "Xin chào {$user->name},\n\nTài khoản của bạn đã được khởi tạo bởi quản trị viên hệ thống.\nEmail: {$user->email}\nVai trò: " . ($user->role === 'admin' ? 'Quản trị viên' : ($user->role === 'owner' ? 'Chủ nhà chính chủ' : 'Khách thuê')) . "\n\nChúc bạn có những trải nghiệm tuyệt vời cùng BDS NKS!"
+                '✨ Chào mừng bạn đến với BDS NKS - Thông tin tài khoản mới',
+                "Xin chào! Quản trị viên của BDS NKS đã khởi tạo thành công tài khoản cá nhân dành riêng cho bạn trên hệ thống. 🌟 Dưới đây là thông tin đăng nhập chính thức. Để bảo mật tài khoản tốt nhất, vui lòng tiến hành thay đổi mật khẩu ngay sau lần đăng nhập đầu tiên nhé.",
+                [
+                    'Email đăng nhập' => $user->email,
+                    'Mật khẩu truy cập' => '<code style="background-color: #f1f5f9; padding: 2px 6px; border-radius: 4px; font-weight: 700; color: #b45309;">' . $request->password . '</code>',
+                    'Vai trò tài khoản' => $user->role === 'admin' ? 'Quản trị viên 👑' : ($user->role === 'owner' ? 'Chủ nhà chính chủ 🏡' : 'Khách thuê tìm nhà 🔑')
+                ],
+                'Đăng nhập hệ thống ngay',
+                url('/')
             );
 
             return response()->json(['success' => true, 'user' => $user]);
@@ -2305,13 +2428,28 @@ class PropertyController extends Controller
             $newStatus = $user->status === 'blocked' ? 'active' : 'blocked';
             $user->update(['status' => $newStatus]);
 
-            // Log email notification
-            $subject = $newStatus === 'blocked' ? 'Thông báo: Tài khoản của bạn đã bị khóa tạm thời' : 'Thông báo: Tài khoản của bạn đã được kích hoạt lại';
-            $body = $newStatus === 'blocked' 
-                ? "Xin chào {$user->name},\n\nTài khoản của bạn ({$user->email}) đã bị khóa tạm thời bởi quản trị viên BDS NKS do vi phạm chính sách hoặc yêu cầu từ hệ thống. Vui lòng liên hệ hỗ trợ để biết thêm thông tin."
-                : "Xin chào {$user->name},\n\nTài khoản của bạn ({$user->email}) đã được kích hoạt lại thành công. Bạn hiện tại có thể tiếp tục sử dụng tất cả tính năng của BDS NKS.";
+            $subject = $newStatus === 'blocked'
+                ? '⚠️ Thông báo quan trọng: Tài khoản BDS NKS tạm thời bị khóa'
+                : '🎉 Chúc mừng! Tài khoản BDS NKS của bạn đã hoạt động trở lại';
 
-            $this->logSystemEmail($user->id, $user->email, $subject, $body);
+            // Send account status change notification email
+            $this->sendAndLogEmail(
+                $user->id,
+                $user->email,
+                $subject,
+                $newStatus === 'blocked'
+                    ? "Để bảo vệ an toàn hệ thống và tính bảo mật của tài khoản thành viên, chúng tôi đã tạm thời đình bản hoạt động tài khoản của bạn. 🔒 Vui lòng liên hệ trực tiếp với bộ phận hỗ trợ khách hàng để được giải đáp và hướng dẫn mở lại nhanh nhất."
+                    : "Chúng tôi xin vui mừng thông báo tài khoản BDS NKS của bạn đã được khôi phục và kích hoạt hoạt động bình thường trở lại! 🥳 Bạn hiện có thể đăng nhập ngay để tiếp tục tìm kiếm, đăng tin và trải nghiệm dịch vụ của chúng tôi.",
+                [
+                    'Email tài khoản' => $user->email,
+                    'Trạng thái tài khoản' => $newStatus === 'blocked'
+                        ? '<span style="color: #ef4444; font-weight: 700; background-color: #fef2f2; padding: 2px 8px; border-radius: 20px; border: 1px solid #fee2e2;">Tạm khóa 🔒</span>'
+                        : '<span style="color: #10b981; font-weight: 700; background-color: #f0fdf4; padding: 2px 8px; border-radius: 20px; border: 1px solid #dcfce7;">Đang hoạt động ✨</span>',
+                    'Thời gian cập nhật' => now()->format('d/m/Y H:i:s')
+                ],
+                'Truy cập BDS NKS',
+                url('/')
+            );
 
             return response()->json(['success' => true, 'user' => $user]);
         } catch (\Exception $e) {
@@ -2399,15 +2537,42 @@ class PropertyController extends Controller
                 'is_read' => false
             ]);
 
-            // Email Notification log
+            // Send HTML email notification for chat message
             $receiver = \App\Models\User::find($receiverId);
             if ($receiver) {
-                $this->logSystemEmail(
-                    $receiver->id,
-                    $receiver->email,
-                    'Tin nhắn hỗ trợ mới từ ' . $sender->name,
-                    "Xin chào {$receiver->name},\n\nBạn nhận được tin nhắn mới từ thành viên {$sender->name} ({$sender->email}):\n\n\"{$request->message}\"\n\nVui lòng truy cập trang Dashboard của BDS NKS để trả lời."
-                );
+                if ($sender->role === 'admin') {
+                    // Admin replying to Customer
+                    $this->sendAndLogEmail(
+                        $receiver->id,
+                        $receiver->email,
+                        '✉️ [BDS NKS] Bạn có phản hồi hỗ trợ mới',
+                        "Ban quản trị BDS NKS vừa gửi tin nhắn phản hồi liên quan đến yêu cầu hỗ trợ của bạn. Chúng tôi luôn sẵn lòng lắng nghe và hỗ trợ bạn trong mọi tình huống! 💬",
+                        [
+                            'Người gửi' => 'Đội ngũ CSKH BDS NKS 👑',
+                            'Nội dung tin nhắn' => '<span style="font-style: italic; color: #475569;">"' . e($request->message) . '"</span>',
+                            'Thời gian phản hồi' => now()->format('d/m/Y H:i:s')
+                        ],
+                        'Xem phản hồi & trò chuyện tiếp',
+                        url('/profile')
+                    );
+                } else {
+                    // Customer sending message to Admin
+                    $this->sendAndLogEmail(
+                        $receiver->id,
+                        $receiver->email,
+                        "📥 [NKS - ADMIN] Yêu cầu hỗ trợ mới từ khách hàng {$sender->name}",
+                        "Hệ thống vừa ghi nhận một tin nhắn liên hệ hỗ trợ hoặc giải đáp thắc mắc mới từ thành viên. Vui lòng phản hồi sớm để duy trì chất lượng dịch vụ 5 sao:",
+                        [
+                            'Họ và tên thành viên' => $sender->name,
+                            'Email liên hệ' => $sender->email,
+                            'Số điện thoại' => $sender->phone ?? 'Chưa cập nhật',
+                            'Nội dung tin nhắn' => '<span style="font-style: italic; color: #475569;">"' . e($request->message) . '"</span>',
+                            'Thời gian gửi' => now()->format('d/m/Y H:i:s')
+                        ],
+                        'Phản hồi tin nhắn ngay',
+                        url('/profile')
+                    );
+                }
             }
 
             // Auto-chatbot reply for renter/owner support chat to Admin, to make it interactive:
