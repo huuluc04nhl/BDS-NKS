@@ -440,15 +440,28 @@
                                 <template x-if="avatarImgSrc">
                                     <div class="w-full flex flex-col items-center space-y-6">
                                         <!-- Circular Mask container -->
-                                        <div class="w-44 h-44 rounded-full overflow-hidden border-4 border-white shadow-xl relative bg-slate-100 flex items-center justify-center">
+                                        <div class="w-44 h-44 rounded-full overflow-hidden border-4 border-white shadow-xl relative bg-slate-100 flex items-center justify-center cursor-grab active:cursor-grabbing select-none"
+                                             @mousedown="startDragging($event)"
+                                             @touchstart="startDragging($event)"
+                                             @mousemove="drag($event)"
+                                             @touchmove="drag($event)"
+                                             @mouseup="stopDragging()"
+                                             @mouseleave="stopDragging()"
+                                             @touchend="stopDragging()">
                                             <img :src="avatarImgSrc" 
                                                  alt="Crop Preview" 
-                                                 class="w-full h-full object-cover transition-transform duration-75"
-                                                 :style="`transform: scale(${avatarZoom}) rotate(${avatarRotate}deg);`" />
+                                                 class="w-full h-full object-cover pointer-events-none select-none"
+                                                 :class="isDraggingAvatar ? '' : 'transition-transform duration-75'"
+                                                 :style="`transform: translate(${avatarOffsetX}px, ${avatarOffsetY}px) scale(${avatarZoom}) rotate(${avatarRotate}deg);`" />
                                         </div>
 
                                         <!-- Controls -->
                                         <div class="w-full px-6 space-y-4 max-w-sm">
+                                            <!-- Drag Tip -->
+                                            <div class="text-center text-[11px] text-slate-400 font-semibold mb-2">
+                                                💡 Kéo thả ảnh trong khung để căn chỉnh vị trí tự do
+                                            </div>
+
                                             <!-- Zoom Slider -->
                                             <div class="space-y-1">
                                                 <div class="flex justify-between items-center text-[10px] font-bold text-slate-500 uppercase tracking-wider">
@@ -2321,6 +2334,32 @@
             avatarZoom: 1,
             avatarRotate: 0,
             avatarImgSrc: '',
+            avatarOffsetX: 0,
+            avatarOffsetY: 0,
+            isDraggingAvatar: false,
+            dragStartX: 0,
+            dragStartY: 0,
+            
+            startDragging(e) {
+                this.isDraggingAvatar = true;
+                const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+                const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+                this.dragStartX = clientX - this.avatarOffsetX;
+                this.dragStartY = clientY - this.avatarOffsetY;
+                if (e.cancelable) e.preventDefault();
+            },
+            
+            drag(e) {
+                if (!this.isDraggingAvatar) return;
+                const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+                const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+                this.avatarOffsetX = clientX - this.dragStartX;
+                this.avatarOffsetY = clientY - this.dragStartY;
+            },
+            
+            stopDragging() {
+                this.isDraggingAvatar = false;
+            },
             
             handleAvatarSelect(event) {
                 const file = event.target.files[0];
@@ -2330,6 +2369,8 @@
                     this.avatarImgSrc = e.target.result;
                     this.avatarZoom = 1;
                     this.avatarRotate = 0;
+                    this.avatarOffsetX = 0;
+                    this.avatarOffsetY = 0;
                 };
                 reader.readAsDataURL(file);
             },
@@ -2352,6 +2393,12 @@
                     
                     // Draw centered
                     ctx.translate(150, 150);
+                    
+                    // Apply offset scaled to canvas size
+                    const canvasX = this.avatarOffsetX * (300 / 176);
+                    const canvasY = this.avatarOffsetY * (300 / 176);
+                    ctx.translate(canvasX, canvasY);
+                    
                     ctx.rotate((this.avatarRotate * Math.PI) / 180);
                     
                     const scale = this.avatarZoom;
