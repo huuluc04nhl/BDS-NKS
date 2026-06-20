@@ -14,15 +14,23 @@
                 <div class="w-full lg:w-1/4 flex-shrink-0">
                     <div class="bg-white rounded-3xl p-6 border border-slate-100 shadow-sm space-y-6">
                         <!-- User Card -->
-                        <div class="text-center pb-6 border-b border-slate-100">
+                        <div class="text-center pb-6 border-b border-slate-100 flex flex-col items-center">
                             <div class="w-20 h-20 rounded-full border-4 border-primary/10 overflow-hidden mx-auto bg-slate-50 mb-3 relative group">
                                 <img :src="user && user.avatar ? user.avatar : 'https://api.dicebear.com/7.x/adventurer/svg?seed=' + (user ? user.name : 'nks')" alt="Avatar" class="w-full h-full object-cover">
                             </div>
                             <h3 class="text-lg font-bold text-slate-800" x-text="user ? user.name : ''"></h3>
                             <p class="text-xs text-slate-400 mt-1" x-text="user ? user.email : ''"></p>
-                            <span class="inline-flex mt-3 px-3 py-1 rounded-full text-[10px] font-extrabold tracking-wide uppercase"
-                                  :class="user && user.role === 'admin' ? 'bg-rose-100 text-rose-600 border border-rose-200' : (user && user.role === 'owner' ? 'bg-primary/10 text-primary' : 'bg-slate-100 text-slate-500')"
-                                  x-text="user && user.role === 'admin' ? 'Quản trị viên' : (user && user.role === 'owner' ? 'Chủ nhà chính chủ' : 'Khách thuê')"></span>
+                            <div class="flex flex-col items-center gap-2 mt-3 w-full">
+                                <span class="inline-flex px-3 py-1 rounded-full text-[10px] font-extrabold tracking-wide uppercase"
+                                      :class="user && user.role === 'admin' ? 'bg-rose-100 text-rose-600 border border-rose-200' : (user && user.role === 'owner' ? 'bg-primary/10 text-primary' : 'bg-slate-100 text-slate-500')"
+                                      x-text="user && user.role === 'admin' ? 'Quản trị viên' : (user && user.role === 'owner' ? 'Chủ nhà chính chủ' : 'Khách thuê')"></span>
+                                <span class="inline-flex items-center gap-1 bg-amber-500/10 text-amber-600 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wide border border-amber-200/50">
+                                    <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                    </svg>
+                                    <span x-text="(point || 0) + ' điểm'"></span>
+                                </span>
+                            </div>
                         </div>
                         
                         <!-- Nav Items -->
@@ -123,41 +131,7 @@
                          x-transition:leave-start="opacity-100 translate-y-0"
                          x-transition:leave-end="opacity-0 translate-y-4"
                          x-cloak class="space-y-8">
-                        <!-- User Header Card -->
-                        <div class="flex flex-col sm:flex-row items-center gap-6 pb-6 border-b border-slate-100 mb-6">
-                            <div class="relative group cursor-pointer w-24 h-24 rounded-full overflow-hidden border-4 border-primary/10 shadow-sm" @click="activeStep = 3">
-                                <img :src="user && user.avatar ? user.avatar : 'https://api.dicebear.com/7.x/adventurer/svg?seed=' + (user ? user.name : 'nks')" alt="Avatar" class="w-full h-full object-cover">
-                                <div class="absolute inset-0 bg-slate-900/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-all duration-200">
-                                    <span class="text-[10px] text-white font-extrabold uppercase tracking-wider">Đổi ảnh</span>
-                                </div>
-                            </div>
-                            <div class="text-center sm:text-left space-y-1 w-full">
-                                <div class="flex flex-wrap items-center justify-center sm:justify-start gap-2.5">
-                                    <h3 class="text-xl font-black text-slate-800" x-text="user ? user.name : 'Thành viên NKS'"></h3>
-                                    <span class="inline-flex items-center gap-1 bg-amber-500/10 text-amber-600 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wide border border-amber-200/50">
-                                        <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
-                                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                        </svg>
-                                        <span x-text="(point || 0) + ' điểm'"></span>
-                                    </span>
-                                </div>
-                                <p class="text-xs text-slate-400 font-medium" x-text="user ? user.email : ''"></p>
-                                <div class="flex items-center justify-center sm:justify-start gap-3 mt-3 pt-2">
-                                    <button type="button" @click="activeStep = 2" class="inline-flex items-center gap-1 text-slate-500 hover:text-primary transition-all text-xs font-bold bg-white border border-slate-200 px-3.5 py-2 rounded-2xl shadow-xs hover:shadow-sm">
-                                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2">
-                                            <path stroke-linecap="round" stroke-linejoin="round" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
-                                        </svg>
-                                        Mật khẩu
-                                    </button>
-                                    <button type="button" @click="cccdNumberInput = idNumberInput; cccdDateInput = idDateInput; cccdPlaceInput = idPlaceInput; activeStep = 4" class="inline-flex items-center gap-1 text-slate-500 hover:text-primary transition-all text-xs font-bold bg-white border border-slate-200 px-3.5 py-2 rounded-2xl shadow-xs hover:shadow-sm">
-                                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2">
-                                            <path stroke-linecap="round" stroke-linejoin="round" d="M10 6H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V8a2 2 0 00-2-2h-5m-4 0V5a2 2 0 114 0v1m-4 0a2 2 0 104 0m-5 8a2 2 0 100-4 2 2 0 000 4zm0 0c1.378 0 2.5-1.122 2.5-2.5S10.378 9 9 9m9 2h-3m3 4h-3" />
-                                        </svg>
-                                        CCCD / CMND
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
+
 
                         <!-- Sub-tab Navigation (Independent sections instead of sequential steps) -->
                         <div class="mb-8 border-b border-slate-100 pb-3 overflow-x-auto">
