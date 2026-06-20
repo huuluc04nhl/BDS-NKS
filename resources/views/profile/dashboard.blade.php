@@ -278,6 +278,13 @@
                                         </select>
                                     </div>
                                     <div>
+                                        <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Ngày sinh</label>
+                                        <input type="date" x-model="dobInput" class="w-full bg-slate-50 border border-slate-200 rounded-2xl px-4 py-3.5 text-sm focus:outline-none focus:border-primary focus:bg-white transition-all text-slate-700">
+                                    </div>
+                                </div>
+
+                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                    <div>
                                         <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Tỉnh / Thành phố</label>
                                         <select x-model="provinceInput" class="w-full bg-slate-50 border border-slate-200 rounded-2xl px-4 py-3.5 text-sm focus:outline-none focus:border-primary focus:bg-white text-slate-700">
                                             <option value="">Chọn Tỉnh / Thành phố</option>
@@ -286,16 +293,34 @@
                                             </template>
                                         </select>
                                     </div>
+                                    <div>
+                                        <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Phường / Xã</label>
+                                        <div class="relative">
+                                            <select x-model="wardInput" :disabled="!provinceInput || isLoadingWards" class="w-full bg-slate-50 border border-slate-200 rounded-2xl px-4 py-3.5 text-sm focus:outline-none focus:border-primary focus:bg-white text-slate-700 disabled:opacity-60 disabled:cursor-not-allowed">
+                                                <option value="">Chọn Phường / Xã</option>
+                                                <template x-for="w in wards" :key="w.id || w.name">
+                                                    <option :value="w.id || w.name" x-text="w.name" :selected="wardInput == w.id || wardInput == w.name"></option>
+                                                </template>
+                                            </select>
+                                            <template x-if="isLoadingWards">
+                                                <div class="absolute right-8 top-1/2 -translate-y-1/2">
+                                                    <svg class="animate-spin h-4 w-4 text-primary" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                                    </svg>
+                                                </div>
+                                            </template>
+                                        </div>
+                                    </div>
                                 </div>
 
                                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                     <div>
-                                        <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Ngày sinh</label>
-                                        <input type="date" x-model="dobInput" class="w-full bg-slate-50 border border-slate-200 rounded-2xl px-4 py-3.5 text-sm focus:outline-none focus:border-primary focus:bg-white transition-all text-slate-700">
-                                    </div>
-                                    <div>
                                         <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Nơi sinh</label>
                                         <input type="text" x-model="pobInput" placeholder="Ví dụ: Hà Nội" class="w-full bg-slate-50 border border-slate-200 rounded-2xl px-4 py-3.5 text-sm focus:outline-none focus:border-primary focus:bg-white transition-all text-slate-700">
+                                    </div>
+                                    <div>
+                                        <!-- Keep empty column for grid symmetry -->
                                     </div>
                                 </div>
 
@@ -1811,6 +1836,9 @@
             idDateInput: '',
             idPlaceInput: '',
             provinceInput: '',
+            wardInput: '',
+            wards: [],
+            isLoadingWards: false,
             point: 0,
             provinces: [],
             activeStep: 1,
@@ -1877,7 +1905,7 @@
             editPropFeatureImg: '',
             editPropDesc: '',
             
-            init() {
+            async init() {
                 const urlParams = new URLSearchParams(window.location.search);
                 const tabParam = urlParams.get('tab');
                 if (tabParam) {
@@ -1890,7 +1918,7 @@
                     this.showSecondLogin = true;
                 }
                 
-                this.loadProvinces();
+                await this.loadProvinces();
                 this.checkLogin();
                 
                 window.addEventListener('nks-login-change', () => {
@@ -1902,6 +1930,14 @@
                 // Setup watcher for activeTab changes to handle chat polling and loading logs
                 this.$watch('activeTab', (value) => {
                     this.handleTabChange(value);
+                });
+
+                // Watch provinceInput to load wards
+                this.$watch('provinceInput', async (newProvince, oldProvince) => {
+                    await this.loadWards();
+                    if (oldProvince && oldProvince !== newProvince) {
+                        this.wardInput = '';
+                    }
                 });
 
                 // Load initial tab data
@@ -1961,6 +1997,7 @@
                     this.idDateInput = this.user.id_date || '';
                     this.idPlaceInput = this.user.id_place || '';
                     this.provinceInput = this.user.province || '';
+                    this.wardInput = this.user.ward || '';
                     
                 } else {
                     this.isLoggedIn = false;
@@ -2309,7 +2346,8 @@
                             id_number: this.idNumberInput,
                             id_date: this.idDateInput,
                             id_place: this.idPlaceInput,
-                            province: this.provinceInput
+                            province: this.provinceInput,
+                            ward: this.wardInput
                         })
                     });
 
@@ -2344,6 +2382,48 @@
                     }
                 } catch (e) {
                     console.error('Failed to load provinces:', e);
+                }
+            },
+
+            async loadWards() {
+                if (!this.provinceInput) {
+                    this.wards = [];
+                    return;
+                }
+                
+                let provId = 79; // Default to HCMC
+                if (Number.isInteger(Number(this.provinceInput))) {
+                    provId = Number(this.provinceInput);
+                } else {
+                    const found = this.provinces.find(p => p.name === this.provinceInput || p.title === this.provinceInput);
+                    if (found && found.id) {
+                        provId = found.id;
+                    }
+                }
+                
+                this.isLoadingWards = true;
+                try {
+                    const res = await fetch('/nks-api/nks/administratives', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                        },
+                        body: JSON.stringify({ province_id: provId, slcBox: true })
+                    });
+                    if (res.ok) {
+                        this.wards = await res.json();
+                        const wardExists = this.wards.some(w => String(w.id) === String(this.wardInput) || w.name === this.wardInput);
+                        if (!wardExists && this.wardInput && this.wards.length > 0) {
+                            if (this.user && this.user.ward !== this.wardInput) {
+                                this.wardInput = '';
+                            }
+                        }
+                    }
+                } catch (e) {
+                    console.error('Failed to load wards:', e);
+                } finally {
+                    this.isLoadingWards = false;
                 }
             },
 

@@ -212,7 +212,9 @@ class PropertyApiTest extends TestCase
             'email' => 'test@nks.vn',
             'name' => 'Updated Name',
             'phone' => '0987654321',
-            'avatar' => 'https://api.dicebear.com/7.x/adventurer/svg?seed=updated'
+            'avatar' => 'https://api.dicebear.com/7.x/adventurer/svg?seed=updated',
+            'province' => 'Thành phố Hồ Chí Minh',
+            'ward' => 'Phường Bến Nghé'
         ]);
 
         $updateResponse->assertStatus(200)
@@ -220,9 +222,13 @@ class PropertyApiTest extends TestCase
                 'success' => true,
                 'user' => [
                     'name' => 'Updated Name',
-                    'phone' => '0987654321'
+                    'phone' => '0987654321',
+                    'province' => 'Thành phố Hồ Chí Minh',
+                    'ward' => 'Phường Bến Nghé'
                 ]
             ]);
+
+        $this->assertEquals('Phường Bến Nghé', $user->fresh()->ward);
 
         // 2. Upgrade Host
         $upgradeResponse = $this->postJson('/nks-api/profile/upgrade-host', [

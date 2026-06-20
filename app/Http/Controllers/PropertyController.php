@@ -661,7 +661,8 @@ class PropertyController extends Controller
                             'id_number' => $remoteUser['id_number'] ?? '',
                             'id_date' => $remoteUser['id_date'] ?? '',
                             'id_place' => $remoteUser['id_place'] ?? '',
-                            'province' => $remoteUser['province'] ?? $remoteUser['add_province'] ?? ''
+                            'province' => $remoteUser['province'] ?? $remoteUser['add_province'] ?? '',
+                            'ward' => $remoteUser['ward'] ?? $remoteUser['add_ward'] ?? ''
                         ]
                     );
                 } catch (\Exception $dbEx) {
@@ -689,7 +690,8 @@ class PropertyController extends Controller
                             'id_number' => $remoteUser['id_number'] ?? '',
                             'id_date' => $remoteUser['id_date'] ?? '',
                             'id_place' => $remoteUser['id_place'] ?? '',
-                            'province' => $remoteUser['province'] ?? $remoteUser['add_province'] ?? ''
+                            'province' => $remoteUser['province'] ?? $remoteUser['add_province'] ?? '',
+                            'ward' => $remoteUser['ward'] ?? $remoteUser['add_ward'] ?? ''
                         ]
                     ]);
                 }
@@ -726,7 +728,8 @@ class PropertyController extends Controller
                         'id_number' => $user->id_number ?? '',
                         'id_date' => $user->id_date ?? '',
                         'id_place' => $user->id_place ?? '',
-                        'province' => $user->province ?? ''
+                        'province' => $user->province ?? '',
+                        'ward' => $user->ward ?? ''
                     ]
                 ]);
             } else {
@@ -769,7 +772,8 @@ class PropertyController extends Controller
                             'id_number' => $localUser->id_number ?? '',
                             'id_date' => $localUser->id_date ?? '',
                             'id_place' => $localUser->id_place ?? '',
-                            'province' => $localUser->province ?? ''
+                            'province' => $localUser->province ?? '',
+                            'ward' => $localUser->ward ?? ''
                         ]
                     ]);
                 }
@@ -901,7 +905,8 @@ class PropertyController extends Controller
                         'id_number' => $remoteUser['id_number'] ?? ($userData['id_number'] ?? ''),
                         'id_date' => $remoteUser['id_date'] ?? ($userData['id_date'] ?? ''),
                         'id_place' => $remoteUser['id_place'] ?? ($userData['id_place'] ?? ''),
-                        'province' => $remoteUser['province'] ?? $remoteUser['add_province'] ?? ($userData['province'] ?? '')
+                        'province' => $remoteUser['province'] ?? $remoteUser['add_province'] ?? ($userData['province'] ?? ''),
+                        'ward' => $remoteUser['ward'] ?? $remoteUser['add_ward'] ?? ($userData['ward'] ?? '')
                     ]);
                     $isRecreated = true;
                 } else {
@@ -922,7 +927,8 @@ class PropertyController extends Controller
                         'id_number' => $remoteUser['id_number'] ?? ($userData['id_number'] ?? $user->id_number),
                         'id_date' => $remoteUser['id_date'] ?? ($userData['id_date'] ?? $user->id_date),
                         'id_place' => $remoteUser['id_place'] ?? ($userData['id_place'] ?? $user->id_place),
-                        'province' => $remoteUser['province'] ?? $remoteUser['add_province'] ?? ($userData['province'] ?? $user->province)
+                        'province' => $remoteUser['province'] ?? $remoteUser['add_province'] ?? ($userData['province'] ?? $user->province),
+                        'ward' => $remoteUser['ward'] ?? $remoteUser['add_ward'] ?? ($userData['ward'] ?? $user->ward)
                     ]);
                 }
             } else {
@@ -946,7 +952,8 @@ class PropertyController extends Controller
                         'id_number' => $userData['id_number'] ?? '',
                         'id_date' => $userData['id_date'] ?? '',
                         'id_place' => $userData['id_place'] ?? '',
-                        'province' => $userData['province'] ?? ''
+                        'province' => $userData['province'] ?? '',
+                        'ward' => $userData['ward'] ?? ''
                     ]);
                     $isRecreated = true;
                 } else {
@@ -967,7 +974,8 @@ class PropertyController extends Controller
                         'id_number' => $userData['id_number'] ?? $user->id_number,
                         'id_date' => $userData['id_date'] ?? $user->id_date,
                         'id_place' => $userData['id_place'] ?? $user->id_place,
-                        'province' => $userData['province'] ?? $user->province
+                        'province' => $userData['province'] ?? $user->province,
+                        'ward' => $userData['ward'] ?? $user->ward
                     ]);
                 }
             }
@@ -1197,7 +1205,8 @@ class PropertyController extends Controller
                 'id_number' => $user->id_number ?? '',
                 'id_date' => $user->id_date ?? '',
                 'id_place' => $user->id_place ?? '',
-                'province' => $user->province ?? ''
+                'province' => $user->province ?? '',
+                'ward' => $user->ward ?? ''
             ];
 
             return response()->json([
@@ -1245,8 +1254,25 @@ class PropertyController extends Controller
                     }
 
                     $province = $request->input('province');
-                    if (is_numeric($province)) {
-                        $params['province'] = (int)$province;
+                    if (!empty($province)) {
+                        if (is_numeric($province)) {
+                            $params['province'] = (int)$province;
+                            $params['add_province'] = (int)$province;
+                        } else {
+                            $params['province'] = $province;
+                            $params['add_province'] = $province;
+                        }
+                    }
+
+                    $ward = $request->input('ward');
+                    if (!empty($ward)) {
+                        if (is_numeric($ward)) {
+                            $params['ward'] = (int)$ward;
+                            $params['add_ward'] = (int)$ward;
+                        } else {
+                            $params['ward'] = $ward;
+                            $params['add_ward'] = $ward;
+                        }
                     }
 
                     $dob = $request->input('dob');
@@ -1286,7 +1312,8 @@ class PropertyController extends Controller
                                     'id_number' => $remoteUser['id_number'] ?? $user->id_number,
                                     'id_date' => $remoteUser['id_date'] ?? $user->id_date,
                                     'id_place' => $remoteUser['id_place'] ?? $user->id_place,
-                                    'province' => $remoteUser['province'] ?? $remoteUser['add_province'] ?? $user->province
+                                    'province' => $remoteUser['province'] ?? $remoteUser['add_province'] ?? $request->input('province') ?? $user->province,
+                                    'ward' => $remoteUser['ward'] ?? $remoteUser['add_ward'] ?? $request->input('ward') ?? $user->ward
                                 ]);
                             }
                             
@@ -1311,7 +1338,8 @@ class PropertyController extends Controller
                                     'id_number' => $remoteUser['id_number'] ?? '',
                                     'id_date' => $remoteUser['id_date'] ?? '',
                                     'id_place' => $remoteUser['id_place'] ?? '',
-                                    'province' => $remoteUser['province'] ?? $remoteUser['add_province'] ?? ''
+                                    'province' => $remoteUser['province'] ?? $remoteUser['add_province'] ?? ($user ? $user->province : ''),
+                                    'ward' => $remoteUser['ward'] ?? $remoteUser['add_ward'] ?? ($user ? $user->ward : '')
                                 ]
                             ]);
                         }
@@ -1347,7 +1375,8 @@ class PropertyController extends Controller
                 'id_number' => $request->input('id_number') ?? $user->id_number,
                 'id_date' => $request->input('id_date') ?? $user->id_date,
                 'id_place' => $request->input('id_place') ?? $user->id_place,
-                'province' => $request->input('province') ?? $user->province
+                'province' => $request->input('province') ?? $user->province,
+                'ward' => $request->input('ward') ?? $user->ward
             ]);
 
             return response()->json([
@@ -1370,7 +1399,8 @@ class PropertyController extends Controller
                     'id_number' => $user->id_number ?? '',
                     'id_date' => $user->id_date ?? '',
                     'id_place' => $user->id_place ?? '',
-                    'province' => $user->province ?? ''
+                    'province' => $user->province ?? '',
+                    'ward' => $user->ward ?? ''
                 ]
             ]);
         } catch (\Illuminate\Validation\ValidationException $e) {
