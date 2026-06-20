@@ -905,8 +905,8 @@ class PropertyController extends Controller
                         'id_number' => $remoteUser['id_number'] ?? ($userData['id_number'] ?? ''),
                         'id_date' => $remoteUser['id_date'] ?? ($userData['id_date'] ?? ''),
                         'id_place' => $remoteUser['id_place'] ?? ($userData['id_place'] ?? ''),
-                        'province' => $remoteUser['province'] ?? $remoteUser['add_province'] ?? ($userData['province'] ?? ''),
-                        'ward' => $remoteUser['ward'] ?? $remoteUser['add_ward'] ?? ($userData['ward'] ?? '')
+                        'province' => (!empty($remoteUser['province']) ? $remoteUser['province'] : (!empty($remoteUser['add_province']) ? $remoteUser['add_province'] : ($userData['province'] ?? ''))),
+                        'ward' => (!empty($remoteUser['ward']) ? $remoteUser['ward'] : (!empty($remoteUser['add_ward']) ? $remoteUser['add_ward'] : ($userData['ward'] ?? '')))
                     ]);
                     $isRecreated = true;
                 } else {
@@ -927,8 +927,8 @@ class PropertyController extends Controller
                         'id_number' => $remoteUser['id_number'] ?? ($userData['id_number'] ?? $user->id_number),
                         'id_date' => $remoteUser['id_date'] ?? ($userData['id_date'] ?? $user->id_date),
                         'id_place' => $remoteUser['id_place'] ?? ($userData['id_place'] ?? $user->id_place),
-                        'province' => $remoteUser['province'] ?? $remoteUser['add_province'] ?? ($userData['province'] ?? $user->province),
-                        'ward' => $remoteUser['ward'] ?? $remoteUser['add_ward'] ?? ($userData['ward'] ?? $user->ward)
+                        'province' => (!empty($remoteUser['province']) ? $remoteUser['province'] : (!empty($remoteUser['add_province']) ? $remoteUser['add_province'] : ($userData['province'] ?? $user->province))),
+                        'ward' => (!empty($remoteUser['ward']) ? $remoteUser['ward'] : (!empty($remoteUser['add_ward']) ? $remoteUser['add_ward'] : ($userData['ward'] ?? $user->ward)))
                     ]);
                 }
             } else {
@@ -1312,8 +1312,8 @@ class PropertyController extends Controller
                                     'id_number' => $remoteUser['id_number'] ?? $user->id_number,
                                     'id_date' => $remoteUser['id_date'] ?? $user->id_date,
                                     'id_place' => $remoteUser['id_place'] ?? $user->id_place,
-                                    'province' => $remoteUser['province'] ?? $remoteUser['add_province'] ?? $request->input('province') ?? $user->province,
-                                    'ward' => $remoteUser['ward'] ?? $remoteUser['add_ward'] ?? $request->input('ward') ?? $user->ward
+                                    'province' => (!empty($remoteUser['province']) ? $remoteUser['province'] : (!empty($remoteUser['add_province']) ? $remoteUser['add_province'] : ($request->input('province') ?? $user->province))),
+                                    'ward' => (!empty($remoteUser['ward']) ? $remoteUser['ward'] : (!empty($remoteUser['add_ward']) ? $remoteUser['add_ward'] : ($request->input('ward') ?? $user->ward)))
                                 ]);
                             }
                             
@@ -1338,8 +1338,8 @@ class PropertyController extends Controller
                                     'id_number' => $remoteUser['id_number'] ?? '',
                                     'id_date' => $remoteUser['id_date'] ?? '',
                                     'id_place' => $remoteUser['id_place'] ?? '',
-                                    'province' => $remoteUser['province'] ?? $remoteUser['add_province'] ?? ($user ? $user->province : ''),
-                                    'ward' => $remoteUser['ward'] ?? $remoteUser['add_ward'] ?? ($user ? $user->ward : '')
+                                    'province' => (!empty($remoteUser['province']) ? $remoteUser['province'] : (!empty($remoteUser['add_province']) ? $remoteUser['add_province'] : ($user ? $user->province : ''))),
+                                    'ward' => (!empty($remoteUser['ward']) ? $remoteUser['ward'] : (!empty($remoteUser['add_ward']) ? $remoteUser['add_ward'] : ($user ? $user->ward : '')))
                                 ]
                             ]);
                         }
