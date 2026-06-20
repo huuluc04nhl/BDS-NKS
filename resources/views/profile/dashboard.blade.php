@@ -1844,6 +1844,11 @@
                     }
                 });
 
+                // Watch avatarZoom to constrain offsets
+                this.$watch('avatarZoom', () => {
+                    this.limitOffsets();
+                });
+
                 // Load initial tab data
                 if (tabParam) {
                     this.handleTabChange(tabParam);
@@ -2330,15 +2335,35 @@
                 }
             },
 
-            // Avatar upload helpers
-            avatarZoom: 1,
-            avatarRotate: 0,
-            avatarImgSrc: '',
-            avatarOffsetX: 0,
-            avatarOffsetY: 0,
-            isDraggingAvatar: false,
-            dragStartX: 0,
-            dragStartY: 0,
+            avatarImgWidth: 0,
+            avatarImgHeight: 0,
+            
+            limitOffsets() {
+                if (!this.avatarImgWidth || !this.avatarImgHeight) return;
+                
+                const containerSize = 176;
+                const ratio = this.avatarImgWidth / this.avatarImgHeight;
+                let wBase = containerSize;
+                let hBase = containerSize;
+                
+                if (ratio >= 1) {
+                    wBase = containerSize * ratio;
+                } else {
+                    hBase = containerSize / ratio;
+                }
+                
+                const wScaled = wBase * this.avatarZoom;
+                const hScaled = hBase * this.avatarZoom;
+                
+                const limitX = Math.max(0, (wScaled - containerSize) / 2);
+                const limitY = Math.max(0, (hScaled - containerSize) / 2);
+                
+                if (this.avatarOffsetX > limitX) this.avatarOffsetX = limitX;
+                if (this.avatarOffsetX < -limitX) this.avatarOffsetX = -limitX;
+                
+                if (this.avatarOffsetY > limitY) this.avatarOffsetY = limitY;
+                if (this.avatarOffsetY < -limitY) this.avatarOffsetY = -limitY;
+            },
             
             startDragging(e) {
                 this.isDraggingAvatar = true;
@@ -2355,6 +2380,7 @@
                 const clientY = e.touches ? e.touches[0].clientY : e.clientY;
                 this.avatarOffsetX = clientX - this.dragStartX;
                 this.avatarOffsetY = clientY - this.dragStartY;
+                this.limitOffsets();
             },
             
             stopDragging() {
@@ -2371,6 +2397,14 @@
                     this.avatarRotate = 0;
                     this.avatarOffsetX = 0;
                     this.avatarOffsetY = 0;
+                    
+                    const tempImg = new Image();
+                    tempImg.onload = () => {
+                        this.avatarImgWidth = tempImg.width;
+                        this.avatarImgHeight = tempImg.height;
+                        this.limitOffsets();
+                    };
+                    tempImg.src = e.target.result;
                 };
                 reader.readAsDataURL(file);
             },
