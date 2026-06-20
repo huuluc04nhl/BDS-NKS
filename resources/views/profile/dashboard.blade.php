@@ -2538,11 +2538,12 @@
             handleCccdSelect(event, side) {
                 const file = event.target.files[0];
                 if (!file) return;
+                const fileName = file.name;
                 const reader = new FileReader();
                 reader.onload = (e) => {
                     if (side === 'front') {
                         this.cccdFrontSrc = e.target.result;
-                        this.startCccdScan(e.target.result);
+                        this.startCccdScan(e.target.result, fileName);
                     } else {
                         this.cccdBackSrc = e.target.result;
                     }
@@ -2550,7 +2551,7 @@
                 reader.readAsDataURL(file);
             },
             
-            startCccdScan(dataUrl) {
+            startCccdScan(dataUrl, fileName) {
                 this.isScanningCccd = true;
                 this.cccdScanProgress = 0;
                 this.cccdScanType = 'ocr';
@@ -2604,8 +2605,19 @@
 
                     // Fallback to simulated OCR scan
                     this.simulateScanProgress(1500, () => {
-                        const randomId = '079' + Math.floor(100000000 + Math.random() * 900000000);
-                        this.cccdNumberInput = randomId;
+                        let cccdNumber = '';
+                        if (fileName) {
+                            const match = fileName.match(/\d{9,12}/);
+                            if (match) {
+                                cccdNumber = match[0];
+                            }
+                        }
+                        
+                        if (!cccdNumber) {
+                            cccdNumber = '079' + Math.floor(100000000 + Math.random() * 900000000);
+                        }
+                        
+                        this.cccdNumberInput = cccdNumber;
                         this.cccdDateInput = '2022-09-15';
                         this.cccdPlaceInput = 'Cục Cảnh sát QLHC về TTXH';
                         alert('🔍 Quét OCR hoàn tất! Đã nhận dạng và tự động điền các thông tin CCCD.');
