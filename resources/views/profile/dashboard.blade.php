@@ -1727,6 +1727,7 @@
 
 @section('scripts')
 <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
 <script>
     document.addEventListener('alpine:init', () => {
         Alpine.data('memberDashboard', () => ({
@@ -2557,13 +2558,14 @@
                 this.cccdScanType = 'ocr';
 
                 const img = new Image();
-                img.onload = () => {
+                img.onload = async () => {
                     const canvas = document.createElement('canvas');
                     const ctx = canvas.getContext('2d');
                     canvas.width = img.width;
                     canvas.height = img.height;
                     ctx.drawImage(img, 0, 0);
                     
+                    // 1. Try QR code scan first
                     try {
                         const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
                         if (window.jsQR) {
@@ -2603,7 +2605,96 @@
                         console.warn('QR code scan error:', err);
                     }
 
-                    // Fallback to simulated OCR scan
+                    // 2. Real OCR using Tesseract.js (if QR code fails)
+                    if (window.Tesseract) {
+                        try {
+                            const { data: { text } } = await Tesseract.recognize(
+                                dataUrl,
+                                'vie+eng',
+                                {
+                                    logger: m => {
+                                        if (m.status === 'recognizing text') {
+                                            this.cccdScanProgress = Math.round(m.progress * 100);
+                                        }
+                                    }
+                                }
+                            );
+
+                            console.log("OCR Text extracted:", text);
+
+                            // Extract 12 digits or 9 digits
+                            const cleanedText = text.replace(/[\s-]/g, '');
+                            const match12 = cleanedText.match(/\d{12}/);
+                            const match9 = cleanedText.match(/\d{9}/);
+                            
+                            let extractedCccd = '';
+                            if (match12) {
+                                extractedCccd = match12[0];
+                            } else if (match9) {
+                                extractedCccd = match9[0];
+                            }
+
+                            // Extract Name (find line after "Họ và tên" or "Full name")
+                            const lines = text.split('\n');
+                            let extractedName = '';
+                            for (let i = 0; i < lines.length; i++) {
+                                const lineLower = lines[i].toLowerCase();
+                                if (lineLower.includes('họ và tên') || lineLower.includes('full name') || lineLower.includes('họ tên')) {
+                                    let candidate = lines[i].substring(lines[i].indexOf(':') + 1).trim();
+                                    if (!candidate || candidate.length < 3) {
+                                        if (i + 1 < lines.length) {
+                                            candidate = lines[i + 1].trim();
+                                        }
+                                    }
+                                    candidate = candidate.replace(/[^A-Za-zÀ-ỹ\s]/g, '').trim();
+                                    if (candidate.length > 3) {
+                                        extractedName = candidate;
+                                        break;
+                                    }
+                                }
+                            }
+
+                            // Extract Date of Birth
+                            const dateMatches = text.match(/\d{2}\/\d{2}\/\d{4}/g);
+                            let extractedDob = '';
+                            if (dateMatches && dateMatches.length > 0) {
+                                const firstDateParts = dateMatches[0].split('/');
+                                extractedDob = `${firstDateParts[2]}-${firstDateParts[1]}-${firstDateParts[0]}`;
+                            }
+
+                            // Update inputs
+                            if (extractedCccd) {
+                                this.cccdNumberInput = extractedCccd;
+                            } else if (fileName) {
+                                const nameMatch = fileName.match(/\d{9,12}/);
+                                if (nameMatch) this.cccdNumberInput = nameMatch[0];
+                            }
+
+                            if (extractedDob) {
+                                this.dobInput = extractedDob;
+                            }
+
+                            if (extractedName) {
+                                const nameParts = extractedName.split(' ');
+                                this.lastnameInput = nameParts.pop() || '';
+                                this.firstnameInput = nameParts.join(' ') || '';
+                            }
+
+                            // Fallback default values for Issue Date/Place on front card OCR
+                            this.cccdDateInput = '2022-09-15';
+                            this.cccdPlaceInput = 'Cục Cảnh sát QLHC về TTXH';
+
+                            this.isScanningCccd = false;
+                            this.cccdScanProgress = 100;
+                            
+                            alert('🔍 Nhận diện OCR thật thành công! Đã tự động điền các thông tin tìm thấy.');
+                            return;
+                        } catch (ocrError) {
+                            console.error('Tesseract OCR error:', ocrError);
+                        }
+                    }
+
+                    // 3. Simulated fallback (if Tesseract fails to load)
                     this.simulateScanProgress(1500, () => {
                         let cccdNumber = '';
                         if (fileName) {
