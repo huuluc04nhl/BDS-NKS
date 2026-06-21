@@ -161,4 +161,89 @@ class UserAdminChatTest extends TestCase
         $historyResponse->assertStatus(200)
             ->assertJsonCount(2, 'messages'); // 1 user msg + 1 chatbot msg
     }
+
+    /**
+     * Test cancelling an appointment generates confirmation and owner alert emails.
+     */
+    public function test_cancel_appointment_sends_emails()
+    {
+        // Setup appointment
+        $appt = \App\Models\Appointment::create([
+            'user_id' => $this->renter->id,
+            'property_id' => '91',
+            'appt_name' => 'Duy renter',
+            'appt_phone' => '0912345678',
+            'email' => 'duy@example.com',
+            'appointment_date' => '2026-06-25',
+            'appointment_time' => '14:30:00',
+            'status' => 'confirmed'
+        ]);
+
+        $this->actingAs($this->renter);
+
+        $response = $this->postJson("/nks-api/appointments/cancel/{$appt->id}");
+        $response->assertStatus(200);
+
+        $this->assertDatabaseMissing('appointments', ['id' => $appt->id]);
+
+        // Email to renter
+        $this->assertDatabaseHas('email_logs', [
+            'user_id' => $this->renter->id,
+            'recipient_email' => 'duy@example.com',
+            'subject' => '❌ [BDS NKS] Xác nhận hủy lịch hẹn xem nhà thành công'
+        ]);
+
+        // Email to host/owner (91 points to Sunny with email nks.diaocchinhchu@nks.vn in our mock rsitems)
+        $this->assertDatabaseHas('email_logs', [
+            'recipient_email' => 'nks.diaocchinhchu@nks.vn',
+            'subject' => '⚠️ [BDS NKS] Khách hàng đã hủy lịch hẹn xem nhà'
+        ]);
+    }
+
+    /**
+     * Test upgrade host sends notification email.
+     */
+    public function test_upgrade_host_sends_email()
+    {
+        $response = $this->postJson('/nks-api/profile/upgrade-host', [
+            'email' => $this->renter->email,
+            'name' => 'Duy renter updated',
+            'phone' => '0900000009'
+        ]);
+
+        $response->assertStatus(200);
+
+        $this->assertEquals('owner', $this->renter->fresh()->role);
+
+        $this->assertDatabaseHas('email_logs', [
+            'user_id' => $this->renter->id,
+            'recipient_email' => $this->renter->email,
+            'subject' => '👑 [BDS NKS] Chúc mừng! Tài khoản của bạn đã được nâng cấp thành Chủ nhà'
+        ]);
+    }
+
+    /**
+     * Test proxy update CCCD persists to the local database.
+     */
+    public function test_update_cccd_persists_locally()
+    {
+        $this->actingAs($this->renter);
+
+        $response = $this->postJson('/nks-api/nks/user/updateCccd', [
+            'access_token' => 'mock_token_for_local_user',
+            'front' => 'data:image/png;base64,mockfront',
+            'back' => 'data:image/png;base64,mockback',
+            'number' => '079123456789',
+            'date' => '2025-05-12',
+            'place' => 'Cuc Canh sat QLHC ve TTXH'
+        ]);
+
+        $response->assertStatus(200);
+
+        $updatedRenter = $this->renter->fresh();
+        $this->assertEquals('079123456789', $updatedRenter->id_number);
+        $this->assertEquals('2025-05-12', $updatedRenter->id_date);
+        $this->assertEquals('Cuc Canh sat QLHC ve TTXH', $updatedRenter->id_place);
+    }
 }
+

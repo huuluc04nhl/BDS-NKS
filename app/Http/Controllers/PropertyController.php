@@ -1470,6 +1470,22 @@ class PropertyController extends Controller
                 'role' => 'owner'
             ]);
 
+            // Send/Log HTML email confirmation for Host Upgrade
+            $this->sendAndLogEmail(
+                $user->id,
+                $user->email,
+                '👑 [BDS NKS] Chúc mừng! Tài khoản của bạn đã được nâng cấp thành Chủ nhà',
+                "Chào mừng bạn đến với cộng đồng Chủ nhà chính chủ của BDS NKS! 🎉 Tài khoản của bạn đã được nâng cấp thành công. Giờ đây, bạn có thể tự do đăng tin cho thuê/bán bất động sản trực tiếp lên hệ thống và tiếp cận hàng ngàn khách thuê & đối tác tiềm năng.",
+                [
+                    'Họ và tên' => $user->name,
+                    'Số điện thoại' => $user->phone,
+                    'Vai trò mới' => 'Chủ nhà chính chủ (Owner)',
+                    'Ngày nâng cấp' => now()->format('d/m/Y H:i:s')
+                ],
+                'Đăng tin bất động sản ngay',
+                url('/profile?tab=properties')
+            );
+
             return response()->json([
                 'success' => true,
                 'user' => [
@@ -1701,7 +1717,78 @@ class PropertyController extends Controller
         try {
             $appt = \App\Models\Appointment::find($id);
             if ($appt) {
+                $apptName = $appt->appt_name;
+                $apptPhone = $appt->appt_phone;
+                $apptEmail = $appt->email;
+                $apptDate = $appt->appointment_date;
+                $apptTime = $appt->appointment_time;
+                $userId = $appt->user_id;
+                $propertyId = $appt->property_id;
+
+                // Resolve property & host details for notifications
+                $propertyTitle = 'Bất động sản chính chủ';
+                $hostEmail = 'nks.diaocchinhchu@nks.vn';
+                $hostName = 'Đội ngũ NKS';
+                $hostPhone = '0932030958';
+
+                $items = $this->fetchAllItems();
+                $property = collect($items)->first(function ($item) use ($propertyId) {
+                    return (string)$item['id'] === (string)$propertyId;
+                });
+
+                if ($property) {
+                    $propertyTitle = $property['title'] ?? $propertyTitle;
+                    $hostEmail = $property['email'] ?? $hostEmail;
+                    $hostName = $property['sale']['name'] ?? $hostName;
+                    $hostPhone = $property['sale']['phone'] ?? $hostPhone;
+                }
+
+                // Determine customer email
+                $renterEmail = $apptEmail;
+                if (empty($renterEmail) && $userId) {
+                    $u = \App\Models\User::find($userId);
+                    if ($u) {
+                        $renterEmail = $u->email;
+                    }
+                }
+                if (empty($renterEmail)) {
+                    $renterEmail = $apptPhone . '@nks-sms.vn';
+                }
+
                 $appt->delete();
+
+                // 1. Send/Log cancellation email to Customer (Renter)
+                $this->sendAndLogEmail(
+                    $userId,
+                    $renterEmail,
+                    '❌ [BDS NKS] Xác nhận hủy lịch hẹn xem nhà thành công',
+                    "Chúng tôi ghi nhận bạn đã hủy lịch hẹn xem nhà thành công. Hẹn gặp lại bạn ở các cơ hội tìm kiếm nhà đất tiếp theo tại BDS NKS! 🏡 Nếu đây là sự nhầm lẫn, bạn hoàn toàn có thể đặt lại lịch hẹn bất kỳ lúc nào trên trang chi tiết bất động sản.",
+                    [
+                        'Bất động sản' => $propertyTitle,
+                        'Thời gian hẹn (đã hủy)' => '<span style="color: #b45309; font-weight: 700;">' . $apptDate . ' lúc ' . $apptTime . '</span>',
+                        'Đại diện chủ nhà' => $hostName,
+                        'SĐT chủ nhà' => $hostPhone
+                    ],
+                    'Tìm kiếm bất động sản khác',
+                    url('/properties')
+                );
+
+                // 2. Send/Log cancellation email to Host/Owner
+                $hostUser = \App\Models\User::where('email', $hostEmail)->first();
+                $this->sendAndLogEmail(
+                    $hostUser ? $hostUser->id : null,
+                    $hostEmail,
+                    '⚠️ [BDS NKS] Khách hàng đã hủy lịch hẹn xem nhà',
+                    "Thông báo từ BDS NKS: Lịch hẹn xem nhà của khách hàng dưới đây đã bị hủy. Chúng tôi gửi thông tin này để bạn chủ động sắp xếp lại lịch trình cá nhân.",
+                    [
+                        'Bất động sản' => $propertyTitle,
+                        'Thời gian hẹn (đã hủy)' => '<span style="color: #b45309; font-weight: 700;">' . $apptDate . ' lúc ' . $apptTime . '</span>',
+                        'Tên khách hẹn' => $apptName,
+                        'Số điện thoại khách' => $apptPhone
+                    ],
+                    'Quản lý lịch hẹn của bạn',
+                    url('/profile?tab=appointments')
+                );
             }
             return response()->json(['success' => true]);
         } catch (\Exception $e) {
@@ -2895,6 +2982,14 @@ class PropertyController extends Controller
             }
             
             if (strpos($accessToken, 'mock_token_for_local_') !== false) {
+                $user = \Illuminate\Support\Facades\Auth::user();
+                if ($user) {
+                    $user->update([
+                        'id_number' => $request->input('number'),
+                        'id_date' => $request->input('date'),
+                        'id_place' => $request->input('place')
+                    ]);
+                }
                 return response()->json(['success' => true, 'message' => 'Cập nhật CCCD thành công (Mock).']);
             }
             
@@ -2908,6 +3003,14 @@ class PropertyController extends Controller
             ]);
             
             if ($response->successful()) {
+                $user = \Illuminate\Support\Facades\Auth::user();
+                if ($user) {
+                    $user->update([
+                        'id_number' => $request->input('number'),
+                        'id_date' => $request->input('date'),
+                        'id_place' => $request->input('place')
+                    ]);
+                }
                 return response()->json($response->json());
             }
             
