@@ -1599,10 +1599,33 @@ class PropertyController extends Controller
                 url('/profile')
             );
 
+            // Send a copy to the configured system email if it's different and valid for debugging
+            $systemEmail = config('mail.from.address');
+            if ($systemEmail && !str_contains($systemEmail, 'example.com') && $systemEmail !== $hostEmail && $systemEmail !== $renterEmail) {
+                $this->sendAndLogEmail(
+                    null,
+                    $systemEmail,
+                    '🤝 [SAO CHÉP CHỦ NHÀ] Lịch hẹn xem nhà mới từ khách hàng',
+                    "Tin vui từ BDS NKS! Một khách hàng tiềm năng vừa đặt lịch hẹn ghé thăm bất động sản của bạn. 🏡 (Bản sao thông báo gửi cho chủ nhà để phục vụ thử nghiệm/xác minh)",
+                    [
+                        'Bất động sản' => $propertyTitle,
+                        'Thời gian hẹn khách' => '<span style="color: #b45309; font-weight: 700;">' . $request->appointment_date . ' lúc ' . $request->appointment_time . '</span>',
+                        'Tên khách hẹn' => $request->appt_name,
+                        'Số điện thoại khách' => $request->appt_phone,
+                        'Ghi chú của khách' => $noteContent
+                    ],
+                    'Quản lý lịch hẹn',
+                    url('/profile')
+                );
+            }
+
             // 3. Send/Log Email to Admin
             $adminEmails = \App\Models\User::where('role', 'admin')->pluck('email')->toArray();
             if (empty($adminEmails)) {
                 $adminEmails = ['admin@nks.vn'];
+            }
+            if ($systemEmail && !str_contains($systemEmail, 'example.com') && !in_array($systemEmail, $adminEmails)) {
+                $adminEmails[] = $systemEmail;
             }
 
             foreach ($adminEmails as $adminEmail) {
