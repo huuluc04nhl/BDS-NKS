@@ -9,7 +9,7 @@
             margin: 0;
             padding: 0;
             background-color: #f1f5f9;
-            font-family: 'Montserrat', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            font-family: 'Outfit', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             color: #334155;
             -webkit-font-smoothing: antialiased;
         }
@@ -28,14 +28,14 @@
             border-radius: 24px;
             overflow: hidden;
             box-shadow: 0 20px 25px -5px rgba(15, 23, 42, 0.08), 0 10px 10px -5px rgba(15, 23, 42, 0.04);
-            border-top: 6px solid #d4af37;
+            border-top: 6px solid #0077bb;
         }
         .header-gradient {
             background: #0f172a;
-            background: linear-gradient(135deg, #0b132b 0%, #1e293b 100%);
+            background: linear-gradient(135deg, #0f172a 0%, #0077bb 100%);
             padding: 45px 40px;
             text-align: center;
-            border-bottom: 3px solid #d4af37;
+            border-bottom: 3px solid #0077bb;
             position: relative;
         }
         .logo-container {
@@ -56,7 +56,7 @@
             text-shadow: 0 2px 4px rgba(0,0,0,0.2);
         }
         .logo-sub {
-            color: #d4af37;
+            color: #33a1e2;
             font-size: 11px;
             font-weight: 700;
             text-transform: uppercase;
@@ -90,7 +90,7 @@
         .details-card {
             background-color: #f8fafc;
             border: 1px solid #e2e8f0;
-            border-left: 4px solid #d4af37;
+            border-left: 4px solid #0077bb;
             border-radius: 16px;
             padding: 24px;
             margin-top: 30px;
@@ -139,8 +139,8 @@
         }
         .btn-cta {
             display: inline-block;
-            background: #d97706;
-            background: linear-gradient(135deg, #d97706 0%, #b45309 100%);
+            background: #0077bb;
+            background: linear-gradient(135deg, #0077bb 0%, #005a90 100%);
             color: #ffffff !important;
             text-decoration: none;
             padding: 15px 36px;
@@ -149,8 +149,8 @@
             font-size: 14px;
             text-transform: uppercase;
             letter-spacing: 1px;
-            box-shadow: 0 8px 16px -4px rgba(217, 119, 6, 0.4);
-            border: 1px solid rgba(217, 119, 6, 0.2);
+            box-shadow: 0 8px 16px -4px rgba(0, 119, 187, 0.4);
+            border: 1px solid rgba(0, 119, 187, 0.2);
         }
         .footer {
             background-color: #f8fafc;
@@ -165,8 +165,8 @@
             letter-spacing: 1px;
             margin-bottom: 8px;
         }
-        .footer-logo-gold {
-            color: #d4af37;
+        .footer-logo-blue {
+            color: #0077bb;
             margin-left: 5px;
         }
         .footer-text {
@@ -186,7 +186,7 @@
             padding-top: 15px;
         }
         .footer-links a {
-            color: #b45309;
+            color: #0077bb;
             text-decoration: none;
             margin: 0 12px;
             font-weight: 600;
@@ -204,7 +204,7 @@
             <!-- Header -->
             <div class="header-gradient">
                 <div class="logo-container">
-                    <div class="logo-icon">👑</div>
+                    <div class="logo-icon">🏠</div>
                     <h1 class="logo-text">BDS NKS</h1>
                     <p class="logo-sub">Địa ốc chính chủ cao cấp</p>
                 </div>
@@ -255,16 +255,16 @@
             <div class="footer">
                 <div class="footer-logo">
                     <span>BẤT ĐỘNG SẢN NKS</span>
-                    <span class="footer-logo-gold">★ ★ ★ ★ ★</span>
+                    <span class="footer-logo-blue">★ ★ ★ ★ ★</span>
                 </div>
                 <p class="footer-text">Hệ thống thông tin và dịch vụ nhà đất chính chủ hàng đầu Việt Nam.</p>
                 <p class="footer-text" style="margin-top: 5px;">
                     <span class="footer-highlight">Hotline:</span> 0932.030.958 | 
-                    <span class="footer-highlight">Email:</span> nks.diaocchinhchu@nks.vn
+                    <span class="footer-highlight">Email:</span> huuluc04@gmail.com
                 </p>
                 <div class="footer-links">
-                    <a href="https://online.nks.vn" target="_blank">Trang chủ NKS</a>
-                    <a href="https://online.nks.vn/contact" target="_blank">Liên hệ hỗ trợ</a>
+                    <a href="{{ url('/') }}" target="_blank">Trang chủ NKS</a>
+                    <a href="{{ url('/profile') }}" target="_blank">Hồ sơ & Liên hệ</a>
                 </div>
                 <p class="auto-email-note">Đây là hòm thư tự động của hệ thống, quý khách vui lòng không trả lời trực tiếp email này.</p>
             </div>
