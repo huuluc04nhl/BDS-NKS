@@ -1043,7 +1043,7 @@ class PropertyController extends Controller
                             'floors' => intval($prop['floors'] ?? 1),
                             'direction' => $prop['direction'] ?? 'Đông',
                             'feature_img' => $prop['feature_img'] ?? $prop['featureimg'] ?? 'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?auto=format&fit=crop&q=80&w=800',
-                            'images' => is_array($prop['gallery'] ?? null) ? json_encode($prop['gallery']) : json_encode([$prop['feature_img'] ?? '']),
+                            'images' => is_array($prop['gallery'] ?? null) ? $prop['gallery'] : [$prop['feature_img'] ?? ''],
                             'description' => $prop['description'] ?? 'Căn hộ dịch vụ cao cấp.',
                             'is_verified' => true
                         ]);
@@ -1599,33 +1599,10 @@ class PropertyController extends Controller
                 url('/profile')
             );
 
-            // Send a copy to the configured system email if it's different and valid for debugging
-            $systemEmail = config('mail.from.address');
-            if ($systemEmail && !str_contains($systemEmail, 'example.com') && $systemEmail !== $hostEmail && $systemEmail !== $renterEmail) {
-                $this->sendAndLogEmail(
-                    null,
-                    $systemEmail,
-                    '🤝 [SAO CHÉP CHỦ NHÀ] Lịch hẹn xem nhà mới từ khách hàng',
-                    "Tin vui từ BDS NKS! Một khách hàng tiềm năng vừa đặt lịch hẹn ghé thăm bất động sản của bạn. 🏡 (Bản sao thông báo gửi cho chủ nhà để phục vụ thử nghiệm/xác minh)",
-                    [
-                        'Bất động sản' => $propertyTitle,
-                        'Thời gian hẹn khách' => '<span style="color: #b45309; font-weight: 700;">' . $request->appointment_date . ' lúc ' . $request->appointment_time . '</span>',
-                        'Tên khách hẹn' => $request->appt_name,
-                        'Số điện thoại khách' => $request->appt_phone,
-                        'Ghi chú của khách' => $noteContent
-                    ],
-                    'Quản lý lịch hẹn',
-                    url('/profile')
-                );
-            }
-
             // 3. Send/Log Email to Admin
             $adminEmails = \App\Models\User::where('role', 'admin')->pluck('email')->toArray();
             if (empty($adminEmails)) {
                 $adminEmails = ['admin@nks.vn'];
-            }
-            if ($systemEmail && !str_contains($systemEmail, 'example.com') && !in_array($systemEmail, $adminEmails)) {
-                $adminEmails[] = $systemEmail;
             }
 
             foreach ($adminEmails as $adminEmail) {
@@ -1988,7 +1965,7 @@ class PropertyController extends Controller
                 'floors' => $request->floors,
                 'direction' => $request->direction,
                 'feature_img' => $request->feature_img,
-                'images' => json_encode([$request->feature_img]),
+                'images' => [$request->feature_img],
                 'description' => $request->description,
                 'is_verified' => true
             ]);
@@ -2005,7 +1982,7 @@ class PropertyController extends Controller
                 [
                     'Tiêu đề tin' => $property->title,
                     'Loại bất động sản' => $property->rstype === 'room' ? 'Phòng trọ / Căn hộ dịch vụ 🏢' : 'Nhà nguyên căn 🏠',
-                    'Hình thức' => $property->transaction_type === 'rent' ? 'Cho thuê 🔑' : 'Bán lẻ 🏷️',
+                    'Hình thức' => $property->transaction_type === 'Cho thuê' ? 'Cho thuê 🔑' : 'Bán lẻ 🏷️',
                     'Mức giá' => '<span style="color: #b45309; font-weight: 700;">' . $property->formated_price . '</span>',
                     'Diện tích' => $property->total_area . ' m²',
                     'Địa chỉ' => $property->address
@@ -2031,7 +2008,7 @@ class PropertyController extends Controller
                         'Số điện thoại' => $user->phone ?? 'Chưa cập nhật',
                         'Tiêu đề tin' => $property->title,
                         'Loại bất động sản' => $property->rstype === 'room' ? 'Phòng trọ / Căn hộ dịch vụ' : 'Nhà nguyên căn',
-                        'Hình thức' => $property->transaction_type === 'rent' ? 'Cho thuê' : 'Bán',
+                        'Hình thức' => $property->transaction_type === 'Cho thuê' ? 'Cho thuê' : 'Bán',
                         'Mức giá' => $property->formated_price,
                         'Địa chỉ' => $property->address
                     ],
@@ -2149,7 +2126,7 @@ class PropertyController extends Controller
                 'floors' => $request->floors,
                 'direction' => $request->direction,
                 'feature_img' => $request->feature_img,
-                'images' => json_encode([$request->feature_img]),
+                'images' => [$request->feature_img],
                 'description' => $request->description
             ]);
 
