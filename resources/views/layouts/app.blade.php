@@ -295,7 +295,17 @@
                             <template x-if="isLoggedIn">
                                 <div>
                                     <div class="px-4 py-2 border-b border-slate-50">
-                                        <p class="text-xs text-slate-400">Tài khoản</p>
+                                        <div class="flex items-center justify-between gap-2">
+                                            <p class="text-xs text-slate-400">Tài khoản</p>
+                                            <template x-if="user && user.id_number">
+                                                <span class="inline-flex items-center gap-0.5 bg-emerald-500/10 text-emerald-600 px-1.5 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wide border border-emerald-200/30">
+                                                    <svg class="w-2.5 h-2.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+                                                    </svg>
+                                                    Đã xác minh
+                                                </span>
+                                            </template>
+                                        </div>
                                         <p class="text-xs font-bold text-slate-700 truncate" x-text="user ? user.email : ''"></p>
                                     </div>
                                     <a href="/profile?tab=info" class="block px-4 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-50 hover:text-primary">Hồ sơ cá nhân</a>

@@ -34,6 +34,14 @@
                                 <span class="inline-flex px-3 py-1 rounded-full text-[10px] font-extrabold tracking-wide uppercase"
                                       :class="user && user.role === 'admin' ? 'bg-rose-100 text-rose-600 border border-rose-200' : (user && user.role === 'owner' ? 'bg-primary/10 text-primary' : 'bg-slate-100 text-slate-500')"
                                       x-text="user && user.role === 'admin' ? 'Quản trị viên' : (user && user.role === 'owner' ? 'Chủ nhà chính chủ' : 'Khách thuê')"></span>
+                                <template x-if="user && user.id_number">
+                                    <span class="inline-flex items-center gap-1 bg-emerald-500/10 text-emerald-600 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wide border border-emerald-200/50">
+                                        <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                        </svg>
+                                        Đã xác minh
+                                    </span>
+                                </template>
                                 <span class="inline-flex items-center gap-1 bg-amber-500/10 text-amber-600 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wide border border-amber-200/50">
                                     <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
                                         <path stroke-linecap="round" stroke-linejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -164,7 +172,7 @@
                                     <svg class="w-4.5 h-4.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
                                     Ảnh đại diện
                                 </button>
-                                <button type="button" @click="cccdNumberInput = idNumberInput; cccdDateInput = idDateInput; cccdPlaceInput = idPlaceInput; activeStep = 4"
+                                <button type="button" @click="cccdNumberInput = idNumberInput; cccdDateInput = idDateInput; cccdPlaceInput = idPlaceInput; cccdAddressInput = idAddressInput; activeStep = 4"
                                         class="flex items-center gap-2 px-5 py-3 rounded-2xl font-extrabold text-xs uppercase tracking-wider transition-all duration-300 shadow-xs"
                                         :class="activeStep === 4 ? 'bg-primary text-white shadow-md shadow-primary/20 scale-[1.02]' : 'text-slate-500 hover:bg-slate-100/80 hover:text-slate-700'">
                                     <svg class="w-4.5 h-4.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M10 6H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V8a2 2 0 00-2-2h-5m-4 0V5a2 2 0 114 0v1m-4 0a2 2 0 104 0m-5 8a2 2 0 100-4 2 2 0 000 4zm0 0c1.378 0 2.5-1.122 2.5-2.5S10.378 9 9 9m9 2h-3m3 4h-3" /></svg>
@@ -532,6 +540,21 @@
                                 <p class="text-xs text-slate-400 font-medium">Tải lên hình ảnh CCCD 2 mặt và cập nhật thông tin giấy tờ</p>
                             </div>
 
+                            <!-- Verified Banner -->
+                            <template x-if="idNumberInput">
+                                <div class="bg-emerald-50 border border-emerald-100 rounded-3xl p-5 flex gap-4 text-emerald-800 leading-relaxed shadow-sm">
+                                    <div class="w-10 h-10 rounded-full bg-emerald-500/10 text-emerald-600 flex items-center justify-center flex-shrink-0">
+                                        <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                                        </svg>
+                                    </div>
+                                    <div>
+                                        <p class="text-sm font-black mb-1">Tài khoản đã được xác minh danh tính (CCCD)</p>
+                                        <p class="text-xs text-emerald-700/90 font-medium">Thông tin CCCD của bạn đã được quét và đối chiếu hợp lệ. Bạn có thể cập nhật lại bằng cách tải ảnh mới bên dưới nếu cần thiết.</p>
+                                    </div>
+                                </div>
+                            </template>
+
                             <!-- Info banner -->
                             <div class="bg-amber-50 border border-amber-100 rounded-2xl p-4 flex gap-3 text-xs text-amber-700 leading-relaxed">
                                 <svg class="w-5 h-5 flex-shrink-0 text-amber-500 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
@@ -710,10 +733,17 @@
                                                class="w-full bg-slate-50 border border-slate-200 rounded-2xl px-4 py-3 text-sm focus:outline-none focus:border-primary focus:bg-white transition-all text-slate-700">
                                     </div>
                                 </div>
+                                <div>
+                                    <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-2">Nơi thường trú</label>
+                                    <input type="text" 
+                                           x-model="cccdAddressInput" 
+                                           placeholder="Ví dụ: 123 Nguyễn Huệ, Quận 1, TP.HCM" 
+                                           class="w-full bg-slate-50 border border-slate-200 rounded-2xl px-4 py-3 text-sm focus:outline-none focus:border-primary focus:bg-white transition-all text-slate-700">
+                                </div>
                             </div>
 
                             <!-- Read-only Display of current info if present -->
-                            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 bg-slate-50/50 p-4 rounded-3xl border border-slate-100">
+                            <div class="grid grid-cols-1 sm:grid-cols-4 gap-4 bg-slate-50/50 p-4 rounded-3xl border border-slate-100">
                                 <div>
                                     <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Số CCCD đã lưu</label>
                                     <div class="text-xs font-semibold text-slate-600 py-1" x-text="idNumberInput || 'Chưa cập nhật'"></div>
@@ -726,11 +756,15 @@
                                     <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Nơi cấp</label>
                                     <div class="text-xs font-semibold text-slate-600 py-1" x-text="idPlaceInput || 'Chưa cập nhật'"></div>
                                 </div>
+                                <div>
+                                    <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Nơi thường trú</label>
+                                    <div class="text-xs font-semibold text-slate-600 py-1 truncate" :title="idAddressInput" x-text="idAddressInput || 'Chưa cập nhật'"></div>
+                                </div>
                             </div>
 
                             <!-- Action buttons -->
                             <div class="flex gap-3 pt-4 border-t border-slate-100">
-                                <button @click="saveCccd" :disabled="!cccdFrontSrc || !cccdBackSrc || !cccdNumberInput" class="bg-primary hover:bg-primary-dark disabled:opacity-50 text-white font-bold px-8 py-3.5 rounded-full text-xs transition-all shadow-md">
+                                <button @click="saveCccd" :disabled="!cccdFrontSrc || !cccdBackSrc || !cccdNumberInput || !cccdAddressInput" class="bg-primary hover:bg-primary-dark disabled:opacity-50 text-white font-bold px-8 py-3.5 rounded-full text-xs transition-all shadow-md">
                                     Xác thực & Lưu
                                 </button>
                             </div>
@@ -1833,6 +1867,7 @@
             idNumberInput: '',
             idDateInput: '',
             idPlaceInput: '',
+            idAddressInput: '',
             provinceInput: '',
             wardInput: '',
             wards: [],
@@ -1861,6 +1896,7 @@
             cccdNumberInput: '',
             cccdDateInput: '',
             cccdPlaceInput: '',
+            cccdAddressInput: '',
             
             // Owner Register State
             companyInput: '',
@@ -2037,6 +2073,7 @@
                     this.idNumberInput = this.user.id_number || '';
                     this.idDateInput = this.user.id_date || '';
                     this.idPlaceInput = this.user.id_place || '';
+                    this.idAddressInput = this.user.permanent_address || '';
                     this.provinceInput = this.user.province || '';
                     this.wardInput = this.user.ward || '';
                     
@@ -2387,6 +2424,7 @@
                             id_number: this.idNumberInput,
                             id_date: this.idDateInput,
                             id_place: this.idPlaceInput,
+                            permanent_address: this.idAddressInput,
                             province: this.provinceInput,
                             ward: this.wardInput
                         })
@@ -2679,6 +2717,7 @@
                     let extractedName = '';
                     let extractedIssueDate = '';
                     let extractedPlace = '';
+                    let extractedAddress = '';
 
                     // 1. Try QR code scan on the front image first
                     try {
@@ -2715,6 +2754,9 @@
                                     if (parts[2]) {
                                         extractedName = parts[2].trim();
                                     }
+                                    if (parts[5]) {
+                                        extractedAddress = parts[5].trim();
+                                    }
                                 }
                             }
                         }
@@ -2736,6 +2778,7 @@
                                 if (extractedDob) this.dobInput = extractedDob;
                                 if (extractedIssueDate) this.cccdDateInput = extractedIssueDate;
                                 if (extractedPlace) this.cccdPlaceInput = extractedPlace;
+                                if (extractedAddress) this.cccdAddressInput = extractedAddress;
                                 
                                 if (extractedName) {
                                     const nameParts = extractedName.split(' ');
@@ -2970,7 +3013,7 @@
             },
             
             async saveCccd() {
-                if (!this.cccdFrontSrc || !this.cccdBackSrc || !this.cccdNumberInput || !this.cccdDateInput || !this.cccdPlaceInput) {
+                if (!this.cccdFrontSrc || !this.cccdBackSrc || !this.cccdNumberInput || !this.cccdDateInput || !this.cccdPlaceInput || !this.cccdAddressInput) {
                     alert('Vui lòng nhập đầy đủ thông tin và chọn ảnh 2 mặt CCCD.');
                     return;
                 }
@@ -2989,7 +3032,8 @@
                             back: this.cccdBackSrc,
                             number: this.cccdNumberInput,
                             date: this.cccdDateInput,
-                            place: this.cccdPlaceInput
+                            place: this.cccdPlaceInput,
+                            permanent_address: this.cccdAddressInput
                         })
                     });
                     
@@ -3000,11 +3044,13 @@
                         userObj.id_number = this.cccdNumberInput;
                         userObj.id_date = this.cccdDateInput;
                         userObj.id_place = this.cccdPlaceInput;
+                        userObj.permanent_address = this.cccdAddressInput;
                         localStorage.setItem('nks_user', JSON.stringify(userObj));
                         
                         this.idNumberInput = this.cccdNumberInput;
                         this.idDateInput = this.cccdDateInput;
                         this.idPlaceInput = this.cccdPlaceInput;
+                        this.idAddressInput = this.cccdAddressInput;
                         
                         this.showUpdateCccdModal = false;
                         alert('Xác thực và cập nhật CCCD thành công!');

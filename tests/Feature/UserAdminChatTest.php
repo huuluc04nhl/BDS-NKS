@@ -235,7 +235,8 @@ class UserAdminChatTest extends TestCase
             'back' => 'data:image/png;base64,mockback',
             'number' => '079123456789',
             'date' => '2025-05-12',
-            'place' => 'Cuc Canh sat QLHC ve TTXH'
+            'place' => 'Cuc Canh sat QLHC ve TTXH',
+            'permanent_address' => '123 Nguyen Hue, Quan 1, TP.HCM'
         ]);
 
         $response->assertStatus(200);
@@ -244,6 +245,7 @@ class UserAdminChatTest extends TestCase
         $this->assertEquals('079123456789', $updatedRenter->id_number);
         $this->assertEquals('2025-05-12', $updatedRenter->id_date);
         $this->assertEquals('Cuc Canh sat QLHC ve TTXH', $updatedRenter->id_place);
+        $this->assertEquals('123 Nguyen Hue, Quan 1, TP.HCM', $updatedRenter->permanent_address);
     }
 
     /**
