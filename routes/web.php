@@ -19,6 +19,9 @@ Route::get('/profile', function () {
 
 // Database API Routing Endpoints
 Route::prefix('nks-api')->group(function () {
+    Route::get('/ping', function () {
+        return response()->json(['success' => true]);
+    });
     Route::post('/register', [PropertyController::class, 'apiRegister']);
     Route::post('/login', [PropertyController::class, 'apiLogin']);
     Route::post('/logout', [PropertyController::class, 'apiLogout']);

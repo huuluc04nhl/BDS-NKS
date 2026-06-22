@@ -32,27 +32,139 @@
           isLoggedIn: false,
           user: null,
           addressToggle: false,
+          idleInterval: null,
+          pingInterval: null,
+          
+          resetIdleTimer() {
+              if (!this.isLoggedIn) {
+                  return;
+              }
+              localStorage.setItem('nks_last_activity', Date.now().toString());
+          },
+
           init() {
-              // Check local storage for mock user
+              // 1. Check if idle timeout has expired while tab/browser was closed
               const savedUser = localStorage.getItem('nks_user');
               if (savedUser) {
-                  this.isLoggedIn = true;
-                  this.user = JSON.parse(savedUser);
+                  const lastAct = parseInt(localStorage.getItem('nks_last_activity') || '0');
+                  const now = Date.now();
+                  if (lastAct > 0 && now - lastAct >= 300000) {
+                      localStorage.removeItem('nks_user');
+                      localStorage.removeItem('nks_appointments');
+                      localStorage.removeItem('nks_favorites');
+                      localStorage.removeItem('nks_owner_properties');
+                      localStorage.removeItem('nks_access_token');
+                      localStorage.removeItem('nks_last_activity');
+                      this.isLoggedIn = false;
+                      this.user = null;
+                  } else {
+                      this.isLoggedIn = true;
+                      this.user = JSON.parse(savedUser);
+                  }
               }
               
-              // Listen for login events
+              // 2. Listen to login change events (local tab scope)
               window.addEventListener('nks-login-change', () => {
                   const saved = localStorage.getItem('nks_user');
                   if (saved) {
                       this.isLoggedIn = true;
                       this.user = JSON.parse(saved);
+                      this.resetIdleTimer();
+                      this.startIdleMonitoring();
                   } else {
                       this.isLoggedIn = false;
                       this.user = null;
+                      this.stopIdleMonitoring();
                   }
               });
+
+              // 3. Register user activity listeners once
+              const events = ['mousemove', 'keydown', 'click', 'scroll', 'touchstart'];
+              events.forEach(event => {
+                  window.addEventListener(event, () => this.resetIdleTimer(), { passive: true });
+              });
+
+              // 4. Multi-tab synchronization via storage events
+              window.addEventListener('storage', (e) => {
+                  if (e.key === 'nks_user') {
+                      if (!e.newValue) {
+                          this.isLoggedIn = false;
+                          this.user = null;
+                          this.stopIdleMonitoring();
+                          window.location.href = '/';
+                      } else {
+                          this.isLoggedIn = true;
+                          this.user = JSON.parse(e.newValue);
+                          this.resetIdleTimer();
+                          this.startIdleMonitoring();
+                      }
+                  }
+              });
+              
+              if (this.isLoggedIn) {
+                  this.resetIdleTimer();
+                  this.startIdleMonitoring();
+              }
           },
+
+          startIdleMonitoring() {
+              this.stopIdleMonitoring();
+
+              // Run check every 2 seconds for inactivity across all tabs
+              this.idleInterval = setInterval(() => {
+                  if (!this.isLoggedIn) return;
+                  
+                  const lastAct = parseInt(localStorage.getItem('nks_last_activity') || '0');
+                  const now = Date.now();
+                  const idleTime = now - lastAct;
+
+                  if (lastAct > 0 && idleTime >= 300000) { // 5 minutes
+                      this.stopIdleMonitoring();
+                      
+                      // Only trigger alert on the first tab to clean up
+                      if (localStorage.getItem('nks_user')) {
+                          alert('Phiên đăng nhập đã hết hạn do không có hoạt động trong 5 phút. Vui lòng đăng nhập lại.');
+                          this.logout();
+                      } else {
+                          this.isLoggedIn = false;
+                          this.user = null;
+                          window.location.href = '/';
+                      }
+                  }
+              }, 2000);
+
+              // Server keep-alive ping every 2 minutes when user is active
+              this.pingInterval = setInterval(() => {
+                  if (!this.isLoggedIn) return;
+                  
+                  const lastAct = parseInt(localStorage.getItem('nks_last_activity') || '0');
+                  const now = Date.now();
+                  
+                  if (lastAct > 0 && now - lastAct < 120000) {
+                      fetch('/nks-api/ping', {
+                          method: 'GET',
+                          headers: {
+                              'Accept': 'application/json',
+                              'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]').getAttribute('content')
+                          }
+                      }).catch(() => {});
+                  }
+              }, 120000);
+          },
+
+          stopIdleMonitoring() {
+              if (this.idleInterval) {
+                  clearInterval(this.idleInterval);
+                  this.idleInterval = null;
+              }
+              if (this.pingInterval) {
+                  clearInterval(this.pingInterval);
+                  this.pingInterval = null;
+              }
+          },
+
           async logout() {
+              this.stopIdleMonitoring();
               try {
                   await fetch('/nks-api/logout', {
                       method: 'POST',
@@ -67,6 +179,7 @@
               localStorage.removeItem('nks_favorites');
               localStorage.removeItem('nks_owner_properties');
               localStorage.removeItem('nks_access_token');
+              localStorage.removeItem('nks_last_activity');
               this.isLoggedIn = false;
               this.user = null;
               window.dispatchEvent(new CustomEvent('nks-login-change'));

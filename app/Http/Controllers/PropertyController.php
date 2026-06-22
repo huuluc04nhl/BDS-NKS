@@ -531,7 +531,7 @@ class PropertyController extends Controller
             }
 
             // Authenticate in Laravel session
-            \Illuminate\Support\Facades\Auth::login($user, true);
+            \Illuminate\Support\Facades\Auth::login($user, false);
 
             return response()->json([
                 'success' => true,
@@ -739,7 +739,7 @@ class PropertyController extends Controller
                 }
 
                 // === Bước 6: Đăng nhập session local ===
-                \Illuminate\Support\Facades\Auth::login($user, true);
+                \Illuminate\Support\Facades\Auth::login($user, false);
 
                 return response()->json([
                     'success' => true,
@@ -781,7 +781,7 @@ class PropertyController extends Controller
                     $accessToken = 'mock_token_for_local_' . bin2hex(random_bytes(16));
 
                     // Đăng nhập session local
-                    \Illuminate\Support\Facades\Auth::login($localUser, true);
+                    \Illuminate\Support\Facades\Auth::login($localUser, false);
 
                     Log::info('Local DB Fallback Login Success for [' . $username . ']');
 
@@ -1022,7 +1022,7 @@ class PropertyController extends Controller
                 }
             }
 
-            \Illuminate\Support\Facades\Auth::login($user, true);
+            \Illuminate\Support\Facades\Auth::login($user, false);
 
             // Sync properties (owner only) - Do this first so that favorites can link to them!
             $idMapping = []; // maps oldPropertyId -> newPropertyId
