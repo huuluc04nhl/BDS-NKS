@@ -1928,6 +1928,19 @@
                     this.checkLogin();
                 });
                 
+                // Sync appointments, favorites, and listings in real-time across other open tabs
+                window.addEventListener('storage', (e) => {
+                    if (e.key === 'nks_appointments') {
+                        this.appointments = e.newValue ? JSON.parse(e.newValue) : [];
+                    }
+                    if (e.key === 'nks_favorites') {
+                        this.favorites = e.newValue ? JSON.parse(e.newValue) : [];
+                    }
+                    if (e.key === 'nks_owner_properties') {
+                        this.ownerProperties = e.newValue ? JSON.parse(e.newValue) : [];
+                    }
+                });
+                
                 this.loadMockData();
 
                 // Watch user object to keep lastUsername & lastAvatar updated in localStorage
@@ -3156,7 +3169,7 @@
                         });
                     } catch (e) {}
                     
-                    this.appointments = this.appointments.filter(a => a.id !== id);
+                    this.appointments = this.appointments.filter(a => String(a.id) !== String(id));
                     localStorage.setItem('nks_appointments', JSON.stringify(this.appointments));
                 }
             },
@@ -3188,7 +3201,7 @@
                     }
                 }
                 
-                this.favorites = this.favorites.filter(f => f.id !== id);
+                this.favorites = this.favorites.filter(f => String(f.id) !== String(id));
                 localStorage.setItem('nks_favorites', JSON.stringify(this.favorites));
                 window.dispatchEvent(new CustomEvent('nks-fav-change'));
             },

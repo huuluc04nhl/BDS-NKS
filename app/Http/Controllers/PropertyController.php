@@ -1108,6 +1108,16 @@ class PropertyController extends Controller
             // Sync appointments
             $localAppts = $request->input('appointments', []);
             foreach ($localAppts as $appt) {
+                // If it has a database ID, and that ID is not found in the database,
+                // it means it was deleted/cancelled. We should NOT recreate it!
+                if (isset($appt['id']) && is_numeric($appt['id'])) {
+                    $apptId = (int)$appt['id'];
+                    $dbExists = \App\Models\Appointment::where('id', $apptId)->exists();
+                    if (!$dbExists) {
+                        continue;
+                    }
+                }
+
                 $oldPropId = $appt['property_id'] ?? '';
                 $newPropId = $oldPropId;
                 if (!empty($oldPropId) && is_numeric($oldPropId)) {

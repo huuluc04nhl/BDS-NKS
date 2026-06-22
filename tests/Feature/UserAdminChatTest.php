@@ -319,5 +319,43 @@ class UserAdminChatTest extends TestCase
 
         $this->assertEquals('owner', $this->renter->fresh()->role);
     }
+
+    /**
+     * Test apiSessionSync does not recreate cancelled appointments that have a database ID.
+     */
+    public function test_session_sync_does_not_recreate_cancelled_appointments()
+    {
+        $this->actingAs($this->renter);
+
+        // Send a session sync request with an appointment that does not exist in DB (e.g. ID = 9999)
+        $response = $this->postJson('/nks-api/session/sync', [
+            'user' => [
+                'id' => $this->renter->id,
+                'name' => $this->renter->name,
+                'email' => $this->renter->email,
+                'role' => 'renter'
+            ],
+            'appointments' => [
+                [
+                    'id' => 9999, // Database ID of a deleted/cancelled appointment
+                    'property_id' => '91',
+                    'date' => '2026-06-25',
+                    'time' => '14:30:00',
+                    'name' => 'Duy renter',
+                    'phone' => '0912345678'
+                ]
+            ]
+        ]);
+
+        $response->assertStatus(200);
+
+        // Verify the appointment was NOT created/recreated in the database
+        $this->assertDatabaseMissing('appointments', ['id' => 9999]);
+        $this->assertDatabaseMissing('appointments', [
+            'user_id' => $this->renter->id,
+            'appointment_date' => '2026-06-25',
+            'appointment_time' => '14:30:00'
+        ]);
+    }
 }
 
