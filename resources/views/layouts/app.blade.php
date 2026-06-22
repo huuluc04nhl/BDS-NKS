@@ -52,14 +52,16 @@
                   }
               });
           },
-          logout() {
-              fetch('/nks-api/logout', {
-                  method: 'POST',
-                  headers: {
-                      'Accept': 'application/json',
-                      'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]').getAttribute('content')
-                  }
-              }).catch(e => {});
+          async logout() {
+              try {
+                  await fetch('/nks-api/logout', {
+                      method: 'POST',
+                      headers: {
+                          'Accept': 'application/json',
+                          'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]').getAttribute('content')
+                      }
+                  });
+              } catch (e) {}
               localStorage.removeItem('nks_user');
               localStorage.removeItem('nks_appointments');
               localStorage.removeItem('nks_favorites');
