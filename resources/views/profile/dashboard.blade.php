@@ -1161,7 +1161,7 @@
                         <form x-show="showSecondLogin" @submit.prevent="login(lastUsername, $refs.loginPassSecond.value)" class="space-y-5" style="display: none;" x-cloak>
                             <div class="bg-slate-50 border border-slate-200/60 rounded-3xl p-5 text-center relative overflow-hidden">
                                 <div class="w-16 h-16 rounded-full bg-primary/10 overflow-hidden mx-auto mb-2 border border-slate-100 flex items-center justify-center">
-                                    <img :src="'https://api.dicebear.com/7.x/adventurer/svg?seed=' + encodeURIComponent(lastUsername)" alt="Avatar" class="w-full h-full object-cover">
+                                    <img :src="lastAvatar ? lastAvatar : 'https://api.dicebear.com/7.x/adventurer/svg?seed=' + encodeURIComponent(lastUsername)" alt="Avatar" class="w-full h-full object-cover">
                                 </div>
                                 <h3 class="text-sm font-bold text-slate-700 truncate" x-text="lastUsername"></h3>
                                 <p class="text-xs text-slate-400 mt-0.5">Chào mừng bạn quay lại!</p>
@@ -1869,6 +1869,7 @@
             showRegisterPassword: false,
             showSecondLogin: false,
             lastUsername: '',
+            lastAvatar: '',
             
             // New Property Form Modal State
             showAddPropertyModal: false,
@@ -1915,6 +1916,10 @@
                     this.lastUsername = savedLastUsername;
                     this.showSecondLogin = true;
                 }
+                const savedLastAvatar = localStorage.getItem('nks_last_avatar');
+                if (savedLastAvatar) {
+                    this.lastAvatar = savedLastAvatar;
+                }
                 
                 await this.loadProvinces();
                 this.checkLogin();
@@ -1924,6 +1929,17 @@
                 });
                 
                 this.loadMockData();
+
+                // Watch user object to keep lastUsername & lastAvatar updated in localStorage
+                this.$watch('user', (value) => {
+                    if (value && value.email) {
+                        localStorage.setItem('nks_last_username', value.email);
+                        if (value.avatar) {
+                            localStorage.setItem('nks_last_avatar', value.avatar);
+                            this.lastAvatar = value.avatar;
+                        }
+                    }
+                });
 
                 // Setup watcher for activeTab changes to handle chat polling and loading logs
                 this.$watch('activeTab', (value) => {
