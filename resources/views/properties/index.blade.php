@@ -381,7 +381,7 @@
                                     <div class="grid grid-cols-2 gap-3">
                                         <div>
                                             <label class="block text-[8px] font-black text-slate-400 uppercase tracking-wider mb-1">Ngày hẹn</label>
-                                            <input type="date" x-model="apptDate" required class="w-full bg-slate-50 border border-slate-200/50 rounded-xl px-3 py-2 text-xs font-semibold focus:outline-none focus:border-primary focus:bg-white transition-all text-slate-700">
+                                            <input type="date" :min="todayDate" x-model="apptDate" required class="w-full bg-slate-50 border border-slate-200/50 rounded-xl px-3 py-2 text-xs font-semibold focus:outline-none focus:border-primary focus:bg-white transition-all text-slate-700">
                                         </div>
                                         <div>
                                             <label class="block text-[8px] font-black text-slate-400 uppercase tracking-wider mb-1">Giờ hẹn</label>
@@ -450,8 +450,15 @@
             apptName: '',
             apptPhone: '',
             isApptSuccess: false,
+            todayDate: '',
 
             init() {
+                const today = new Date();
+                const yyyy = today.getFullYear();
+                const mm = String(today.getMonth() + 1).padStart(2, '0');
+                const dd = String(today.getDate()).padStart(2, '0');
+                this.todayDate = `${yyyy}-${mm}-${dd}`;
+
                 this.properties = window.NKS_PROPERTIES || [];
                 this.filteredProperties = [...this.properties];
                 

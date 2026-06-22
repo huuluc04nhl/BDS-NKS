@@ -234,7 +234,7 @@
                             <!-- Date Selector -->
                             <div>
                                 <label class="block text-[9px] font-black text-slate-400 uppercase tracking-wider mb-1.5">Chọn ngày hẹn xem</label>
-                                <input type="date" x-model="apptDate" required class="w-full bg-slate-50 border border-slate-200/50 rounded-xl px-3.5 py-3 text-xs font-semibold focus:outline-none focus:border-primary focus:bg-white transition-all text-slate-700">
+                                <input type="date" :min="todayDate" x-model="apptDate" required class="w-full bg-slate-50 border border-slate-200/50 rounded-xl px-3.5 py-3 text-xs font-semibold focus:outline-none focus:border-primary focus:bg-white transition-all text-slate-700">
                             </div>
 
                             <!-- Time Selector -->
@@ -282,6 +282,7 @@
             apptEmail: '',
             apptNote: '',
             isApptSuccess: false,
+            todayDate: new Date().toISOString().split('T')[0],
             
             init() {
                 // Prefill user details if logged in
