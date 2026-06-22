@@ -283,5 +283,41 @@ class UserAdminChatTest extends TestCase
 
         $this->assertEquals('owner', $this->renter->fresh()->role);
     }
+
+    /**
+     * Test apiLogin does not downgrade host/owner or admin back to renter.
+     */
+    public function test_login_does_not_downgrade_owner_role()
+    {
+        // Upgrade renter to owner locally
+        $this->renter->update(['role' => 'owner']);
+
+        // Mock remote NKS Login API returning the older renter role
+        Http::fake([
+            'account.nks.vn/api/nks/user/login' => Http::response([
+                'success' => true,
+                'access_token' => 'real_access_token_123',
+                'user' => [
+                    'id' => $this->renter->id,
+                    'name' => $this->renter->name,
+                    'email' => $this->renter->email,
+                    'phone' => $this->renter->phone,
+                    'role' => 'renter', // Older role on remote
+                    'status' => 'active',
+                    'point' => 50
+                ]
+            ], 200)
+        ]);
+
+        $response = $this->postJson('/nks-api/login', [
+            'email' => $this->renter->email,
+            'password' => '123456'
+        ]);
+
+        $response->assertStatus(200)
+            ->assertJsonPath('user.role', 'owner'); // Role should be preserved!
+
+        $this->assertEquals('owner', $this->renter->fresh()->role);
+    }
 }
 

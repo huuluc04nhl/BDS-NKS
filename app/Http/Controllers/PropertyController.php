@@ -660,6 +660,10 @@ class PropertyController extends Controller
                     elseif ($roleName === 'owner') $role = 'owner';
                 }
 
+                if ($localUser && ($localUser->role === 'owner' || $localUser->role === 'admin') && $role === 'renter') {
+                    $role = $localUser->role;
+                }
+
                 // Map status: NKS API dùng "active" (1/0), không dùng "status"
                 $active = $remoteUser['active'] ?? $remoteUser['status'] ?? 1;
                 $status = ($active == 1 || $active === 'active') ? 'active' : 'blocked';
