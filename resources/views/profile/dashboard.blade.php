@@ -1995,6 +1995,15 @@
                     this.isLoggedIn = true;
                     this.user = JSON.parse(savedUser);
                     
+                    if (this.activeTab === 'login' || this.activeTab === 'register') {
+                        this.activeTab = 'info';
+                        try {
+                            const url = new URL(window.location.href);
+                            url.searchParams.set('tab', 'info');
+                            window.history.replaceState({}, '', url.toString());
+                        } catch (e) {}
+                    }
+                    
                     this.phoneInput = this.user.phone || '';
                     this.point = this.user.point || 0;
                     
