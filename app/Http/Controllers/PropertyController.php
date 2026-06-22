@@ -908,6 +908,9 @@ class PropertyController extends Controller
                 } else {
                     $role = 'renter';
                 }
+                if ($user && ($user->role === 'owner' || $user->role === 'admin') && $role === 'renter') {
+                    $role = $user->role;
+                }
                 $status = $remoteUser['status'] ?? ($userData['status'] ?? 'active');
                 $point = intval($remoteUser['point'] ?? 0);
                 $avatar = $remoteUser['avatar'] ?? ($userData['avatar'] ?? null);
@@ -988,10 +991,14 @@ class PropertyController extends Controller
                     ]);
                     $isRecreated = true;
                 } else {
+                    $role = $userData['role'] ?? $user->role;
+                    if (($user->role === 'owner' || $user->role === 'admin') && $role === 'renter') {
+                        $role = $user->role;
+                    }
                     $user->update([
                         'name' => $userData['name'] ?? $user->name,
                         'phone' => $userData['phone'] ?? $user->phone,
-                        'role' => $userData['role'] ?? $user->role,
+                        'role' => $role,
                         'status' => $userData['status'] ?? $user->status,
                         'avatar' => $userData['avatar'] ?? $user->avatar,
                         'point' => intval($userData['point'] ?? $user->point),
