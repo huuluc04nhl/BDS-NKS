@@ -1602,7 +1602,8 @@
          style="display: none;"
          x-cloak>
         
-        <div @click.away="showAddPropertyModal = false" 
+        <form @submit.prevent="addProperty()"
+             @click.away="showAddPropertyModal = false" 
              x-show="showAddPropertyModal"
              x-transition:enter="transition ease-out duration-300 transform"
              x-transition:enter-start="opacity-0 scale-95 translate-y-4"
@@ -1610,32 +1611,282 @@
              x-transition:leave="transition ease-in duration-200 transform"
              x-transition:leave-start="opacity-100 scale-100 translate-y-0"
              x-transition:leave-end="opacity-0 scale-95 translate-y-4"
-                                <option value="Đông Nam">Đông Nam</option>
-                                <option value="Tây Bắc">Tây Bắc</option>
-                                <option value="Tây Nam">Tây Nam</option>
-                            </select>
+             class="bg-white rounded-[32px] shadow-2xl max-w-5xl w-full h-[85vh] max-h-[700px] overflow-hidden border border-slate-100 flex flex-col relative">
+            
+            <button type="button" @click="showAddPropertyModal = false" class="absolute top-4 right-4 z-50 w-9 h-9 rounded-full bg-white/95 hover:bg-white text-slate-500 hover:text-slate-800 shadow-md flex items-center justify-center transition-all active:scale-95 border border-slate-100">
+                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+            </button>
+
+            <!-- Modal Header with Progress Line -->
+            <div class="px-6 pt-6 sm:px-8 sm:pt-8 border-b border-slate-100 pb-5 flex-shrink-0">
+                <div class="flex justify-between items-end mb-4">
+                    <div>
+                        <h2 class="text-xl font-black text-slate-900 leading-none">Đăng tin bất động sản mới</h2>
+                        <p class="text-xs text-slate-400 mt-1.5">Điền thông số chính xác để xác thực 3 Thật và đăng trực tuyến miễn phí.</p>
+                    </div>
+                    <span class="text-xs font-extrabold text-primary" x-text="'Bước ' + newPropStep + ' / 4'"></span>
+                </div>
+                
+                <!-- Progress Line -->
+                <div class="relative w-full h-1.5 bg-slate-100 rounded-full overflow-hidden">
+                    <div class="absolute left-0 top-0 h-full bg-gradient-to-r from-primary to-indigo-500 rounded-full transition-all duration-300"
+                         :style="'width: ' + ((newPropStep / 4) * 100) + '%'"></div>
+                </div>
+            </div>
+
+            <!-- Two Column Layout -->
+            <div class="flex-grow overflow-y-auto p-6 sm:p-8 grid grid-cols-1 lg:grid-cols-5 gap-8">
+                <!-- Left: Form steps (lg:col-span-3) -->
+                <div class="lg:col-span-3 space-y-6">
+                    
+                    <!-- STEP 1: Basic info -->
+                    <div x-show="newPropStep === 1" class="space-y-5" x-transition>
+                        <div class="border-b border-slate-100 pb-2">
+                            <h3 class="font-extrabold text-sm text-slate-800 font-bold">1. Thông tin cơ bản</h3>
+                        </div>
+                        
+                        <!-- Title -->
+                        <div>
+                            <label class="block text-[10px] font-black text-slate-400 uppercase tracking-wider mb-2">Tiêu đề tin đăng *</label>
+                            <input type="text" x-model="newPropTitle" required placeholder="Ví dụ: Căn hộ Studio view sông cao cấp 45m²..." 
+                                   class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-xs font-semibold focus:outline-none focus:border-primary focus:bg-white transition-all text-slate-700">
+                        </div>
+
+                        <!-- Transaction type toggles -->
+                        <div>
+                            <label class="block text-[10px] font-black text-slate-400 uppercase tracking-wider mb-2">Loại tin đăng *</label>
+                            <div class="grid grid-cols-2 gap-2 bg-slate-50 p-1.5 rounded-xl border border-slate-200/50">
+                                <button type="button" @click="newPropTxType = 'Cho thuê'"
+                                        class="py-2.5 rounded-lg font-extrabold text-xs transition-all"
+                                        :class="newPropTxType === 'Cho thuê' ? 'bg-white text-primary shadow-sm ring-1 ring-slate-100' : 'text-slate-500 hover:text-slate-700'">
+                                    Cho thuê
+                                </button>
+                                <button type="button" @click="newPropTxType = 'Bán'"
+                                        class="py-2.5 rounded-lg font-extrabold text-xs transition-all"
+                                        :class="newPropTxType === 'Bán' ? 'bg-white text-primary shadow-sm ring-1 ring-slate-100' : 'text-slate-500 hover:text-slate-700'">
+                                    Bán
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Property type toggles -->
+                        <div>
+                            <label class="block text-[10px] font-black text-slate-400 uppercase tracking-wider mb-2">Phân loại BĐS *</label>
+                            <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                                <button type="button" @click="newPropType = 'Căn hộ'"
+                                        class="py-3 rounded-xl font-bold text-xs border transition-all flex flex-col items-center gap-1.5"
+                                        :class="newPropType === 'Căn hộ' ? 'border-primary bg-primary/5 text-primary' : 'border-slate-200 text-slate-500 hover:bg-slate-50'">
+                                    <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" /></svg>
+                                    <span>Căn hộ</span>
+                                </button>
+                                <button type="button" @click="newPropType = 'Nhà phố'"
+                                        class="py-3 rounded-xl font-bold text-xs border transition-all flex flex-col items-center gap-1.5"
+                                        :class="newPropType === 'Nhà phố' ? 'border-primary bg-primary/5 text-primary' : 'border-slate-200 text-slate-500 hover:bg-slate-50'">
+                                    <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7-7" /></svg>
+                                    <span>Nhà phố</span>
+                                </button>
+                                <button type="button" @click="newPropType = 'Biệt thự'"
+                                        class="py-3 rounded-xl font-bold text-xs border transition-all flex flex-col items-center gap-1.5"
+                                        :class="newPropType === 'Biệt thự' ? 'border-primary bg-primary/5 text-primary' : 'border-slate-200 text-slate-500 hover:bg-slate-50'">
+                                    <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M8 14v3m4-3v3m4-3v3M3 21h18M3 10h18M3 7l9-4 9 4M4 10h16v11H4V10z" /></svg>
+                                    <span>Biệt thự</span>
+                                </button>
+                                <button type="button" @click="newPropType = 'Phòng trọ'"
+                                        class="py-3 rounded-xl font-bold text-xs border transition-all flex flex-col items-center gap-1.5"
+                                        :class="newPropType === 'Phòng trọ' ? 'border-primary bg-primary/5 text-primary' : 'border-slate-200 text-slate-500 hover:bg-slate-50'">
+                                    <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" /></svg>
+                                    <span>Phòng trọ</span>
+                                </button>
+                            </div>
                         </div>
                     </div>
 
-                    <!-- Feature Image Link -->
-                    <div>
-                        <label class="block text-[10px] font-black text-slate-400 uppercase tracking-wider mb-1.5">Ảnh đại diện (Link ảnh) *</label>
-                        <input type="url" x-model="newPropFeatureImg" required class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-3 text-xs font-semibold focus:outline-none focus:border-primary focus:bg-white transition-all text-slate-700">
+                    <!-- STEP 2: Price & Area -->
+                    <div x-show="newPropStep === 2" class="space-y-5" x-transition>
+                        <div class="border-b border-slate-100 pb-2">
+                            <h3 class="font-extrabold text-sm text-slate-800 font-bold">2. Giá tiền & Diện tích</h3>
+                        </div>
+                        
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-[10px] font-black text-slate-400 uppercase tracking-wider mb-2">Giá (VND) *</label>
+                                <input type="number" x-model="newPropPrice" required placeholder="Ví dụ: 12000000" 
+                                       class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-xs font-semibold focus:outline-none focus:border-primary focus:bg-white transition-all text-slate-700">
+                                <p class="text-[10px] text-slate-400 mt-1">Đọc trực quan: <span class="font-bold text-primary" x-text="formatPriceLive(newPropPrice, newPropTxType)"></span></p>
+                            </div>
+                            <div>
+                                <label class="block text-[10px] font-black text-slate-400 uppercase tracking-wider mb-2">Diện tích (m²) *</label>
+                                <input type="number" step="0.1" x-model="newPropArea" required placeholder="Ví dụ: 45.0" 
+                                       class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-xs font-semibold focus:outline-none focus:border-primary focus:bg-white transition-all text-slate-700">
+                            </div>
+                        </div>
+
+                        <!-- Price/m2 display banner -->
+                        <div x-show="newPropPrice && newPropArea && parseFloat(newPropArea) > 0" 
+                             class="bg-indigo-50 border border-indigo-100 rounded-2xl p-4 flex items-center justify-between text-xs text-indigo-800">
+                            <div class="flex items-center gap-2">
+                                <svg class="w-5 h-5 text-indigo-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" /></svg>
+                                <span class="font-bold">Đơn giá ước tính theo diện tích:</span>
+                            </div>
+                            <span class="font-extrabold text-sm" x-text="calculatePricePerM2(newPropPrice, newPropArea)"></span>
+                        </div>
                     </div>
 
-                    <!-- Description -->
-                    <div>
-                        <label class="block text-[10px] font-black text-slate-400 uppercase tracking-wider mb-1.5">Mô tả bất động sản</label>
-                        <textarea rows="3" x-model="newPropDesc" placeholder="Mô tả các tiện ích đi kèm, khu vực lân cận..." class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-3 text-xs font-semibold focus:outline-none focus:border-primary focus:bg-white transition-all text-slate-700"></textarea>
+                    <!-- STEP 3: Location -->
+                    <div x-show="newPropStep === 3" class="space-y-5" x-transition>
+                        <div class="border-b border-slate-100 pb-2">
+                            <h3 class="font-extrabold text-sm text-slate-800 font-bold">3. Vị trí địa lý</h3>
+                        </div>
+
+                        <div>
+                            <label class="block text-[10px] font-black text-slate-400 uppercase tracking-wider mb-2">Địa chỉ chi tiết *</label>
+                            <input type="text" x-model="newPropAddress" required placeholder="Ví dụ: 123 Nguyễn Huệ, Phường Bến Nghé, Quận 1, TP. HCM..." 
+                                   class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-xs font-semibold focus:outline-none focus:border-primary focus:bg-white transition-all text-slate-700">
+                        </div>
+                        <div>
+                            <label class="block text-[10px] font-black text-slate-400 uppercase tracking-wider mb-2">Tọa độ GPS (Lat, Lng) *</label>
+                            <input type="text" x-model="newPropGeolocation" required placeholder="Ví dụ: 10.7932,106.6710" 
+                                   class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-xs font-semibold focus:outline-none focus:border-primary focus:bg-white transition-all text-slate-700">
+                            <p class="text-[10px] text-slate-400 mt-1 flex items-center gap-1">
+                                <svg class="w-3.5 h-3.5 text-slate-300" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                                Dùng Google Maps để lấy tọa độ Lat, Lng chính xác giúp định vị trên bản đồ tìm kiếm.
+                            </p>
+                        </div>
                     </div>
 
-                    <button type="submit" class="w-full bg-primary hover:bg-primary-dark text-white font-extrabold py-4 rounded-xl shadow-md shadow-primary/20 hover:shadow-lg transition-all hover:scale-[1.01] active:scale-95 text-xs uppercase tracking-wider">
-                                                        Đăng tin ngay
-                                                    </button>
-                                                </form>
-                                            </div>
-                                        </div>
-                                    </div>
+                    <!-- STEP 4: Features & Image -->
+                    <div x-show="newPropStep === 4" class="space-y-5" x-transition>
+                        <div class="border-b border-slate-100 pb-2">
+                            <h3 class="font-extrabold text-sm text-slate-800 font-bold">4. Thông số chi tiết & Ảnh</h3>
+                        </div>
+
+                        <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                            <div>
+                                <label class="block text-[10px] font-black text-slate-400 uppercase tracking-wider mb-1.5">Phòng ngủ</label>
+                                <input type="number" x-model="newPropBed" required class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs font-semibold focus:outline-none focus:border-primary focus:bg-white text-slate-700">
+                            </div>
+                            <div>
+                                <label class="block text-[10px] font-black text-slate-400 uppercase tracking-wider mb-1.5">Phòng tắm</label>
+                                <input type="number" x-model="newPropBath" required class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs font-semibold focus:outline-none focus:border-primary focus:bg-white text-slate-700">
+                            </div>
+                            <div>
+                                <label class="block text-[10px] font-black text-slate-400 uppercase tracking-wider mb-1.5">Số tầng</label>
+                                <input type="number" x-model="newPropFloors" required class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs font-semibold focus:outline-none focus:border-primary focus:bg-white text-slate-700">
+                            </div>
+                            <div>
+                                <label class="block text-[10px] font-black text-slate-400 uppercase tracking-wider mb-1.5">Hướng nhà</label>
+                                <select x-model="newPropDirection" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 text-xs font-semibold focus:outline-none focus:border-primary focus:bg-white text-slate-700">
+                                    <option value="Đông">Đông</option>
+                                    <option value="Tây">Tây</option>
+                                    <option value="Nam">Nam</option>
+                                    <option value="Bắc">Bắc</option>
+                                    <option value="Đông Bắc">Đông Bắc</option>
+                                    <option value="Đông Nam">Đông Nam</option>
+                                    <option value="Tây Bắc">Tây Bắc</option>
+                                    <option value="Tây Nam">Tây Nam</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- Image URL -->
+                        <div>
+                            <label class="block text-[10px] font-black text-slate-400 uppercase tracking-wider mb-2">Ảnh đại diện (Link ảnh) *</label>
+                            <input type="url" x-model="newPropFeatureImg" required placeholder="Dán link ảnh bất động sản..." 
+                                   class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-xs font-semibold focus:outline-none focus:border-primary focus:bg-white transition-all text-slate-700">
+                        </div>
+
+                        <!-- Description -->
+                        <div>
+                            <label class="block text-[10px] font-black text-slate-400 uppercase tracking-wider mb-2">Mô tả bất động sản</label>
+                            <textarea rows="3" x-model="newPropDesc" placeholder="Mô tả các tiện ích đi kèm, khu vực lân cận, giờ giấc..." 
+                                      class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-xs font-semibold focus:outline-none focus:border-primary focus:bg-white transition-all text-slate-700"></textarea>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right: Live Preview Card (lg:col-span-2) -->
+                <div class="lg:col-span-2 hidden lg:flex flex-col items-center justify-start border-l border-slate-100 pl-8 space-y-4">
+                    <h3 class="text-xs font-black text-slate-400 uppercase tracking-wider self-start">Xem trước tin đăng</h3>
+                    
+                    <!-- Live card mock -->
+                    <div class="bg-slate-50 border border-slate-200/60 rounded-3xl overflow-hidden shadow-md flex flex-col w-full max-w-sm transition-all duration-300 hover:shadow-lg">
+                        <div class="h-44 overflow-hidden relative bg-slate-200">
+                            <img :src="newPropFeatureImg ? newPropFeatureImg : 'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?auto=format&fit=crop&q=80&w=800'" 
+                                 alt="Live Preview" class="w-full h-full object-cover">
+                            <span class="absolute top-3 left-3 bg-emerald-500 text-white text-[9px] font-bold px-2 py-0.5 rounded-md uppercase">Đã duyệt</span>
+                            <span class="absolute top-3 right-3 bg-primary text-white text-[9px] font-bold px-2 py-0.5 rounded-md uppercase" x-text="newPropTxType">Cho thuê</span>
+                        </div>
+                        <div class="p-5 flex-grow flex flex-col justify-between space-y-4">
+                            <div>
+                                <span class="inline-block px-2.5 py-0.5 bg-primary/10 text-primary text-[10px] font-bold rounded-md uppercase mb-2" x-text="newPropType">Căn hộ</span>
+                                <h4 class="font-extrabold text-slate-800 text-sm line-clamp-2" x-text="newPropTitle ? newPropTitle : 'Chưa nhập tiêu đề...' "></h4>
+                                <p class="text-xs text-slate-400 mt-2 truncate flex items-center gap-1">
+                                    <svg class="w-3.5 h-3.5 text-slate-300 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /></svg>
+                                    <span x-text="newPropAddress ? newPropAddress : 'Chưa có địa chỉ...'"></span>
+                                </p>
+                            </div>
+                            
+                            <!-- Stats info (PN, PT, m2) -->
+                            <div class="grid grid-cols-3 gap-2 py-2 border-y border-slate-200/50 text-[10px] text-slate-500 font-bold">
+                                <div class="flex items-center gap-1">
+                                    <span>🛏️</span>
+                                    <span x-text="newPropBed + ' PN'"></span>
+                                </div>
+                                <div class="flex items-center gap-1">
+                                    <span>🛁</span>
+                                    <span x-text="newPropBath + ' PT'"></span>
+                                </div>
+                                <div class="flex items-center gap-1">
+                                    <span>📐</span>
+                                    <span x-text="newPropArea ? newPropArea + ' m²' : '0.0 m²'"></span>
+                                </div>
+                            </div>
+
+                            <div class="flex justify-between items-center mt-2">
+                                <div class="space-y-0.5">
+                                    <p class="text-xs text-slate-400">Giá giao dịch</p>
+                                    <p class="text-base font-extrabold text-primary" x-text="formatPriceLive(newPropPrice, newPropTxType)"></p>
+                                </div>
+                                <div x-show="newPropPrice && newPropArea && parseFloat(newPropArea) > 0" class="text-right">
+                                    <p class="text-[10px] text-slate-400">Đơn giá</p>
+                                    <p class="text-xs font-bold text-slate-600" x-text="calculatePricePerM2(newPropPrice, newPropArea)"></p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sticky Footer inside <form> -->
+            <div class="px-6 py-4 bg-slate-50 border-t border-slate-100 flex justify-between items-center flex-shrink-0">
+                <!-- Back button -->
+                <button type="button" x-show="newPropStep > 1" @click="newPropStep--"
+                        class="border border-slate-200 hover:bg-slate-50 text-slate-500 font-extrabold px-5 py-3 rounded-full text-xs transition-all flex items-center gap-1.5">
+                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" /></svg>
+                    <span>Quay lại</span>
+                </button>
+                <div x-show="newPropStep === 1" class="w-1"></div> <!-- spacer -->
+
+                <!-- Next button -->
+                <button type="button" x-show="newPropStep < 4" @click="newPropStep++"
+                        :disabled="(newPropStep === 1 && !newPropTitle.trim()) || (newPropStep === 2 && (!newPropPrice || !newPropArea || parseFloat(newPropPrice) <= 0 || parseFloat(newPropArea) <= 0)) || (newPropStep === 3 && (!newPropAddress.trim() || !newPropGeolocation.trim()))"
+                        class="bg-primary hover:bg-primary-dark disabled:bg-slate-100 disabled:text-slate-400 text-white font-extrabold px-6 py-3.5 rounded-full text-xs shadow-md hover:shadow-lg transition-all flex items-center gap-1.5"
+                        :class="((newPropStep === 1 && !newPropTitle.trim()) || (newPropStep === 2 && (!newPropPrice || !newPropArea || parseFloat(newPropPrice) <= 0 || parseFloat(newPropArea) <= 0)) || (newPropStep === 3 && (!newPropAddress.trim() || !newPropGeolocation.trim()))) ? 'cursor-not-allowed opacity-50' : 'btn-hover-premium'">
+                    <span>Tiếp tục</span>
+                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" /></svg>
+                </button>
+
+                <!-- Submit button -->
+                <button type="submit" x-show="newPropStep === 4"
+                        :disabled="!newPropFeatureImg.trim()"
+                        class="bg-gradient-to-r from-primary to-indigo-600 text-white font-extrabold px-8 py-3.5 rounded-full text-xs shadow-md shadow-indigo-100 disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none hover:shadow-lg transition-all flex items-center gap-1.5"
+                        :class="newPropFeatureImg.trim() ? 'btn-hover-premium hover:scale-[1.01]' : ''">
+                    <span>Đăng tin ngay</span>
+                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" /></svg>
+                </button>
+            </div>
+        </form>
+    </div>
 
 
     <!-- EDIT PROPERTY MODAL OVERLAY -->
@@ -1650,7 +1901,8 @@
          style="display: none;"
          x-cloak>
         
-        <div @click.away="showEditPropertyModal = false" 
+        <form @submit.prevent="updateProperty()"
+             @click.away="showEditPropertyModal = false" 
              x-show="showEditPropertyModal"
              x-transition:enter="transition ease-out duration-300 transform"
              x-transition:enter-start="opacity-0 scale-95 translate-y-4"
@@ -1658,14 +1910,14 @@
              x-transition:leave="transition ease-in duration-200 transform"
              x-transition:leave-start="opacity-100 scale-100 translate-y-0"
              x-transition:leave-end="opacity-0 scale-95 translate-y-4"
-             class="bg-white rounded-[32px] shadow-2xl max-w-5xl w-full max-h-[92vh] overflow-hidden border border-slate-100 flex flex-col relative">
+             class="bg-white rounded-[32px] shadow-2xl max-w-5xl w-full h-[85vh] max-h-[700px] overflow-hidden border border-slate-100 flex flex-col relative">
             
-            <button @click="showEditPropertyModal = false" class="absolute top-4 right-4 z-50 w-9 h-9 rounded-full bg-white/95 hover:bg-white text-slate-500 hover:text-slate-800 shadow-md flex items-center justify-center transition-all active:scale-95 border border-slate-100">
+            <button type="button" @click="showEditPropertyModal = false" class="absolute top-4 right-4 z-50 w-9 h-9 rounded-full bg-white/95 hover:bg-white text-slate-500 hover:text-slate-800 shadow-md flex items-center justify-center transition-all active:scale-95 border border-slate-100">
                 <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
             </button>
 
             <!-- Modal Header with Progress Line -->
-            <div class="px-6 pt-6 sm:px-8 sm:pt-8 border-b border-slate-100 pb-5">
+            <div class="px-6 pt-6 sm:px-8 sm:pt-8 border-b border-slate-100 pb-5 flex-shrink-0">
                 <div class="flex justify-between items-end mb-4">
                     <div>
                         <h2 class="text-xl font-black text-slate-900 leading-none">Chỉnh sửa tin đăng</h2>
@@ -1684,7 +1936,7 @@
             <!-- Two Column Layout -->
             <div class="flex-grow overflow-y-auto p-6 sm:p-8 grid grid-cols-1 lg:grid-cols-5 gap-8">
                 <!-- Left: Form steps (lg:col-span-3) -->
-                <form @submit.prevent="updateProperty()" class="lg:col-span-3 flex flex-col justify-between min-h-[40vh] space-y-6">
+                <div class="lg:col-span-3 space-y-6">
                     
                     <!-- STEP 1: Basic info -->
                     <div x-show="editPropStep === 1" class="space-y-5" x-transition>
@@ -1795,7 +2047,7 @@
                             <input type="text" x-model="editPropGeolocation" required placeholder="Ví dụ: 10.7932,106.6710" 
                                    class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-xs font-semibold focus:outline-none focus:border-primary focus:bg-white transition-all text-slate-700">
                             <p class="text-[10px] text-slate-400 mt-1 flex items-center gap-1">
-                                <svg class="w-3.5 h-3.5 text-slate-300" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                                <svg class="w-3.5 h-3.5 text-slate-300" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
                                 Dùng Google Maps để lấy tọa độ Lat, Lng chính xác giúp định vị trên bản đồ tìm kiếm.
                             </p>
                         </div>
@@ -1849,36 +2101,7 @@
                                       class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-xs font-semibold focus:outline-none focus:border-primary focus:bg-white transition-all text-slate-700"></textarea>
                         </div>
                     </div>
-
-                    <!-- Step controls -->
-                    <div class="flex justify-between pt-6 border-t border-slate-100 mt-auto">
-                        <!-- Back button -->
-                        <button type="button" x-show="editPropStep > 1" @click="editPropStep--"
-                                class="border border-slate-200 hover:bg-slate-50 text-slate-500 font-extrabold px-5 py-3 rounded-full text-xs transition-all flex items-center gap-1.5">
-                            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" /></svg>
-                            <span>Quay lại</span>
-                        </button>
-                        <div x-show="editPropStep === 1" class="w-1"></div> <!-- spacer -->
-
-                        <!-- Next button -->
-                        <button type="button" x-show="editPropStep < 4" @click="editPropStep++"
-                                :disabled="(editPropStep === 1 && !editPropTitle.trim()) || (editPropStep === 2 && (!editPropPrice || !editPropArea || parseFloat(editPropPrice) <= 0 || parseFloat(editPropArea) <= 0)) || (editPropStep === 3 && (!editPropAddress.trim() || !editPropGeolocation.trim()))"
-                                class="bg-primary hover:bg-primary-dark disabled:bg-slate-100 disabled:text-slate-400 text-white font-extrabold px-6 py-3.5 rounded-full text-xs shadow-md hover:shadow-lg transition-all flex items-center gap-1.5"
-                                :class="((editPropStep === 1 && !editPropTitle.trim()) || (editPropStep === 2 && (!editPropPrice || !editPropArea || parseFloat(editPropPrice) <= 0 || parseFloat(editPropArea) <= 0)) || (editPropStep === 3 && (!editPropAddress.trim() || !editPropGeolocation.trim()))) ? 'cursor-not-allowed opacity-50' : 'btn-hover-premium'">
-                            <span>Tiếp tục</span>
-                            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" /></svg>
-                        </button>
-
-                        <!-- Submit button -->
-                        <button type="submit" x-show="editPropStep === 4"
-                                :disabled="!editPropFeatureImg.trim()"
-                                class="bg-gradient-to-r from-primary to-indigo-600 text-white font-extrabold px-8 py-3.5 rounded-full text-xs shadow-md shadow-indigo-100 disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none hover:shadow-lg transition-all flex items-center gap-1.5"
-                                :class="editPropFeatureImg.trim() ? 'btn-hover-premium hover:scale-[1.01]' : ''">
-                            <span>Lưu thay đổi</span>
-                            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" /></svg>
-                        </button>
-                    </div>
-                </form>
+                </div>
 
                 <!-- Right: Live Preview Card (lg:col-span-2) -->
                 <div class="lg:col-span-2 hidden lg:flex flex-col items-center justify-start border-l border-slate-100 pl-8 space-y-4">
@@ -1932,10 +2155,36 @@
                     </div>
                 </div>
             </div>
-        </div>
-    </div>
+
+            <!-- Sticky Footer inside <form> -->
+            <div class="px-6 py-4 bg-slate-50 border-t border-slate-100 flex justify-between items-center flex-shrink-0">
+                <!-- Back button -->
+                <button type="button" x-show="editPropStep > 1" @click="editPropStep--"
+                        class="border border-slate-200 hover:bg-slate-50 text-slate-500 font-extrabold px-5 py-3 rounded-full text-xs transition-all flex items-center gap-1.5">
+                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" /></svg>
+                    <span>Quay lại</span>
+                </button>
+                <div x-show="editPropStep === 1" class="w-1"></div> <!-- spacer -->
+
+                <!-- Next button -->
+                <button type="button" x-show="editPropStep < 4" @click="editPropStep++"
+                        :disabled="(editPropStep === 1 && !editPropTitle.trim()) || (editPropStep === 2 && (!editPropPrice || !editPropArea || parseFloat(editPropPrice) <= 0 || parseFloat(editPropArea) <= 0)) || (editPropStep === 3 && (!editPropAddress.trim() || !editPropGeolocation.trim()))"
+                        class="bg-primary hover:bg-primary-dark disabled:bg-slate-100 disabled:text-slate-400 text-white font-extrabold px-6 py-3.5 rounded-full text-xs shadow-md hover:shadow-lg transition-all flex items-center gap-1.5"
+                        :class="((editPropStep === 1 && !editPropTitle.trim()) || (editPropStep === 2 && (!editPropPrice || !editPropArea || parseFloat(editPropPrice) <= 0 || parseFloat(editPropArea) <= 0)) || (editPropStep === 3 && (!editPropAddress.trim() || !editPropGeolocation.trim()))) ? 'cursor-not-allowed opacity-50' : 'btn-hover-premium'">
+                    <span>Tiếp tục</span>
+                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" /></svg>
+                </button>
+
+                <!-- Submit button -->
+                <button type="submit" x-show="editPropStep === 4"
+                        :disabled="!editPropFeatureImg.trim()"
+                        class="bg-gradient-to-r from-primary to-indigo-600 text-white font-extrabold px-8 py-3.5 rounded-full text-xs shadow-md shadow-indigo-100 disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none hover:shadow-lg transition-all flex items-center gap-1.5"
+                        :class="editPropFeatureImg.trim() ? 'btn-hover-premium hover:scale-[1.01]' : ''">
+                    <span>Lưu thay đổi</span>
+                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" /></svg>
+                </button>
             </div>
-        </div>
+        </form>
     </div>
 
 
