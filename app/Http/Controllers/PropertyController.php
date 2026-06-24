@@ -3274,9 +3274,9 @@ class PropertyController extends Controller
             $replyText = "";
             $isRateLimit = false;
 
-            // Try primary model (gemini-3.1-pro-preview) with a 15-second timeout
+            // Try primary model (gemini-3.5-flash) with a 15-second timeout
             try {
-                $model = 'gemini-3.1-pro-preview';
+                $model = 'gemini-3.5-flash';
                 $url = "https://generativelanguage.googleapis.com/v1beta/models/{$model}:generateContent?key=" . $apiKey;
                 
                 $response = Http::timeout(15)->withoutVerifying()->post($url, [
@@ -3299,16 +3299,16 @@ class PropertyController extends Controller
                         $success = true;
                     }
                 } else {
-                    Log::error("Gemini 3.1-pro-preview failed. Status: " . $response->status() . " Body: " . $response->body());
+                    Log::error("Gemini 3.5-flash failed. Status: " . $response->status() . " Body: " . $response->body());
                 }
             } catch (\Exception $ex) {
-                Log::warning("Gemini 3.1-pro-preview call threw exception: " . $ex->getMessage());
+                Log::warning("Gemini 3.5-flash call threw exception: " . $ex->getMessage());
             }
 
-            // Fallback to gemini-3.1-flash-lite if primary fails, BUT skip fallback if error was Rate Limit (429)
+            // Fallback to gemini-2.5-flash-lite if primary fails, BUT skip fallback if error was Rate Limit (429)
             if (!$success && !$isRateLimit) {
                 try {
-                    $fallbackModel = 'gemini-3.1-flash-lite';
+                    $fallbackModel = 'gemini-2.5-flash-lite';
                     $fallbackUrl = "https://generativelanguage.googleapis.com/v1beta/models/{$fallbackModel}:generateContent?key=" . $apiKey;
                     
                     $response = Http::timeout(15)->withoutVerifying()->post($fallbackUrl, [
@@ -3331,7 +3331,7 @@ class PropertyController extends Controller
                             $success = true;
                         }
                     } else {
-                        Log::error("Gemini 3.1-flash-lite fallback failed. Status: " . $response->status() . " Body: " . $response->body());
+                        Log::error("Gemini 2.5-flash-lite fallback failed. Status: " . $response->status() . " Body: " . $response->body());
                     }
                 } catch (\Exception $ex) {
                     Log::error("Gemini fallback model threw exception: " . $ex->getMessage());
