@@ -259,15 +259,9 @@
                                     </div>
                                 </div>
 
-                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                    <div>
-                                        <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Nơi sinh</label>
-                                        <input type="text" x-model="pobInput" placeholder="Ví dụ: Hà Nội" class="w-full bg-slate-50 border border-slate-200 rounded-2xl px-4 py-3.5 text-sm focus:outline-none focus:border-primary focus:bg-white transition-all text-slate-700">
-                                    </div>
-                                    <div>
-                                        <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Quê quán</label>
-                                        <input type="text" x-model="hometownInput" placeholder="Ví dụ: Nam Định" class="w-full bg-slate-50 border border-slate-200 rounded-2xl px-4 py-3.5 text-sm focus:outline-none focus:border-primary focus:bg-white transition-all text-slate-700">
-                                    </div>
+                                <div>
+                                    <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Quê quán</label>
+                                    <input type="text" x-model="hometownInput" placeholder="Ví dụ: Nam Định" class="w-full bg-slate-50 border border-slate-200 rounded-2xl px-4 py-3.5 text-sm focus:outline-none focus:border-primary focus:bg-white transition-all text-slate-700">
                                 </div>
 
                                 <div>
@@ -870,21 +864,12 @@
                                                    class="w-full bg-slate-50 border border-slate-200 rounded-2xl px-4 py-3 text-sm focus:outline-none focus:border-primary focus:bg-white transition-all text-slate-700">
                                         </div>
                                     </div>
-                                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                        <div>
-                                            <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-2">Quê quán</label>
-                                            <input type="text" 
-                                                   x-model="cccdHometownInput" 
-                                                   placeholder="Ví dụ: Hải Hậu, Nam Định" 
-                                                   class="w-full bg-slate-50 border border-slate-200 rounded-2xl px-4 py-3 text-sm focus:outline-none focus:border-primary focus:bg-white transition-all text-slate-700 font-semibold">
-                                        </div>
-                                        <div>
-                                            <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-2">Nơi sinh</label>
-                                            <input type="text" 
-                                                   x-model="pobInput" 
-                                                   placeholder="Ví dụ: Hà Nội" 
-                                                   class="w-full bg-slate-50 border border-slate-200 rounded-2xl px-4 py-3 text-sm focus:outline-none focus:border-primary focus:bg-white transition-all text-slate-700 font-semibold">
-                                        </div>
+                                    <div>
+                                        <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-2">Quê quán</label>
+                                        <input type="text" 
+                                               x-model="cccdHometownInput" 
+                                               placeholder="Ví dụ: Hải Hậu, Nam Định" 
+                                               class="w-full bg-slate-50 border border-slate-200 rounded-2xl px-4 py-3 text-sm focus:outline-none focus:border-primary focus:bg-white transition-all text-slate-700 font-semibold">
                                     </div>
                                     <div>
                                         <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-2">Nơi thường trú</label>

@@ -1307,7 +1307,8 @@ class PropertyController extends Controller
                         'pob' => $request->input('pob'),
                         'hometown' => $request->input('hometown'),
                         'id_number' => $request->input('id_number'),
-                        'id_place' => $request->input('id_place')
+                        'id_place' => $request->input('id_place'),
+                        'permanent_address' => $request->input('permanent_address')
                     ];
 
                     $gender = $request->input('gender');
@@ -1360,24 +1361,24 @@ class PropertyController extends Controller
                                 $name = trim($name) ?: ($remoteUser['name'] ?? $user->name);
                                 $user->update([
                                     'name' => $name,
-                                    'phone' => $remoteUser['phone'] ?? $request->input('phone') ?? $user->phone,
+                                    'phone' => $request->input('phone') ?? $remoteUser['phone'] ?? $user->phone,
                                     'avatar' => $remoteUser['avatar'] ?? $user->avatar,
                                     'point' => intval($remoteUser['point'] ?? $user->point),
                                     'role' => is_array($remoteUser['role'] ?? null) ? ($remoteUser['role']['name'] ?? 'renter') : ($remoteUser['role'] ?? 'renter'),
-                                    'firstname' => $remoteUser['firstname'] ?? $request->input('firstname') ?? $user->firstname,
-                                    'lastname' => $remoteUser['lastname'] ?? $request->input('lastname') ?? $user->lastname,
-                                    'intro' => $remoteUser['intro'] ?? $request->input('intro') ?? $user->intro,
-                                    'gender' => intval($remoteUser['gender'] ?? $request->input('gender') ?? $user->gender),
-                                    'website' => $remoteUser['website'] ?? $request->input('website') ?? $user->website,
-                                    'dob' => $remoteUser['dob'] ?? $request->input('dob') ?? $user->dob,
-                                    'pob' => $remoteUser['pob'] ?? $request->input('pob') ?? $user->pob,
-                                    'hometown' => $remoteUser['hometown'] ?? $request->input('hometown') ?? $user->hometown,
-                                    'id_number' => $remoteUser['id_number'] ?? $request->input('id_number') ?? $user->id_number,
-                                    'id_date' => $remoteUser['id_date'] ?? $request->input('id_date') ?? $user->id_date,
-                                    'id_place' => $remoteUser['id_place'] ?? $request->input('id_place') ?? $user->id_place,
-                                    'province' => (!empty($remoteUser['province']) ? $remoteUser['province'] : (!empty($remoteUser['add_province']) ? $remoteUser['add_province'] : ($request->input('province') ?? $user->province))),
-                                    'ward' => (!empty($remoteUser['ward']) ? $remoteUser['ward'] : (!empty($remoteUser['add_ward']) ? $remoteUser['add_ward'] : ($request->input('ward') ?? $user->ward))),
-                                    'permanent_address' => $remoteUser['permanent_address'] ?? $request->input('permanent_address') ?? $user->permanent_address
+                                    'firstname' => $request->input('firstname') ?? $remoteUser['firstname'] ?? $user->firstname,
+                                    'lastname' => $request->input('lastname') ?? $remoteUser['lastname'] ?? $user->lastname,
+                                    'intro' => $request->input('intro') ?? $remoteUser['intro'] ?? $user->intro,
+                                    'gender' => intval($request->input('gender') ?? $remoteUser['gender'] ?? $user->gender),
+                                    'website' => $request->input('website') ?? $remoteUser['website'] ?? $user->website,
+                                    'dob' => $request->input('dob') ?? $remoteUser['dob'] ?? $user->dob,
+                                    'pob' => $request->input('pob') ?? $remoteUser['pob'] ?? $user->pob,
+                                    'hometown' => $request->input('hometown') ?? $remoteUser['hometown'] ?? $user->hometown,
+                                    'id_number' => $request->input('id_number') ?? $remoteUser['id_number'] ?? $user->id_number,
+                                    'id_date' => $request->input('id_date') ?? $remoteUser['id_date'] ?? $user->id_date,
+                                    'id_place' => $request->input('id_place') ?? $remoteUser['id_place'] ?? $user->id_place,
+                                    'province' => ($request->input('province') ?? (!empty($remoteUser['province']) ? $remoteUser['province'] : (!empty($remoteUser['add_province']) ? $remoteUser['add_province'] : $user->province))),
+                                    'ward' => ($request->input('ward') ?? (!empty($remoteUser['ward']) ? $remoteUser['ward'] : (!empty($remoteUser['add_ward']) ? $remoteUser['add_ward'] : $user->ward))),
+                                    'permanent_address' => $request->input('permanent_address') ?? $remoteUser['permanent_address'] ?? $user->permanent_address
                                 ]);
                             }
                             
@@ -1387,25 +1388,25 @@ class PropertyController extends Controller
                                     'id' => $user ? $user->id : null,
                                     'name' => $user ? $user->name : $name,
                                     'email' => $email,
-                                    'phone' => $remoteUser['phone'] ?? null,
-                                    'role' => is_array($remoteUser['role'] ?? null) ? ($remoteUser['role']['name'] ?? 'renter') : ($remoteUser['role'] ?? 'renter'),
-                                    'avatar' => $remoteUser['avatar'] ?? null,
-                                    'point' => intval($remoteUser['point'] ?? 0),
+                                    'phone' => $user ? $user->phone : ($remoteUser['phone'] ?? null),
+                                    'role' => $user ? $user->role : (is_array($remoteUser['role'] ?? null) ? ($remoteUser['role']['name'] ?? 'renter') : ($remoteUser['role'] ?? 'renter')),
+                                    'avatar' => $user ? $user->avatar : ($remoteUser['avatar'] ?? null),
+                                    'point' => $user ? intval($user->point) : intval($remoteUser['point'] ?? 0),
                                     
-                                    'firstname' => $remoteUser['firstname'] ?? '',
-                                    'lastname' => $remoteUser['lastname'] ?? '',
-                                    'intro' => $remoteUser['intro'] ?? '',
-                                    'gender' => $remoteUser['gender'] ?? 0,
-                                    'website' => $remoteUser['website'] ?? '',
-                                    'dob' => $remoteUser['dob'] ?? '',
-                                    'pob' => $remoteUser['pob'] ?? '',
-                                    'hometown' => $remoteUser['hometown'] ?? '',
-                                    'id_number' => $remoteUser['id_number'] ?? '',
-                                    'id_date' => $remoteUser['id_date'] ?? '',
-                                    'id_place' => $remoteUser['id_place'] ?? '',
-                                    'province' => (!empty($remoteUser['province']) ? $remoteUser['province'] : (!empty($remoteUser['add_province']) ? $remoteUser['add_province'] : ($user ? $user->province : ''))),
-                                    'ward' => (!empty($remoteUser['ward']) ? $remoteUser['ward'] : (!empty($remoteUser['add_ward']) ? $remoteUser['add_ward'] : ($user ? $user->ward : ''))),
-                                    'permanent_address' => $remoteUser['permanent_address'] ?? ($user ? $user->permanent_address : '')
+                                    'firstname' => $user ? ($user->firstname ?? '') : ($remoteUser['firstname'] ?? ''),
+                                    'lastname' => $user ? ($user->lastname ?? '') : ($remoteUser['lastname'] ?? ''),
+                                    'intro' => $user ? ($user->intro ?? '') : ($remoteUser['intro'] ?? ''),
+                                    'gender' => $user ? ($user->gender ?? 0) : ($remoteUser['gender'] ?? 0),
+                                    'website' => $user ? ($user->website ?? '') : ($remoteUser['website'] ?? ''),
+                                    'dob' => $user ? ($user->dob ?? '') : ($remoteUser['dob'] ?? ''),
+                                    'pob' => $user ? ($user->pob ?? '') : ($remoteUser['pob'] ?? ''),
+                                    'hometown' => $user ? ($user->hometown ?? '') : ($remoteUser['hometown'] ?? ''),
+                                    'id_number' => $user ? ($user->id_number ?? '') : ($remoteUser['id_number'] ?? ''),
+                                    'id_date' => $user ? ($user->id_date ?? '') : ($remoteUser['id_date'] ?? ''),
+                                    'id_place' => $user ? ($user->id_place ?? '') : ($remoteUser['id_place'] ?? ''),
+                                    'province' => $user ? ($user->province ?? '') : (!empty($remoteUser['province']) ? $remoteUser['province'] : (!empty($remoteUser['add_province']) ? $remoteUser['add_province'] : '')),
+                                    'ward' => $user ? ($user->ward ?? '') : (!empty($remoteUser['ward']) ? $remoteUser['ward'] : (!empty($remoteUser['add_ward']) ? $remoteUser['add_ward'] : '')),
+                                    'permanent_address' => $user ? ($user->permanent_address ?? '') : ($remoteUser['permanent_address'] ?? '')
                                 ]
                             ]);
                         }
