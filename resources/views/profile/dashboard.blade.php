@@ -536,6 +536,7 @@
                             </div>
 
                             <!-- Verified Banner (Chỉ hiện khi đã xác minh và không chỉnh sửa) -->
+                                    <!-- Verified Banner (Chỉ hiện khi đã xác minh và không chỉnh sửa) -->
                             <template x-if="idNumberInput && !isEditingCccd">
                                 <div class="bg-emerald-50 border border-emerald-100 rounded-3xl p-5 flex gap-4 text-emerald-800 leading-relaxed shadow-sm">
                                     <div class="w-10 h-10 rounded-full bg-emerald-500/10 text-emerald-600 flex items-center justify-center flex-shrink-0">
@@ -550,113 +551,102 @@
                                 </div>
                             </template>
 
-                            <!-- Virtual CCCD Card (Thẻ căn cước ảo) cao cấp - Luôn hiện ở đầu nếu đã có dữ liệu hoặc đang quét -->
+                            <!-- Premium Real Estate Business Card (Danh thiếp Thành viên) - Luôn hiện ở đầu nếu đã có dữ liệu hoặc đang quét -->
                             <template x-if="idNumberInput || cccdNumberInput">
                                 <div class="space-y-3">
-                                    <span class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider">Thông tin Căn cước công dân</span>
-                                    <div class="relative w-full max-w-lg bg-gradient-to-tr from-slate-900 via-slate-800 to-cyan-950 text-white rounded-3xl p-6 shadow-2xl border border-cyan-500/20 overflow-hidden backdrop-blur-md">
-                                        <!-- Họa tiết trống đồng chìm mờ ảo -->
-                                        <div class="absolute inset-0 opacity-10 pointer-events-none mix-blend-overlay flex items-center justify-center">
-                                            <svg class="w-72 h-72 animate-[spin_180s_linear_infinite]" viewBox="0 0 100 100" fill="none" stroke="currentColor" stroke-width="0.5">
-                                                <circle cx="50" cy="50" r="45" stroke-dasharray="2 2" />
-                                                <circle cx="50" cy="50" r="35" />
-                                                <circle cx="50" cy="50" r="25" stroke-dasharray="1 3" />
-                                                <path d="M 50 5 L 50 95 M 5 L 50 95 L 50" />
-                                            </svg>
+                                    <span class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider">Danh thiếp thành viên NKS</span>
+                                    <div class="relative w-full max-w-lg bg-gradient-to-br from-slate-900 via-indigo-950 to-slate-950 text-white rounded-3xl p-6 shadow-2xl border border-indigo-500/20 overflow-hidden backdrop-blur-md">
+                                        <!-- Họa tiết hình học chìm mờ ảo -->
+                                        <div class="absolute inset-0 opacity-10 pointer-events-none mix-blend-overlay">
+                                            <div class="absolute top-0 right-0 w-48 h-48 bg-gradient-to-bl from-cyan-400 to-indigo-600 rounded-full blur-2xl"></div>
+                                            <div class="absolute bottom-0 left-0 w-36 h-36 bg-gradient-to-tr from-indigo-500 to-purple-600 rounded-full blur-2xl"></div>
                                         </div>
 
-                                        <!-- Quốc hiệu & Tiêu đề -->
-                                        <div class="relative flex justify-between items-start border-b border-white/10 pb-3 mb-4">
-                                            <div>
-                                                <p class="text-[8px] font-black tracking-widest text-cyan-200 uppercase">CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM</p>
-                                                <p class="text-[7px] font-bold text-center text-slate-300 mt-0.5">Độc lập - Tự do - Hạnh phúc</p>
+                                        <!-- Header: Company Logo & Verification badge -->
+                                        <div class="relative flex justify-between items-center border-b border-white/10 pb-3.5 mb-4">
+                                            <div class="flex items-center gap-1.5">
+                                                <div class="w-7 h-7 rounded-lg bg-primary/20 flex items-center justify-center border border-primary/30">
+                                                    <svg class="w-4.5 h-4.5 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+                                                    </svg>
+                                                </div>
+                                                <span class="text-xs font-black tracking-widest text-white uppercase">BẤT ĐỘNG SẢN NKS</span>
                                             </div>
-                                            <div class="text-right">
-                                                <!-- Đã xác minh State (đã lưu trùng khớp với input hiện tại và ko quét mới) -->
+                                            
+                                            <div>
+                                                <!-- Verified badge -->
                                                 <template x-if="idNumberInput && cccdNumberInput === idNumberInput && !isEditingCccd">
-                                                    <span class="inline-flex items-center gap-1 bg-emerald-500/20 border border-emerald-500/30 px-2 py-0.5 rounded-full text-[8px] font-bold text-emerald-400">
-                                                        <span class="w-1 h-1 rounded-full bg-emerald-400 animate-pulse"></span>
+                                                    <span class="inline-flex items-center gap-1 bg-emerald-500/20 border border-emerald-500/30 px-2.5 py-1 rounded-full text-[9px] font-black tracking-wider text-emerald-400">
+                                                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
                                                         ĐÃ XÁC MINH
                                                     </span>
                                                 </template>
-                                                <!-- Preview State (chưa lưu hoặc đang trong chế độ edit) -->
+                                                <!-- Preview badge -->
                                                 <template x-if="!idNumberInput || cccdNumberInput !== idNumberInput || isEditingCccd">
-                                                    <span class="inline-flex items-center gap-1 bg-amber-500/20 border border-amber-500/30 px-2 py-0.5 rounded-full text-[8px] font-bold text-amber-400">
-                                                        <span class="w-1 h-1 rounded-full bg-amber-400 animate-pulse"></span>
-                                                        BẢN XEM TRƯỚC (PREVIEW)
+                                                    <span class="inline-flex items-center gap-1 bg-amber-500/20 border border-amber-500/30 px-2.5 py-1 rounded-full text-[9px] font-black tracking-wider text-amber-400">
+                                                        <span class="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse"></span>
+                                                        BẢN XEM TRƯỚC
                                                     </span>
                                                 </template>
                                             </div>
                                         </div>
 
-                                        <div class="relative flex gap-4">
-                                            <!-- Ảnh chân dung & Chip -->
-                                            <div class="flex flex-col items-center gap-3">
-                                                <!-- Khung ảnh chân dung -->
-                                                <div class="w-24 h-32 rounded-xl bg-slate-700/50 border border-white/10 overflow-hidden flex items-center justify-center relative shadow-inner">
+                                        <div class="relative flex gap-5 items-stretch">
+                                            <!-- Portrait & ID Code -->
+                                            <div class="flex flex-col items-center justify-between py-1">
+                                                <!-- Frame image -->
+                                                <div class="w-24 h-24 rounded-2xl bg-slate-800/80 border-2 border-white/20 overflow-hidden relative shadow-lg flex items-center justify-center shrink-0">
                                                     <template x-if="user && user.avatar">
-                                                        <img :src="user.avatar" alt="Portrait" class="w-full h-full object-cover">
+                                                        <img :src="user.avatar" alt="Avatar" class="w-full h-full object-cover">
                                                     </template>
                                                     <template x-if="!(user && user.avatar)">
-                                                        <div class="text-slate-500 flex flex-col items-center justify-center">
-                                                            <svg class="w-12 h-12" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+                                                        <div class="text-slate-500">
+                                                            <svg class="w-10 h-10" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
                                                                 <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
                                                             </svg>
                                                         </div>
                                                     </template>
                                                 </div>
-                                                
-                                                <!-- Chip điện tử mô phỏng -->
-                                                <div class="w-8 h-6 bg-gradient-to-r from-amber-400 to-amber-200 rounded-md border border-amber-500/30 flex flex-col justify-between p-1 shadow-md opacity-90">
-                                                    <div class="grid grid-cols-3 gap-0.5 h-full opacity-60">
-                                                        <div class="border-r border-b border-amber-600/40"></div>
-                                                        <div class="border-r border-b border-amber-600/40"></div>
-                                                        <div class="border-b border-amber-600/40"></div>
-                                                        <div class="border-r border-amber-600/40"></div>
-                                                        <div class="border-r border-amber-600/40"></div>
-                                                        <div></div>
-                                                    </div>
+
+                                                <!-- Membership ID -->
+                                                <div class="mt-4 text-center">
+                                                    <span class="block text-[8px] font-extrabold text-indigo-300 uppercase tracking-widest">MÃ THÀNH VIÊN</span>
+                                                    <span class="text-[10px] font-black text-cyan-300 tracking-wider" x-text="cccdNumberInput ? cccdNumberInput.substring(0, 4) + ' ' + cccdNumberInput.substring(4, 8) + ' ' + cccdNumberInput.substring(8) : (idNumberInput ? idNumberInput.substring(0, 4) + ' ' + idNumberInput.substring(4, 8) + ' ' + idNumberInput.substring(8) : 'N/A')"></span>
                                                 </div>
                                             </div>
 
-                                            <!-- Thông tin chi tiết -->
-                                            <div class="flex-1 space-y-2.5 text-xs text-slate-300">
+                                            <!-- Contact Details / Card content -->
+                                            <div class="flex-grow flex flex-col justify-between space-y-3">
                                                 <div>
-                                                    <span class="block text-[8px] font-bold text-slate-400 uppercase">Số / No.</span>
-                                                    <span class="text-sm font-black text-cyan-300 tracking-wider" x-text="cccdNumberInput || idNumberInput || 'N/A'"></span>
+                                                    <h3 class="text-base font-black text-white uppercase tracking-wide leading-none mb-1.5" x-text="(firstnameInput || lastnameInput) ? (firstnameInput + ' ' + lastnameInput).trim() : (user ? user.name : 'N/A')"></h3>
+                                                    <span class="inline-block text-[9px] font-black tracking-widest text-indigo-400 uppercase bg-indigo-500/10 px-2 py-0.5 rounded-md border border-indigo-500/20"
+                                                          x-text="user && user.role === 'admin' ? 'QUẢN TRỊ VIÊN HỆ THỐNG' : (user && user.role === 'owner' ? 'CHỦ NHÀ CHÍNH CHỦ' : 'THÀNH VIÊN TÌM KIẾM BĐS')"></span>
                                                 </div>
 
-                                                <div>
-                                                    <span class="block text-[8px] font-bold text-slate-400 uppercase">Họ và tên / Full name</span>
-                                                    <span class="font-extrabold text-white uppercase text-xs" x-text="(firstnameInput || lastnameInput) ? (firstnameInput + ' ' + lastnameInput).trim() : (user ? user.name : 'N/A')"></span>
-                                                </div>
-
-                                                <div class="grid grid-cols-2 gap-2">
+                                                <div class="grid grid-cols-2 gap-2 text-[10px] text-slate-300 font-bold border-t border-white/5 pt-2.5">
                                                     <div>
-                                                        <span class="block text-[8px] font-bold text-slate-400 uppercase">Ngày sinh / Date of birth</span>
-                                                        <span class="font-bold text-white text-[11px]" x-text="dobInput ? formatDateDisplay(dobInput) : 'N/A'"></span>
+                                                        <span class="block text-[8px] font-extrabold text-slate-500 uppercase">Ngày sinh</span>
+                                                        <span class="text-white text-[11px]" x-text="dobInput ? formatDateDisplay(dobInput) : 'N/A'"></span>
                                                     </div>
                                                     <div>
-                                                        <span class="block text-[8px] font-bold text-slate-400 uppercase">Giới tính / Sex</span>
-                                                        <span class="font-bold text-white text-[11px]" x-text="genderInput == 0 ? 'Nam' : (genderInput == 1 ? 'Nữ' : 'N/A')"></span>
+                                                        <span class="block text-[8px] font-extrabold text-slate-500 uppercase">Giới tính</span>
+                                                        <span class="text-white text-[11px]" x-text="genderInput == 0 ? 'Nam' : (genderInput == 1 ? 'Nữ' : 'N/A')"></span>
                                                     </div>
                                                 </div>
 
-                                                <div>
-                                                    <span class="block text-[8px] font-bold text-slate-400 uppercase">Quê quán / Place of origin</span>
-                                                    <span class="font-bold text-white text-[10px] block leading-tight" x-text="cccdHometownInput || idHometownInput || hometownInput || 'N/A'"></span>
+                                                <div class="text-[10px] text-slate-300 font-bold">
+                                                    <span class="block text-[8px] font-extrabold text-slate-500 uppercase">Quê quán (Địa chỉ gốc)</span>
+                                                    <span class="text-white leading-snug block text-[11px]" x-text="cccdHometownInput || idHometownInput || hometownInput || 'N/A'"></span>
                                                 </div>
 
-
-
-                                                <div class="grid grid-cols-2 gap-2 pt-1 border-t border-white/5">
+                                                <div class="grid grid-cols-2 gap-2 text-[9px] text-slate-400 font-semibold border-t border-white/5 pt-2">
                                                     <div>
-                                                        <span class="block text-[8px] font-bold text-slate-400 uppercase">Ngày cấp / Date of issue</span>
-                                                        <span class="font-medium text-slate-300 text-[10px]" x-text="cccdDateInput ? formatDateDisplay(cccdDateInput) : (idDateInput ? formatDateDisplay(idDateInput) : 'N/A')"></span>
+                                                        <span class="block text-[7px] font-extrabold text-slate-500 uppercase">Ngày cấp CCCD</span>
+                                                        <span x-text="cccdDateInput ? formatDateDisplay(cccdDateInput) : (idDateInput ? formatDateDisplay(idDateInput) : 'N/A')"></span>
                                                     </div>
                                                     <div>
-                                                        <span class="block text-[8px] font-bold text-slate-400 uppercase">Nơi cấp / Place of issue</span>
-                                                        <span class="font-medium text-slate-300 text-[9px] block truncate" :title="cccdPlaceInput || idPlaceInput" x-text="cccdPlaceInput || idPlaceInput || 'N/A'"></span>
+                                                        <span class="block text-[7px] font-extrabold text-slate-500 uppercase">Nơi cấp CCCD</span>
+                                                        <span class="block truncate" :title="cccdPlaceInput || idPlaceInput" x-text="cccdPlaceInput || idPlaceInput || 'N/A'"></span>
                                                     </div>
                                                 </div>
                                             </div>
