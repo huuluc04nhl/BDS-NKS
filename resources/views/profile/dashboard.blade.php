@@ -530,7 +530,15 @@
                                 <!-- Step 4: Xác thực CCCD -->
                         <div x-show="activeStep === 4"
                              x-transition:enter="transition ease-out duration-300 transform"
-                                          <!-- Verified Banner (Chỉ hiện khi đã xác minh và không chỉnh sửa) -->
+                             x-transition:enter-start="opacity-0 translate-y-4"
+                             x-transition:enter-end="opacity-100 translate-y-0"
+                             x-cloak class="space-y-6 max-w-2xl">
+                            <div>
+                                <h3 class="text-lg font-black text-slate-800">Xác thực CCCD / CMND</h3>
+                                <p class="text-xs text-slate-400 font-medium">Tải lên hình ảnh CCCD 2 mặt và cập nhật thông tin giấy tờ</p>
+                            </div>
+
+                            <!-- Verified Banner (Chỉ hiện khi đã xác minh và không chỉnh sửa) -->
                             <template x-if="idNumberInput && !isEditingCccd">
                                 <div class="bg-emerald-50 border border-emerald-100 rounded-3xl p-5 flex gap-4 text-emerald-800 leading-relaxed shadow-sm">
                                     <div class="w-10 h-10 rounded-full bg-emerald-500/10 text-emerald-600 flex items-center justify-center flex-shrink-0">
