@@ -742,25 +742,118 @@
                                 </div>
                             </div>
 
-                            <!-- Read-only Display of current info if present -->
-                            <div class="grid grid-cols-1 sm:grid-cols-4 gap-4 bg-slate-50/50 p-4 rounded-3xl border border-slate-100">
-                                <div>
-                                    <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Số CCCD đã lưu</label>
-                                    <div class="text-xs font-semibold text-slate-600 py-1" x-text="idNumberInput || 'Chưa cập nhật'"></div>
+                            <!-- Virtual CCCD Card (Thẻ căn cước ảo) cao cấp -->
+                            <template x-if="idNumberInput || cccdNumberInput">
+                                <div class="space-y-3">
+                                    <span class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider">Thông tin Căn cước công dân</span>
+                                    <div class="relative w-full max-w-lg bg-gradient-to-tr from-slate-900 via-slate-800 to-cyan-950 text-white rounded-3xl p-6 shadow-2xl border border-cyan-500/20 overflow-hidden backdrop-blur-md">
+                                        <!-- Họa tiết trống đồng chìm mờ ảo -->
+                                        <div class="absolute inset-0 opacity-10 pointer-events-none mix-blend-overlay flex items-center justify-center">
+                                            <svg class="w-72 h-72 animate-[spin_180s_linear_infinite]" viewBox="0 0 100 100" fill="none" stroke="currentColor" stroke-width="0.5">
+                                                <circle cx="50" cy="50" r="45" stroke-dasharray="2 2" />
+                                                <circle cx="50" cy="50" r="35" />
+                                                <circle cx="50" cy="50" r="25" stroke-dasharray="1 3" />
+                                                <path d="M 50 5 L 50 95 M 5 L 50 95 L 50" />
+                                            </svg>
+                                        </div>
+
+                                        <!-- Quốc hiệu & Tiêu đề -->
+                                        <div class="relative flex justify-between items-start border-b border-white/10 pb-3 mb-4">
+                                            <div>
+                                                <p class="text-[8px] font-black tracking-widest text-cyan-200 uppercase">CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM</p>
+                                                <p class="text-[7px] font-bold text-center text-slate-300 mt-0.5">Độc lập - Tự do - Hạnh phúc</p>
+                                            </div>
+                                            <div class="text-right">
+                                                <!-- Đã xác minh State (đã lưu trùng khớp với input hiện tại và ko quét mới) -->
+                                                <template x-if="idNumberInput && cccdNumberInput === idNumberInput">
+                                                    <span class="inline-flex items-center gap-1 bg-emerald-500/20 border border-emerald-500/30 px-2 py-0.5 rounded-full text-[8px] font-bold text-emerald-400">
+                                                        <span class="w-1 h-1 rounded-full bg-emerald-400 animate-pulse"></span>
+                                                        ĐÃ XÁC MINH
+                                                    </span>
+                                                </template>
+                                                <!-- Preview State (chưa lưu hoặc có input khác với id đã lưu) -->
+                                                <template x-if="!idNumberInput || cccdNumberInput !== idNumberInput">
+                                                    <span class="inline-flex items-center gap-1 bg-amber-500/20 border border-amber-500/30 px-2 py-0.5 rounded-full text-[8px] font-bold text-amber-400">
+                                                        <span class="w-1 h-1 rounded-full bg-amber-400 animate-pulse"></span>
+                                                        BẢN XEM TRƯỚC (PREVIEW)
+                                                    </span>
+                                                </template>
+                                            </div>
+                                        </div>
+
+                                        <div class="relative flex gap-4">
+                                            <!-- Ảnh chân dung & Chip -->
+                                            <div class="flex flex-col items-center gap-3">
+                                                <!-- Khung ảnh chân dung -->
+                                                <div class="w-24 h-32 rounded-xl bg-slate-700/50 border border-white/10 overflow-hidden flex items-center justify-center relative shadow-inner">
+                                                    <template x-if="user && user.avatar">
+                                                        <img :src="user.avatar" alt="Portrait" class="w-full h-full object-cover">
+                                                    </template>
+                                                    <template x-if="!(user && user.avatar)">
+                                                        <div class="text-slate-500 flex flex-col items-center justify-center">
+                                                            <svg class="w-12 h-12" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+                                                                <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
+                                                            </svg>
+                                                        </div>
+                                                    </template>
+                                                </div>
+                                                
+                                                <!-- Chip điện tử mô phỏng -->
+                                                <div class="w-8 h-6 bg-gradient-to-r from-amber-400 to-amber-200 rounded-md border border-amber-500/30 flex flex-col justify-between p-1 shadow-md opacity-90">
+                                                    <div class="grid grid-cols-3 gap-0.5 h-full opacity-60">
+                                                        <div class="border-r border-b border-amber-600/40"></div>
+                                                        <div class="border-r border-b border-amber-600/40"></div>
+                                                        <div class="border-b border-amber-600/40"></div>
+                                                        <div class="border-r border-amber-600/40"></div>
+                                                        <div class="border-r border-amber-600/40"></div>
+                                                        <div></div>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <!-- Thông tin chi tiết -->
+                                            <div class="flex-1 space-y-2.5 text-xs text-slate-300">
+                                                <div>
+                                                    <span class="block text-[8px] font-bold text-slate-400 uppercase">Số / No.</span>
+                                                    <span class="text-sm font-black text-cyan-300 tracking-wider" x-text="cccdNumberInput || idNumberInput || 'N/A'"></span>
+                                                </div>
+
+                                                <div>
+                                                    <span class="block text-[8px] font-bold text-slate-400 uppercase">Họ và tên / Full name</span>
+                                                    <span class="font-extrabold text-white uppercase text-xs" x-text="(firstnameInput || lastnameInput) ? (firstnameInput + ' ' + lastnameInput).trim() : (user ? user.name : 'N/A')"></span>
+                                                </div>
+
+                                                <div class="grid grid-cols-2 gap-2">
+                                                    <div>
+                                                        <span class="block text-[8px] font-bold text-slate-400 uppercase">Ngày sinh / Date of birth</span>
+                                                        <span class="font-bold text-white text-[11px]" x-text="dobInput ? formatDateDisplay(dobInput) : 'N/A'"></span>
+                                                    </div>
+                                                    <div>
+                                                        <span class="block text-[8px] font-bold text-slate-400 uppercase">Giới tính / Sex</span>
+                                                        <span class="font-bold text-white text-[11px]" x-text="genderInput == 0 ? 'Nam' : (genderInput == 1 ? 'Nữ' : 'N/A')"></span>
+                                                    </div>
+                                                </div>
+
+                                                <div>
+                                                    <span class="block text-[8px] font-bold text-slate-400 uppercase">Nơi thường trú / Place of residence</span>
+                                                    <span class="font-bold text-white text-[10px] block leading-tight" x-text="cccdAddressInput || idAddressInput || 'N/A'"></span>
+                                                </div>
+
+                                                <div class="grid grid-cols-2 gap-2 pt-1 border-t border-white/5">
+                                                    <div>
+                                                        <span class="block text-[8px] font-bold text-slate-400 uppercase">Ngày cấp / Date of issue</span>
+                                                        <span class="font-medium text-slate-300 text-[10px]" x-text="cccdDateInput ? formatDateDisplay(cccdDateInput) : (idDateInput ? formatDateDisplay(idDateInput) : 'N/A')"></span>
+                                                    </div>
+                                                    <div>
+                                                        <span class="block text-[8px] font-bold text-slate-400 uppercase">Nơi cấp / Place of issue</span>
+                                                        <span class="font-medium text-slate-300 text-[9px] block truncate" :title="cccdPlaceInput || idPlaceInput" x-text="cccdPlaceInput || idPlaceInput || 'N/A'"></span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
-                                <div>
-                                    <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Ngày cấp</label>
-                                    <div class="text-xs font-semibold text-slate-600 py-1" x-text="idDateInput || 'Chưa cập nhật'"></div>
-                                </div>
-                                <div>
-                                    <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Nơi cấp</label>
-                                    <div class="text-xs font-semibold text-slate-600 py-1" x-text="idPlaceInput || 'Chưa cập nhật'"></div>
-                                </div>
-                                <div>
-                                    <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Nơi thường trú</label>
-                                    <div class="text-xs font-semibold text-slate-600 py-1 truncate" :title="idAddressInput" x-text="idAddressInput || 'Chưa cập nhật'"></div>
-                                </div>
-                            </div>
+                            </template>
 
                             <!-- Action buttons -->
                             <div class="flex gap-3 pt-4 border-t border-slate-100">
@@ -2718,6 +2811,7 @@
                     let extractedIssueDate = '';
                     let extractedPlace = '';
                     let extractedAddress = '';
+                    let extractedGender = '';
 
                     // 1. Try QR code scan on the front image first
                     try {
@@ -2733,30 +2827,39 @@
                             if (code && code.data) {
                                 const qrData = code.data;
                                 const parts = qrData.split('|');
-                                if (parts.length >= 5) {
+                                if (parts.length >= 5 && parts[0] && parts[2]) {
                                     qrSuccess = true;
                                     this.cccdScanType = 'qr';
 
-                                    extractedCccd = parts[0] || '';
+                                    extractedCccd = parts[0].trim();
+                                    extractedName = parts[2].trim();
                                     
-                                    const rawDob = parts[3];
+                                    const rawDob = parts[3] ? parts[3].trim() : '';
                                     if (rawDob && rawDob.length === 8) {
                                         extractedDob = `${rawDob.substring(4, 8)}-${rawDob.substring(2, 4)}-${rawDob.substring(0, 2)}`;
                                     }
 
-                                    const rawIssueDate = parts[6];
-                                    if (rawIssueDate && rawIssueDate.length === 8) {
-                                        extractedIssueDate = `${rawIssueDate.substring(4, 8)}-${rawIssueDate.substring(2, 4)}-${rawIssueDate.substring(0, 2)}`;
+                                    if (parts[4]) {
+                                        const g = parts[4].trim().toLowerCase();
+                                        if (g === 'nam') {
+                                            extractedGender = '0';
+                                        } else if (g === 'nữ' || g === 'nu') {
+                                            extractedGender = '1';
+                                        }
                                     }
 
-                                    extractedPlace = "Cục Cảnh sát QLHC về TTXH";
-
-                                    if (parts[2]) {
-                                        extractedName = parts[2].trim();
-                                    }
                                     if (parts[5]) {
                                         extractedAddress = parts[5].trim();
                                     }
+
+                                    if (parts.length >= 7 && parts[6]) {
+                                        const rawIssueDate = parts[6].trim();
+                                        if (rawIssueDate && rawIssueDate.length === 8) {
+                                            extractedIssueDate = `${rawIssueDate.substring(4, 8)}-${rawIssueDate.substring(2, 4)}-${rawIssueDate.substring(0, 2)}`;
+                                        }
+                                    }
+
+                                    extractedPlace = "Cục Cảnh sát QLHC về TTXH";
                                 }
                             }
                         }
@@ -2779,6 +2882,7 @@
                                 if (extractedIssueDate) this.cccdDateInput = extractedIssueDate;
                                 if (extractedPlace) this.cccdPlaceInput = extractedPlace;
                                 if (extractedAddress) this.cccdAddressInput = extractedAddress;
+                                if (extractedGender !== '') this.genderInput = extractedGender;
                                 
                                 if (extractedName) {
                                     const nameParts = extractedName.split(' ');
@@ -2995,6 +3099,15 @@
                 }
             },
 
+            formatDateDisplay(dateStr) {
+                if (!dateStr) return '';
+                const parts = dateStr.split('-');
+                if (parts.length === 3) {
+                    return `${parts[2]}/${parts[1]}/${parts[0]}`;
+                }
+                return dateStr;
+            },
+
             simulateScanProgress(duration, callback) {
                 const step = 50;
                 const totalSteps = duration / step;
@@ -3040,20 +3153,60 @@
                     if (res.ok) {
                         const data = await res.json();
                         
-                        const userObj = JSON.parse(localStorage.getItem('nks_user'));
+                        const userObj = JSON.parse(localStorage.getItem('nks_user')) || {};
                         userObj.id_number = this.cccdNumberInput;
                         userObj.id_date = this.cccdDateInput;
                         userObj.id_place = this.cccdPlaceInput;
                         userObj.permanent_address = this.cccdAddressInput;
+                        
+                        if (this.firstnameInput) userObj.firstname = this.firstnameInput;
+                        if (this.lastnameInput) userObj.lastname = this.lastnameInput;
+                        userObj.name = (this.firstnameInput + ' ' + this.lastnameInput).trim() || userObj.name;
+                        if (this.dobInput) userObj.dob = this.dobInput;
+                        if (this.genderInput !== undefined) userObj.gender = parseInt(this.genderInput);
+                        
                         localStorage.setItem('nks_user', JSON.stringify(userObj));
                         
                         this.idNumberInput = this.cccdNumberInput;
                         this.idDateInput = this.cccdDateInput;
                         this.idPlaceInput = this.cccdPlaceInput;
                         this.idAddressInput = this.cccdAddressInput;
+                        this.user = userObj;
+                        
+                        // Async background sync to save additional fields (name, DOB, gender, permanent address) in Laravel database
+                        try {
+                            await fetch('/nks-api/profile/update', {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                    'Accept': 'application/json',
+                                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                                },
+                                body: JSON.stringify({
+                                    email: this.user.email,
+                                    access_token: localStorage.getItem('nks_access_token') || '',
+                                    name: (this.firstnameInput + ' ' + this.lastnameInput).trim() || this.user.name,
+                                    firstname: this.firstnameInput,
+                                    lastname: this.lastnameInput,
+                                    dob: this.dobInput,
+                                    gender: this.genderInput,
+                                    id_number: this.cccdNumberInput,
+                                    id_date: this.cccdDateInput,
+                                    id_place: this.cccdPlaceInput,
+                                    permanent_address: this.cccdAddressInput,
+                                    intro: this.introInput,
+                                    phone: this.phoneInput,
+                                    website: this.websiteInput,
+                                    province: this.provinceInput,
+                                    ward: this.wardInput
+                                })
+                            });
+                        } catch (profileErr) {
+                            console.warn('Background profile update sync failed:', profileErr);
+                        }
                         
                         this.showUpdateCccdModal = false;
-                        alert('Xác thực và cập nhật CCCD thành công!');
+                        alert('🎉 Xác thực và cập nhật CCCD thành công!');
                     } else {
                         const err = await res.json();
                         alert(err.message || 'Lỗi khi cập nhật CCCD.');

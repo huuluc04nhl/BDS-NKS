@@ -1374,7 +1374,8 @@ class PropertyController extends Controller
                                     'id_date' => $remoteUser['id_date'] ?? $user->id_date,
                                     'id_place' => $remoteUser['id_place'] ?? $user->id_place,
                                     'province' => (!empty($remoteUser['province']) ? $remoteUser['province'] : (!empty($remoteUser['add_province']) ? $remoteUser['add_province'] : ($request->input('province') ?? $user->province))),
-                                    'ward' => (!empty($remoteUser['ward']) ? $remoteUser['ward'] : (!empty($remoteUser['add_ward']) ? $remoteUser['add_ward'] : ($request->input('ward') ?? $user->ward)))
+                                    'ward' => (!empty($remoteUser['ward']) ? $remoteUser['ward'] : (!empty($remoteUser['add_ward']) ? $remoteUser['add_ward'] : ($request->input('ward') ?? $user->ward))),
+                                    'permanent_address' => $remoteUser['permanent_address'] ?? $request->input('permanent_address') ?? $user->permanent_address
                                 ]);
                             }
                             
@@ -1400,7 +1401,8 @@ class PropertyController extends Controller
                                     'id_date' => $remoteUser['id_date'] ?? '',
                                     'id_place' => $remoteUser['id_place'] ?? '',
                                     'province' => (!empty($remoteUser['province']) ? $remoteUser['province'] : (!empty($remoteUser['add_province']) ? $remoteUser['add_province'] : ($user ? $user->province : ''))),
-                                    'ward' => (!empty($remoteUser['ward']) ? $remoteUser['ward'] : (!empty($remoteUser['add_ward']) ? $remoteUser['add_ward'] : ($user ? $user->ward : '')))
+                                    'ward' => (!empty($remoteUser['ward']) ? $remoteUser['ward'] : (!empty($remoteUser['add_ward']) ? $remoteUser['add_ward'] : ($user ? $user->ward : ''))),
+                                    'permanent_address' => $remoteUser['permanent_address'] ?? ($user ? $user->permanent_address : '')
                                 ]
                             ]);
                         }
