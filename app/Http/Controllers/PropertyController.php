@@ -3187,25 +3187,26 @@ class PropertyController extends Controller
                 ->take(30)
                 ->get();
 
-            // 3. Query properties from local DB to populate context (up to 30 properties)
-            $properties = \App\Models\Property::orderBy('id', 'desc')->take(30)->get();
+            // 3. Retrieve properties from BOTH local DB and NKS remote API via fetchAllItems
+            $properties = $this->fetchAllItems();
             $propertiesContext = "";
-            if ($properties->count() > 0) {
-                foreach ($properties as $prop) {
+            if (is_array($properties) && count($properties) > 0) {
+                // Slice up to 30 properties to avoid token limit issues in prompt context
+                $slicedProperties = array_slice($properties, 0, 30);
+                foreach ($slicedProperties as $prop) {
                     $propertiesContext .= sprintf(
-                        "- ID: %d, Tiêu đề: %s, Địa chỉ: %s, Loại: %s, Giao dịch: %s, Giá: %s, Diện tích: %s m2, Phòng ngủ: %d, Phòng tắm: %d, Hướng: %s, Mô tả: %s, Slug: %s\n",
-                        $prop->id + 1000,
-                        $prop->title,
-                        $prop->address,
-                        $prop->rstype,
-                        $prop->transaction_type,
-                        $prop->formated_price,
-                        $prop->total_area,
-                        $prop->bed,
-                        $prop->bath,
-                        $prop->direction ?? 'Chưa xác định',
-                        strip_tags(\Illuminate\Support\Str::limit($prop->description, 100)),
-                        $prop->slug
+                        "- ID: %d, Tiêu đề: %s, Địa chỉ: %s, Loại: %s, Giao dịch: %s, Giá: %s, Diện tích: %s m2, Phòng ngủ: %d, Phòng tắm: %d, Hướng: %s, Slug: %s\n",
+                        $prop['id'] ?? 0,
+                        $prop['title'] ?? 'BĐS',
+                        $prop['address'] ?? 'Chưa xác định',
+                        $prop['rstype'] ?? 'Căn hộ',
+                        $prop['transaction_type'] ?? 'Cho thuê',
+                        $prop['formatedPrice'] ?? $prop['formated_price'] ?? 'Liên hệ',
+                        $prop['total_area'] ?? '0',
+                        $prop['bed'] ?? 0,
+                        $prop['bath'] ?? 0,
+                        $prop['direction'] ?? 'Chưa xác định',
+                        $prop['slug'] ?? ''
                     );
                 }
             } else {
