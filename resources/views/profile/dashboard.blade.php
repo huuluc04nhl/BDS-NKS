@@ -2763,6 +2763,7 @@
                             },
                             body: JSON.stringify({
                                 access_token: localStorage.getItem('nks_access_token') || '',
+                                email: this.user?.email || '',
                                 avatar: base64
                             })
                         });
@@ -3225,6 +3226,7 @@
                         },
                         body: JSON.stringify({
                             access_token: localStorage.getItem('nks_access_token') || '',
+                            email: this.user?.email || '',
                             front: this.cccdFrontSrc,
                             back: this.cccdBackSrc,
                             number: this.cccdNumberInput,
@@ -3328,6 +3330,7 @@
                         },
                         body: JSON.stringify({
                             access_token: localStorage.getItem('nks_access_token') || '',
+                            email: this.user?.email || '',
                             old_password: this.passwordCurrent,
                             password: this.passwordNew
                         })

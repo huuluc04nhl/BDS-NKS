@@ -676,10 +676,34 @@ class PropertyController extends Controller
 
                 // === Bước 5: Lưu/cập nhật user vào DB local ===
                 try {
-                    $user = \App\Models\User::updateOrCreate(
-                        ['email' => $email],
-                        [
+                    $user = \App\Models\User::where('email', $email)->first();
+                    if ($user) {
+                        $user->update([
                             'name' => $name,
+                            'phone' => $phone,
+                            'avatar' => $avatar,
+                            'role' => $role,
+                            'status' => $status,
+                            'point' => $point,
+                            'password' => bcrypt($request->password),
+                            'firstname' => !empty($remoteUser['firstname']) ? $remoteUser['firstname'] : $user->firstname,
+                            'lastname' => !empty($remoteUser['lastname']) ? $remoteUser['lastname'] : $user->lastname,
+                            'intro' => !empty($remoteUser['intro']) ? $remoteUser['intro'] : $user->intro,
+                            'gender' => intval($remoteUser['gender'] ?? $user->gender),
+                            'website' => !empty($remoteUser['website']) ? $remoteUser['website'] : $user->website,
+                            'dob' => !empty($remoteUser['dob']) ? $remoteUser['dob'] : $user->dob,
+                            'pob' => !empty($remoteUser['pob']) ? $remoteUser['pob'] : $user->pob,
+                            'id_number' => !empty($remoteUser['id_number']) ? $remoteUser['id_number'] : $user->id_number,
+                            'id_date' => !empty($remoteUser['id_date']) ? $remoteUser['id_date'] : $user->id_date,
+                            'id_place' => !empty($remoteUser['id_place']) ? $remoteUser['id_place'] : $user->id_place,
+                            'province' => !empty($remoteUser['province']) ? $remoteUser['province'] : (!empty($remoteUser['add_province']) ? $remoteUser['add_province'] : $user->province),
+                            'ward' => !empty($remoteUser['ward']) ? $remoteUser['ward'] : (!empty($remoteUser['add_ward']) ? $remoteUser['add_ward'] : $user->ward),
+                            'permanent_address' => !empty($remoteUser['permanent_address']) ? $remoteUser['permanent_address'] : $user->permanent_address
+                        ]);
+                    } else {
+                        $user = \App\Models\User::create([
+                            'name' => $name,
+                            'email' => $email,
                             'phone' => $phone,
                             'avatar' => $avatar,
                             'role' => $role,
@@ -699,8 +723,8 @@ class PropertyController extends Controller
                             'province' => $remoteUser['province'] ?? $remoteUser['add_province'] ?? '',
                             'ward' => $remoteUser['ward'] ?? $remoteUser['add_ward'] ?? '',
                             'permanent_address' => $remoteUser['permanent_address'] ?? ''
-                        ]
-                    );
+                        ]);
+                    }
                 } catch (\Exception $dbEx) {
                     Log::error('NKS Login DB Error for [' . $email . ']: ' . $dbEx->getMessage());
                     // DB lỗi nhưng API xác thực thành công → vẫn trả về user info từ API
@@ -943,13 +967,13 @@ class PropertyController extends Controller
                         'gender' => intval($remoteUser['gender'] ?? ($userData['gender'] ?? 0)),
                         'website' => $remoteUser['website'] ?? ($userData['website'] ?? ''),
                         'dob' => $remoteUser['dob'] ?? ($userData['dob'] ?? ''),
-                        'pob' => $remoteUser['pob'] ?? ($userData['pob'] ?? ''),
-                        'id_number' => $remoteUser['id_number'] ?? ($userData['id_number'] ?? ''),
-                        'id_date' => $remoteUser['id_date'] ?? ($userData['id_date'] ?? ''),
-                        'id_place' => $remoteUser['id_place'] ?? ($userData['id_place'] ?? ''),
+                        'pob' => (!empty($remoteUser['pob']) ? $remoteUser['pob'] : ($userData['pob'] ?? '')),
+                        'id_number' => (!empty($remoteUser['id_number']) ? $remoteUser['id_number'] : ($userData['id_number'] ?? '')),
+                        'id_date' => (!empty($remoteUser['id_date']) ? $remoteUser['id_date'] : ($userData['id_date'] ?? '')),
+                        'id_place' => (!empty($remoteUser['id_place']) ? $remoteUser['id_place'] : ($userData['id_place'] ?? '')),
                         'province' => (!empty($remoteUser['province']) ? $remoteUser['province'] : (!empty($remoteUser['add_province']) ? $remoteUser['add_province'] : ($userData['province'] ?? ''))),
                         'ward' => (!empty($remoteUser['ward']) ? $remoteUser['ward'] : (!empty($remoteUser['add_ward']) ? $remoteUser['add_ward'] : ($userData['ward'] ?? ''))),
-                        'permanent_address' => $remoteUser['permanent_address'] ?? ($userData['permanent_address'] ?? '')
+                        'permanent_address' => (!empty($remoteUser['permanent_address']) ? $remoteUser['permanent_address'] : ($userData['permanent_address'] ?? ''))
                     ]);
                     $isRecreated = true;
                 } else {
@@ -966,13 +990,13 @@ class PropertyController extends Controller
                         'gender' => intval($remoteUser['gender'] ?? ($userData['gender'] ?? $user->gender)),
                         'website' => $remoteUser['website'] ?? ($userData['website'] ?? $user->website),
                         'dob' => $remoteUser['dob'] ?? ($userData['dob'] ?? $user->dob),
-                        'pob' => $remoteUser['pob'] ?? ($userData['pob'] ?? $user->pob),
-                        'id_number' => $remoteUser['id_number'] ?? ($userData['id_number'] ?? $user->id_number),
-                        'id_date' => $remoteUser['id_date'] ?? ($userData['id_date'] ?? $user->id_date),
-                        'id_place' => $remoteUser['id_place'] ?? ($userData['id_place'] ?? $user->id_place),
+                        'pob' => (!empty($remoteUser['pob']) ? $remoteUser['pob'] : ($userData['pob'] ?? $user->pob)),
+                        'id_number' => (!empty($remoteUser['id_number']) ? $remoteUser['id_number'] : ($userData['id_number'] ?? $user->id_number)),
+                        'id_date' => (!empty($remoteUser['id_date']) ? $remoteUser['id_date'] : ($userData['id_date'] ?? $user->id_date)),
+                        'id_place' => (!empty($remoteUser['id_place']) ? $remoteUser['id_place'] : ($userData['id_place'] ?? $user->id_place)),
                         'province' => (!empty($remoteUser['province']) ? $remoteUser['province'] : (!empty($remoteUser['add_province']) ? $remoteUser['add_province'] : ($userData['province'] ?? $user->province))),
                         'ward' => (!empty($remoteUser['ward']) ? $remoteUser['ward'] : (!empty($remoteUser['add_ward']) ? $remoteUser['add_ward'] : ($userData['ward'] ?? $user->ward))),
-                        'permanent_address' => $remoteUser['permanent_address'] ?? ($userData['permanent_address'] ?? $user->permanent_address)
+                        'permanent_address' => (!empty($remoteUser['permanent_address']) ? $remoteUser['permanent_address'] : ($userData['permanent_address'] ?? $user->permanent_address))
                     ]);
                 }
             } else {
@@ -2906,6 +2930,17 @@ class PropertyController extends Controller
             }
             
             if (strpos($accessToken, 'mock_token_for_local_') !== false) {
+                $user = null;
+                $email = $request->input('email');
+                if ($email) {
+                    $user = \App\Models\User::where('email', $email)->first();
+                }
+                if (!$user) {
+                    $user = \Illuminate\Support\Facades\Auth::user();
+                }
+                if ($user && $request->input('password')) {
+                    $user->update(['password' => bcrypt($request->input('password'))]);
+                }
                 return response()->json(['success' => true, 'message' => 'Đổi mật khẩu thành công (Mock).']);
             }
             
@@ -2916,7 +2951,19 @@ class PropertyController extends Controller
             ]);
             
             if ($response->successful()) {
-                $user = \Illuminate\Support\Facades\Auth::user();
+                $data = $response->json();
+                $remoteUser = $data['data']['user'] ?? $data['data']['user_info'] ?? $data['data'] ?? $data['user'] ?? $data['user_info'] ?? $data ?? null;
+                $user = null;
+                $email = $request->input('email');
+                if ($remoteUser && is_array($remoteUser)) {
+                    $email = $remoteUser['email'] ?? $email;
+                }
+                if ($email) {
+                    $user = \App\Models\User::where('email', $email)->first();
+                }
+                if (!$user) {
+                    $user = \Illuminate\Support\Facades\Auth::user();
+                }
                 if ($user && $request->input('password')) {
                     $user->update(['password' => bcrypt($request->input('password'))]);
                 }
@@ -2945,7 +2992,14 @@ class PropertyController extends Controller
             }
             
             if (strpos($accessToken, 'mock_token_for_local_') !== false) {
-                $user = \App\Models\User::where('avatar', 'like', '%api.dicebear.com%')->orWhere('avatar', 'like', 'http%')->first();
+                $user = null;
+                $email = $request->input('email');
+                if ($email) {
+                    $user = \App\Models\User::where('email', $email)->first();
+                }
+                if (!$user) {
+                    $user = \App\Models\User::where('avatar', 'like', '%api.dicebear.com%')->orWhere('avatar', 'like', 'http%')->first();
+                }
                 if ($user) {
                     $user->update(['avatar' => $request->input('avatar')]);
                 }
@@ -2965,14 +3019,18 @@ class PropertyController extends Controller
                 $data = $response->json();
                 $remoteUser = $data['data']['user'] ?? $data['data']['user_info'] ?? $data['data'] ?? $data['user'] ?? $data['user_info'] ?? $data ?? null;
                 $user = null;
-                if ($remoteUser) {
-                    $email = $remoteUser['email'] ?? null;
-                    if ($email) {
-                        $user = \App\Models\User::where('email', $email)->first();
-                        if ($user) {
-                            $user->update(['avatar' => $remoteUser['avatar'] ?? $user->avatar]);
-                        }
-                    }
+                $email = $request->input('email');
+                if ($remoteUser && is_array($remoteUser)) {
+                    $email = $remoteUser['email'] ?? $email;
+                }
+                if ($email) {
+                    $user = \App\Models\User::where('email', $email)->first();
+                }
+                if (!$user) {
+                    $user = \Illuminate\Support\Facades\Auth::user();
+                }
+                if ($user) {
+                    $user->update(['avatar' => $remoteUser['avatar'] ?? $user->avatar]);
                 }
                 return response()->json([
                     'success' => true,
@@ -3022,7 +3080,14 @@ class PropertyController extends Controller
             }
             
             if (strpos($accessToken, 'mock_token_for_local_') !== false) {
-                $user = \Illuminate\Support\Facades\Auth::user();
+                $user = null;
+                $email = $request->input('email');
+                if ($email) {
+                    $user = \App\Models\User::where('email', $email)->first();
+                }
+                if (!$user) {
+                    $user = \Illuminate\Support\Facades\Auth::user();
+                }
                 if ($user) {
                     $user->update([
                         'id_number' => $request->input('number'),
@@ -3045,7 +3110,19 @@ class PropertyController extends Controller
             ]);
             
             if ($response->successful()) {
-                $user = \Illuminate\Support\Facades\Auth::user();
+                $data = $response->json();
+                $remoteUser = $data['data']['user'] ?? $data['data']['user_info'] ?? $data['data'] ?? $data['user'] ?? $data['user_info'] ?? $data ?? null;
+                $user = null;
+                $email = $request->input('email');
+                if ($remoteUser && is_array($remoteUser)) {
+                    $email = $remoteUser['email'] ?? $email;
+                }
+                if ($email) {
+                    $user = \App\Models\User::where('email', $email)->first();
+                }
+                if (!$user) {
+                    $user = \Illuminate\Support\Facades\Auth::user();
+                }
                 if ($user) {
                     $user->update([
                         'id_number' => $request->input('number'),
