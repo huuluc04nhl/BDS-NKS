@@ -3187,31 +3187,34 @@ class PropertyController extends Controller
                 ->take(30)
                 ->get();
 
-            // 3. Retrieve properties from BOTH local DB and NKS remote API via fetchAllItems
-            $properties = $this->fetchAllItems();
-            $propertiesContext = "";
-            if (is_array($properties) && count($properties) > 0) {
-                // Slice up to 30 properties to avoid token limit issues in prompt context
-                $slicedProperties = array_slice($properties, 0, 30);
-                foreach ($slicedProperties as $prop) {
-                    $propertiesContext .= sprintf(
-                        "- ID: %d, Tiêu đề: %s, Địa chỉ: %s, Loại: %s, Giao dịch: %s, Giá: %s, Diện tích: %s m2, Phòng ngủ: %d, Phòng tắm: %d, Hướng: %s, Slug: %s\n",
-                        $prop['id'] ?? 0,
-                        $prop['title'] ?? 'BĐS',
-                        $prop['address'] ?? 'Chưa xác định',
-                        $prop['rstype'] ?? 'Căn hộ',
-                        $prop['transaction_type'] ?? 'Cho thuê',
-                        $prop['formatedPrice'] ?? $prop['formated_price'] ?? 'Liên hệ',
-                        $prop['total_area'] ?? '0',
-                        $prop['bed'] ?? 0,
-                        $prop['bath'] ?? 0,
-                        $prop['direction'] ?? 'Chưa xác định',
-                        $prop['slug'] ?? ''
-                    );
+            // 3. Retrieve properties from BOTH local DB and NKS remote API via fetchAllItems with 30 mins Cache
+            $propertiesContext = Cache::remember('chatbot_properties_context_cache', 1800, function() {
+                $properties = $this->fetchAllItems();
+                $context = "";
+                if (is_array($properties) && count($properties) > 0) {
+                    // Slice up to 15 properties to avoid token limit and latency issues
+                    $slicedProperties = array_slice($properties, 0, 15);
+                    foreach ($slicedProperties as $prop) {
+                        $context .= sprintf(
+                            "- ID: %d, Tiêu đề: %s, Địa chỉ: %s, Loại: %s, Giao dịch: %s, Giá: %s, Diện tích: %s m2, Phòng ngủ: %d, Phòng tắm: %d, Hướng: %s, Slug: %s\n",
+                            $prop['id'] ?? 0,
+                            $prop['title'] ?? 'BĐS',
+                            $prop['address'] ?? 'Chưa xác định',
+                            $prop['rstype'] ?? 'Căn hộ',
+                            $prop['transaction_type'] ?? 'Cho thuê',
+                            $prop['formatedPrice'] ?? $prop['formated_price'] ?? 'Liên hệ',
+                            $prop['total_area'] ?? '0',
+                            $prop['bed'] ?? 0,
+                            $prop['bath'] ?? 0,
+                            $prop['direction'] ?? 'Chưa xác định',
+                            $prop['slug'] ?? ''
+                        );
+                    }
+                } else {
+                    $context = "(Không có bất động sản nào đang đăng ký trên hệ thống)\n";
                 }
-            } else {
-                $propertiesContext = "(Không có bất động sản nào đang đăng ký trên hệ thống)\n";
-            }
+                return $context;
+            });
 
             // 4. Build system prompt
             $systemInstruction = "Bạn là trợ lý AI thông minh tư vấn bất động sản của BDS NKS - nền tảng bất động sản uy tín tại TP.HCM.\n" .
@@ -3257,23 +3260,15 @@ class PropertyController extends Controller
                 throw new \Exception("Chưa cấu hình GEMINI_API_KEY trong file .env");
             }
 
-            $model = 'gemini-2.5-flash';
-            $url = "https://generativelanguage.googleapis.com/v1beta/models/{$model}:generateContent?key=" . $apiKey;
+            $success = false;
+            $replyText = "";
 
-            $response = Http::timeout(15)->withoutVerifying()->post($url, [
-                'contents' => $contents,
-                'systemInstruction' => [
-                    'parts' => [
-                        ['text' => $systemInstruction]
-                    ]
-                ]
-            ]);
-
-            if (!$response->successful()) {
-                // Fallback to gemini-2.0-flash-lite if 2.5-flash fails or rate limits
-                $fallbackModel = 'gemini-2.0-flash-lite';
-                $fallbackUrl = "https://generativelanguage.googleapis.com/v1beta/models/{$fallbackModel}:generateContent?key=" . $apiKey;
-                $response = Http::timeout(15)->withoutVerifying()->post($fallbackUrl, [
+            // Try primary model (gemini-2.5-flash) with a tight 8-second timeout
+            try {
+                $model = 'gemini-2.5-flash';
+                $url = "https://generativelanguage.googleapis.com/v1beta/models/{$model}:generateContent?key=" . $apiKey;
+                
+                $response = Http::timeout(8)->withoutVerifying()->post($url, [
                     'contents' => $contents,
                     'systemInstruction' => [
                         'parts' => [
@@ -3281,20 +3276,47 @@ class PropertyController extends Controller
                         ]
                     ]
                 ]);
+
+                if ($response->successful()) {
+                    $resData = $response->json();
+                    $replyText = $resData['candidates'][0]['content']['parts'][0]['text'] ?? '';
+                    if (!empty($replyText)) {
+                        $success = true;
+                    }
+                }
+            } catch (\Exception $ex) {
+                Log::warning("Gemini 2.5-flash failed or timed out: " . $ex->getMessage());
             }
 
-            if ($response->successful()) {
-                $resData = $response->json();
-                $replyText = $resData['candidates'][0]['content']['parts'][0]['text'] ?? '';
-                
-                if (empty($replyText)) {
-                    $replyText = "Xin lỗi, tôi không thể xử lý câu trả lời lúc này. Bạn có câu hỏi nào khác không?";
+            // Fallback to gemini-flash-latest (Gemini 1.5 Flash) if 2.5 fails
+            if (!$success) {
+                try {
+                    $fallbackModel = 'gemini-flash-latest';
+                    $fallbackUrl = "https://generativelanguage.googleapis.com/v1beta/models/{$fallbackModel}:generateContent?key=" . $apiKey;
+                    
+                    $response = Http::timeout(8)->withoutVerifying()->post($fallbackUrl, [
+                        'contents' => $contents,
+                        'systemInstruction' => [
+                            'parts' => [
+                                ['text' => $systemInstruction]
+                            ]
+                        ]
+                    ]);
+
+                    if ($response->successful()) {
+                        $resData = $response->json();
+                        $replyText = $resData['candidates'][0]['content']['parts'][0]['text'] ?? '';
+                        if (!empty($replyText)) {
+                            $success = true;
+                        }
+                    }
+                } catch (\Exception $ex) {
+                    Log::error("Gemini fallback model failed or timed out: " . $ex->getMessage());
                 }
-            } else {
-                $errorJson = $response->json();
-                $errorMessage = $errorJson['error']['message'] ?? 'Unknown API Error';
-                \Illuminate\Support\Facades\Log::error("Gemini API Error: " . $errorMessage);
-                $replyText = "Hiện tại máy chủ AI tư vấn đang bận hoặc quá tải quota. Xin vui lòng thử lại sau vài giây hoặc liên hệ Hotline để được hỗ trợ trực tiếp!";
+            }
+
+            if (!$success) {
+                $replyText = "Hiện tại máy chủ AI tư vấn đang phản hồi hơi chậm do quá tải lượng truy cập. Xin quý khách vui lòng thử lại sau vài giây hoặc liên hệ trực tiếp Hotline để được hỗ trợ tức thì!";
             }
 
             // 7. Save model reply to database
