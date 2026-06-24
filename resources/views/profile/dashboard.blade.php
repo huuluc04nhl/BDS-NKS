@@ -2927,6 +2927,7 @@
                                 }
                             }
                         }
+                    }
                     } catch (qrErr) {
                         console.warn('QR code scan error:', qrErr);
                     }
