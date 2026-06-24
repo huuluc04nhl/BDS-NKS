@@ -664,6 +664,320 @@
         };
     </script>
 
+    <!-- AI Chatbot Floating Widget -->
+    <div x-data="nksAiChatbot()" 
+         x-init="initChatbot()"
+         class="fixed bottom-6 right-6 z-50 flex flex-col items-end">
+         
+        <!-- Chat Window Panel -->
+        <div x-show="isOpen"
+             x-transition:enter="transition ease-out duration-300 transform"
+             x-transition:enter-start="opacity-0 translate-y-8 scale-95"
+             x-transition:enter-end="opacity-100 translate-y-0 scale-100"
+             x-transition:leave="transition ease-in duration-200 transform"
+             x-transition:leave-start="opacity-100 translate-y-0 scale-100"
+             x-transition:leave-end="opacity-0 translate-y-8 scale-95"
+             class="mb-4 w-96 max-w-[calc(100vw-2rem)] h-[520px] max-h-[calc(100vh-10rem)] bg-white rounded-3xl shadow-2xl border border-slate-100 overflow-hidden flex flex-col"
+             style="display: none;">
+             
+             <!-- Header -->
+             <div class="bg-gradient-to-r from-primary to-indigo-600 px-5 py-4 flex items-center justify-between text-white shadow-md">
+                 <div class="flex items-center gap-3">
+                     <div class="relative">
+                         <div class="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center border border-white/20">
+                             <!-- Robot Icon -->
+                             <svg class="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                 <path stroke-linecap="round" stroke-linejoin="round" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                             </svg>
+                         </div>
+                         <span class="absolute bottom-0 right-0 w-2.5 h-2.5 bg-green-400 border-2 border-primary rounded-full animate-pulse"></span>
+                     </div>
+                     <div>
+                         <h4 class="font-black text-sm tracking-wide">Trợ Lý Ảo NKS</h4>
+                         <p class="text-[10px] text-white/80 font-bold flex items-center gap-1">
+                             <span class="w-1.5 h-1.5 rounded-full bg-green-400"></span>
+                             Trực tuyến • Sẵn sàng tư vấn
+                         </p>
+                     </div>
+                 </div>
+                 
+                 <!-- Close Button -->
+                 <button @click="isOpen = false" class="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition-colors focus:outline-none">
+                     <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                         <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                     </svg>
+                 </button>
+             </div>
+             
+             <!-- Messages Body -->
+             <div x-ref="messageContainer" class="flex-grow overflow-y-auto px-5 py-5 space-y-4 bg-slate-50/50">
+                 <!-- Welcome Message -->
+                 <div class="flex gap-2.5 max-w-[85%]">
+                     <div class="w-8 h-8 rounded-full bg-indigo-50 border border-indigo-100 flex items-center justify-center shrink-0">
+                         <svg class="w-4.5 h-4.5 text-indigo-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                             <path stroke-linecap="round" stroke-linejoin="round" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                         </svg>
+                     </div>
+                     <div class="bg-white rounded-2xl rounded-tl-none px-4 py-3 border border-slate-100 shadow-sm text-sm text-slate-700 leading-relaxed">
+                         Chào bạn! Tôi là trợ lý AI của BDS NKS. Tôi có thể giúp gì cho bạn hôm nay? Bạn có thể hỏi tôi về:
+                         <ul class="list-disc pl-4 mt-1.5 space-y-1 text-slate-600">
+                             <li>Tìm nhà/căn hộ thuê theo khu vực & tầm giá</li>
+                             <li>Thủ tục đặt cọc, pháp lý thuê nhà</li>
+                             <li>Tính toán lãi vay mua nhà trả góp</li>
+                         </ul>
+                     </div>
+                 </div>
+                 
+                 <!-- Chat messages dynamic list -->
+                 <template x-for="msg in messages" :key="msg.id">
+                     <div :class="msg.role === 'user' ? 'justify-end' : ''" class="flex gap-2.5 items-start w-full">
+                         <!-- Bot Avatar -->
+                         <template x-if="msg.role !== 'user'">
+                             <div class="w-8 h-8 rounded-full bg-indigo-50 border border-indigo-100 flex items-center justify-center shrink-0">
+                                 <svg class="w-4.5 h-4.5 text-indigo-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                     <path stroke-linecap="round" stroke-linejoin="round" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                                 </svg>
+                             </div>
+                         </template>
+                         
+                         <!-- Message bubble -->
+                         <div :class="msg.role === 'user' ? 'bg-primary text-white rounded-tr-none ml-auto shadow-sm shadow-primary/10' : 'bg-white text-slate-700 border border-slate-100 rounded-tl-none shadow-sm'" 
+                              class="rounded-2xl px-4 py-3 text-sm leading-relaxed whitespace-pre-line break-words max-w-[85%]"
+                              x-html="renderMarkdown(msg.content)">
+                         </div>
+                     </div>
+                 </template>
+                 
+                 <!-- Typing Indicator -->
+                 <div x-show="isTyping" class="flex gap-2.5 max-w-[85%] items-start" style="display: none;">
+                     <div class="w-8 h-8 rounded-full bg-indigo-50 border border-indigo-100 flex items-center justify-center shrink-0">
+                         <svg class="w-4.5 h-4.5 text-indigo-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                             <path stroke-linecap="round" stroke-linejoin="round" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                         </svg>
+                     </div>
+                     <div class="bg-white rounded-2xl rounded-tl-none px-4 py-3.5 border border-slate-100 shadow-sm flex items-center gap-1.5">
+                         <span class="w-2 h-2 rounded-full bg-indigo-500 animate-bounce" style="animation-delay: 0ms"></span>
+                         <span class="w-2 h-2 rounded-full bg-indigo-500 animate-bounce" style="animation-delay: 150ms"></span>
+                         <span class="w-2 h-2 rounded-full bg-indigo-500 animate-bounce" style="animation-delay: 300ms"></span>
+                     </div>
+                 </div>
+             </div>
+             
+             <!-- Suggestion Tags -->
+             <div class="px-4 py-2 bg-slate-50 border-t border-slate-100">
+                 <div class="flex gap-2 overflow-x-auto pb-1.5 pt-0.5 scrollbar-none snap-x snap-mandatory">
+                     <template x-for="tag in suggestions" :key="tag">
+                         <button @click="sendSuggestion(tag)" 
+                                 class="shrink-0 snap-start px-3 py-1.5 rounded-full bg-white hover:bg-indigo-50 border border-slate-100 text-xs font-bold text-slate-600 hover:text-indigo-600 hover:border-indigo-200 transition-all shadow-2xs active:scale-95">
+                             <span x-text="tag"></span>
+                         </button>
+                     </template>
+                 </div>
+             </div>
+             
+             <!-- Input area -->
+             <form @submit.prevent="sendMessage()" class="p-4 bg-white border-t border-slate-100 flex items-center gap-2">
+                 <input type="text"
+                        x-model="inputText"
+                        placeholder="Nhập câu hỏi của bạn..."
+                        class="flex-grow px-4 py-3 rounded-2xl border border-slate-200 text-sm focus:outline-none focus:border-primary/60 focus:ring-2 focus:ring-primary/10 transition-all font-bold placeholder-slate-400 text-slate-700"
+                        :disabled="isTyping">
+                 <button type="submit"
+                         :disabled="!inputText.trim() || isTyping"
+                         class="w-11 h-11 rounded-2xl bg-primary hover:bg-primary-dark text-white flex items-center justify-center transition-all shadow-sm active:scale-95 disabled:opacity-40 disabled:scale-100 focus:outline-none">
+                     <svg class="w-5 h-5 transform rotate-90" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                         <path stroke-linecap="round" stroke-linejoin="round" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+                     </svg>
+                 </button>
+             </form>
+        </div>
+        
+        <!-- Toggle Floating Button -->
+        <button @click="toggleChat()"
+                class="w-14 h-14 rounded-full bg-gradient-to-tr from-primary to-indigo-600 hover:from-primary-dark hover:to-indigo-700 text-white flex items-center justify-center shadow-lg shadow-primary/30 transform active:scale-95 hover:scale-105 transition-all duration-300 relative group focus:outline-none">
+            
+            <!-- Pulsing Ring when chat is closed -->
+            <span x-show="!isOpen" class="absolute -inset-0.5 rounded-full bg-primary/30 animate-ping opacity-75 group-hover:opacity-100 transition-opacity"></span>
+            
+            <!-- Toggle icons -->
+            <div class="relative z-10">
+                <!-- Bot Icon (when closed) -->
+                <svg x-show="!isOpen" class="w-7 h-7" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                </svg>
+                <!-- Close Icon (when open) -->
+                <svg x-show="isOpen" class="w-7 h-7" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" style="display: none;">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+            </div>
+        </button>
+    </div>
+
+    <script>
+        window.nksAiChatbot = function() {
+            return {
+                isOpen: false,
+                messages: [],
+                isTyping: false,
+                inputText: '',
+                sessionId: '',
+                suggestions: [
+                    'Tìm thuê nhà Quận 7',
+                    'Thuê căn hộ Bình Thạnh',
+                    'Thủ tục cọc thuê nhà',
+                    'Tư vấn vay vốn ngân hàng'
+                ],
+
+                initChatbot() {
+                    // Initialize Session ID
+                    let storedSession = localStorage.getItem('nks_ai_session_id');
+                    if (!storedSession) {
+                        storedSession = 'ai_session_' + Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+                        localStorage.setItem('nks_ai_session_id', storedSession);
+                    }
+                    this.sessionId = storedSession;
+
+                    // Load history on load
+                    this.loadChatHistory();
+                },
+
+                async loadChatHistory() {
+                    try {
+                        const response = await fetch(`/nks-api/ai/chat/history?session_id=${this.sessionId}`);
+                        const data = await response.json();
+                        if (data.success && data.messages) {
+                            this.messages = data.messages;
+                            this.scrollToBottom();
+                        }
+                    } catch (e) {
+                        console.error('Failed to load AI chat history:', e);
+                    }
+                },
+
+                toggleChat() {
+                    this.isOpen = !this.isOpen;
+                    if (this.isOpen) {
+                        this.scrollToBottom();
+                    }
+                },
+
+                sendSuggestion(text) {
+                    this.inputText = text;
+                    this.sendMessage();
+                },
+
+                async sendMessage() {
+                    if (!this.inputText.trim() || this.isTyping) return;
+
+                    const userMsgText = this.inputText.trim();
+                    this.inputText = '';
+                    this.isTyping = true;
+
+                    // Append user message immediately to local state
+                    const tempUserId = 'temp_' + Date.now();
+                    this.messages.push({
+                        id: tempUserId,
+                        role: 'user',
+                        content: userMsgText
+                    });
+                    
+                    this.scrollToBottom();
+
+                    // Retrieve logged in user email if available
+                    let email = '';
+                    const savedUser = localStorage.getItem('nks_user');
+                    if (savedUser) {
+                        try {
+                            const parsed = JSON.parse(savedUser);
+                            email = parsed.email || '';
+                        } catch(e) {}
+                    }
+
+                    // Build page context
+                    let areaContext = '';
+                    if (window.location.pathname.startsWith('/properties/')) {
+                        areaContext = `Người dùng đang xem trang chi tiết: ${document.title} (${window.location.href})`;
+                    } else if (window.location.pathname === '/properties') {
+                        areaContext = 'Người dùng đang duyệt danh sách tìm kiếm BĐS';
+                    }
+
+                    try {
+                        const csrfToken = document.querySelector('meta[name=csrf-token]')?.getAttribute('content') || '';
+                        const response = await fetch('/nks-api/ai/chat', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'Accept': 'application/json',
+                                'X-CSRF-TOKEN': csrfToken
+                            },
+                            body: JSON.stringify({
+                                message: userMsgText,
+                                session_id: this.sessionId,
+                                email: email,
+                                area_context: areaContext
+                            })
+                        });
+
+                        const data = await response.json();
+                        this.isTyping = false;
+
+                        if (data.success && data.reply) {
+                            this.messages.push({
+                                id: 'ai_' + Date.now(),
+                                role: 'model',
+                                content: data.reply
+                            });
+                        } else {
+                            this.messages.push({
+                                id: 'ai_error_' + Date.now(),
+                                role: 'model',
+                                content: data.message || 'Lỗi hệ thống, vui lòng thử lại.'
+                            });
+                        }
+                    } catch (e) {
+                        this.isTyping = false;
+                        this.messages.push({
+                            id: 'ai_err_' + Date.now(),
+                            role: 'model',
+                            content: 'Không thể kết nối đến máy chủ AI. Vui lòng kiểm tra lại kết nối mạng hoặc thử lại sau.'
+                        });
+                    }
+
+                    this.scrollToBottom();
+                },
+
+                scrollToBottom() {
+                    this.$nextTick(() => {
+                        const container = this.$refs.messageContainer;
+                        if (container) {
+                            container.scrollTop = container.scrollHeight;
+                        }
+                    });
+                },
+
+                renderMarkdown(text) {
+                    if (!text) return '';
+                    // Basic markdown helper for links and formatting
+                    let html = text
+                        .replace(/&/g, "&amp;")
+                        .replace(/</g, "&lt;")
+                        .replace(/>/g, "&gt;");
+                    
+                    // Bold: **text**
+                    html = html.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+                    
+                    // Links: [text](url)
+                    html = html.replace(/\[(.*?)\]\((.*?)\)/g, '<a href="$2" class="text-indigo-600 hover:text-indigo-800 font-extrabold underline transition-all">$1</a>');
+                    
+                    // Bullet lists: - item or * item
+                    html = html.replace(/^\s*[-*]\s+(.*)$/gm, '<li class="ml-4 list-disc my-1">$1</li>');
+
+                    return html;
+                }
+            };
+        };
+    </script>
+
     @yield('scripts')
 </body>
 </html>

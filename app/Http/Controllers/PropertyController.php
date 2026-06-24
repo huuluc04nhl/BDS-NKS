@@ -3153,4 +3153,203 @@ class PropertyController extends Controller
             return response()->json(['success' => false, 'message' => 'Lỗi: ' . $e->getMessage()], 500);
         }
     }
+
+    /**
+     * API: AI Chat Consult
+     */
+    public function apiAiChat(Request $request)
+    {
+        try {
+            $request->validate([
+                'message' => 'required|string',
+                'session_id' => 'required|string',
+                'email' => 'nullable|string|email',
+                'area_context' => 'nullable|string'
+            ]);
+
+            $message = $request->input('message');
+            $sessionId = $request->input('session_id');
+            $userEmail = $request->input('email');
+            $areaContext = $request->input('area_context');
+
+            // 1. Save user message to database
+            \App\Models\AiChatMessage::create([
+                'session_id' => $sessionId,
+                'user_email' => $userEmail,
+                'role' => 'user',
+                'content' => $message,
+                'context_data' => $areaContext ? ['area_context' => $areaContext] : null
+            ]);
+
+            // 2. Fetch history for context (last 30 messages)
+            $history = \App\Models\AiChatMessage::where('session_id', $sessionId)
+                ->orderBy('created_at', 'asc')
+                ->take(30)
+                ->get();
+
+            // 3. Query properties from local DB to populate context (up to 30 properties)
+            $properties = \App\Models\Property::orderBy('id', 'desc')->take(30)->get();
+            $propertiesContext = "";
+            if ($properties->count() > 0) {
+                foreach ($properties as $prop) {
+                    $propertiesContext .= sprintf(
+                        "- ID: %d, Tiêu đề: %s, Địa chỉ: %s, Loại: %s, Giao dịch: %s, Giá: %s, Diện tích: %s m2, Phòng ngủ: %d, Phòng tắm: %d, Hướng: %s, Mô tả: %s, Slug: %s\n",
+                        $prop->id + 1000,
+                        $prop->title,
+                        $prop->address,
+                        $prop->rstype,
+                        $prop->transaction_type,
+                        $prop->formated_price,
+                        $prop->total_area,
+                        $prop->bed,
+                        $prop->bath,
+                        $prop->direction ?? 'Chưa xác định',
+                        strip_tags(\Illuminate\Support\Str::limit($prop->description, 100)),
+                        $prop->slug
+                    );
+                }
+            } else {
+                $propertiesContext = "(Không có bất động sản nào đang đăng ký trên hệ thống)\n";
+            }
+
+            // 4. Build system prompt
+            $systemInstruction = "Bạn là trợ lý AI thông minh tư vấn bất động sản của BDS NKS - nền tảng bất động sản uy tín tại TP.HCM.\n" .
+                "Nhiệm vụ của bạn:\n" .
+                "1. Tư vấn, gợi ý bất động sản phù hợp với nhu cầu khách hàng (vị trí, loại hình, ngân sách, số phòng ngủ/tắm).\n" .
+                "2. Trả lời các thắc mắc về pháp lý BĐS Việt Nam (như thủ tục đặt cọc, hợp đồng thuê nhà, sổ hồng, sổ đỏ, thuế phí).\n" .
+                "3. Tư vấn tài chính BĐS (tính toán lãi suất vay, hạn mức vay ngân hàng, kế hoạch trả nợ phù hợp).\n" .
+                "4. Giới thiệu và tư vấn các khu vực sống, tiện ích xung quanh.\n\n" .
+                "Quy tắc phản hồi:\n" .
+                "- Luôn trả lời bằng tiếng Việt, lịch sự, xưng hô 'tôi' và gọi khách hàng là 'bạn' hoặc xưng 'BDS NKS' và 'quý khách'.\n" .
+                "- Hãy trả lời ngắn gọn, rõ ràng, dễ hiểu, trình bày mạch lạc bằng markdown. Dùng bullet points và in đậm các ý chính.\n" .
+                "- Khi giới thiệu BĐS từ danh sách dưới đây, HÃY CUNG CẤP LINK dưới dạng: [Tiêu đề BĐS](/properties/{slug}) kèm theo giá tiền, diện tích, địa chỉ để khách hàng click xem trực tiếp. Không tự tạo link giả mạo hoặc link ngoài website.\n" .
+                "- Nếu khách hàng tìm kiếm khu vực hoặc tầm giá không khớp chính xác, hãy đề xuất các BĐS tương tự hoặc khuyên khách hàng để lại thông tin nhu cầu.\n" .
+                "- Không trả lời các chủ đề nhạy cảm, chính trị, tôn giáo hoặc không liên quan đến BĐS/tài chính/pháp lý nhà đất.\n\n" .
+                "Danh sách bất động sản đang có trên BDS NKS:\n" . $propertiesContext;
+
+            if ($areaContext) {
+                $systemInstruction .= "\nKhách hàng hiện đang xem trang hoặc quan tâm đến khu vực/BĐS: " . $areaContext;
+            }
+
+            // 5. Build contents array with alternating roles for Gemini
+            $contents = [];
+            $lastRole = null;
+            foreach ($history as $msg) {
+                $role = $msg->role === 'user' ? 'user' : 'model';
+                if ($role === $lastRole) {
+                    $lastIdx = count($contents) - 1;
+                    $contents[$lastIdx]['parts'][0]['text'] .= "\n" . $msg->content;
+                } else {
+                    $contents[] = [
+                        'role' => $role,
+                        'parts' => [
+                            ['text' => $msg->content]
+                        ]
+                    ];
+                    $lastRole = $role;
+                }
+            }
+
+            // 6. Call Gemini API
+            $apiKey = env('GEMINI_API_KEY');
+            if (!$apiKey) {
+                throw new \Exception("Chưa cấu hình GEMINI_API_KEY trong file .env");
+            }
+
+            $model = 'gemini-2.5-flash';
+            $url = "https://generativelanguage.googleapis.com/v1beta/models/{$model}:generateContent?key=" . $apiKey;
+
+            $response = Http::timeout(15)->withoutVerifying()->post($url, [
+                'contents' => $contents,
+                'systemInstruction' => [
+                    'parts' => [
+                        ['text' => $systemInstruction]
+                    ]
+                ]
+            ]);
+
+            if (!$response->successful()) {
+                // Fallback to gemini-2.0-flash-lite if 2.5-flash fails or rate limits
+                $fallbackModel = 'gemini-2.0-flash-lite';
+                $fallbackUrl = "https://generativelanguage.googleapis.com/v1beta/models/{$fallbackModel}:generateContent?key=" . $apiKey;
+                $response = Http::timeout(15)->withoutVerifying()->post($fallbackUrl, [
+                    'contents' => $contents,
+                    'systemInstruction' => [
+                        'parts' => [
+                            ['text' => $systemInstruction]
+                        ]
+                    ]
+                ]);
+            }
+
+            if ($response->successful()) {
+                $resData = $response->json();
+                $replyText = $resData['candidates'][0]['content']['parts'][0]['text'] ?? '';
+                
+                if (empty($replyText)) {
+                    $replyText = "Xin lỗi, tôi không thể xử lý câu trả lời lúc này. Bạn có câu hỏi nào khác không?";
+                }
+            } else {
+                $errorJson = $response->json();
+                $errorMessage = $errorJson['error']['message'] ?? 'Unknown API Error';
+                \Illuminate\Support\Facades\Log::error("Gemini API Error: " . $errorMessage);
+                $replyText = "Hiện tại máy chủ AI tư vấn đang bận hoặc quá tải quota. Xin vui lòng thử lại sau vài giây hoặc liên hệ Hotline để được hỗ trợ trực tiếp!";
+            }
+
+            // 7. Save model reply to database
+            \App\Models\AiChatMessage::create([
+                'session_id' => $sessionId,
+                'user_email' => $userEmail,
+                'role' => 'model',
+                'content' => $replyText,
+                'context_data' => null
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'reply' => $replyText
+            ]);
+
+        } catch (\Illuminate\Validation\ValidationException $ve) {
+            return response()->json([
+                'success' => false,
+                'message' => implode(' ', \Illuminate\Support\Arr::flatten($ve->errors()))
+            ], 422);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Lỗi xử lý chatbot: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * API: AI Chat History
+     */
+    public function apiAiChatHistory(Request $request)
+    {
+        try {
+            $sessionId = $request->query('session_id');
+            if (empty($sessionId)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Thiếu session_id.'
+                ], 400);
+            }
+
+            $messages = \App\Models\AiChatMessage::where('session_id', $sessionId)
+                ->orderBy('created_at', 'asc')
+                ->get();
+
+            return response()->json([
+                'success' => true,
+                'messages' => $messages
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Lỗi CSDL: ' . $e->getMessage()
+            ], 500);
+        }
+    }
 }
