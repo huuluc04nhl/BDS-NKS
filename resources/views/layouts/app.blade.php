@@ -719,7 +719,7 @@
                          </svg>
                      </div>
                      <div class="bg-white rounded-2xl rounded-tl-none px-4 py-3 border border-slate-100 shadow-sm text-sm text-slate-700 leading-relaxed">
-                         Chào anh/chị! Em là trợ lý ảo của BDS NKS. Em có thể hỗ trợ anh/chị tìm kiếm thông tin gì hôm nay ạ? Anh/chị có thể hỏi em về:
+                         Chào <span x-text="getGenderHonorific()">anh/chị</span>! Em là trợ lý ảo của BDS NKS. Em có thể hỗ trợ <span x-text="getGenderHonorific()">anh/chị</span> tìm kiếm thông tin gì hôm nay ạ? <span class="capitalize" x-text="getGenderHonorific()">Anh/chị</span> có thể hỏi em về:
                          <ul class="list-disc pl-4 mt-1.5 space-y-1 text-slate-600">
                              <li>Tìm nhà/căn hộ thuê theo khu vực & tầm giá</li>
                              <li>Thủ tục đặt cọc, pháp lý thuê nhà</li>
@@ -829,16 +829,24 @@
                 ],
 
                 initChatbot() {
-                    // Initialize Session ID
-                    let storedSession = localStorage.getItem('nks_ai_session_id');
-                    if (!storedSession) {
-                        storedSession = 'ai_session_' + Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
-                        localStorage.setItem('nks_ai_session_id', storedSession);
-                    }
-                    this.sessionId = storedSession;
+                    // Generate fresh session ID on every page load to reset conversation
+                    this.sessionId = 'ai_session_' + Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+                    this.messages = [];
+                },
 
-                    // Load history on load
-                    this.loadChatHistory();
+                getGenderHonorific() {
+                    const savedUser = localStorage.getItem('nks_user');
+                    if (savedUser) {
+                        try {
+                            const parsed = JSON.parse(savedUser);
+                            if (parsed.gender !== undefined && parsed.gender !== null) {
+                                const g = parseInt(parsed.gender);
+                                if (g === 0) return 'anh';
+                                if (g === 1) return 'chị';
+                            }
+                        } catch(e) {}
+                    }
+                    return 'anh/chị';
                 },
 
                 async loadChatHistory() {
@@ -914,7 +922,8 @@
                                 message: userMsgText,
                                 session_id: this.sessionId,
                                 email: email,
-                                area_context: areaContext
+                                area_context: areaContext,
+                                gender_honorific: this.getGenderHonorific()
                             })
                         });
 

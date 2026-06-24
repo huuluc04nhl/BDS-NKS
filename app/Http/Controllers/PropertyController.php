@@ -3164,13 +3164,19 @@ class PropertyController extends Controller
                 'message' => 'required|string',
                 'session_id' => 'required|string',
                 'email' => 'nullable|string|email',
-                'area_context' => 'nullable|string'
+                'area_context' => 'nullable|string',
+                'gender_honorific' => 'nullable|string'
             ]);
 
             $message = $request->input('message');
             $sessionId = $request->input('session_id');
             $userEmail = $request->input('email');
             $areaContext = $request->input('area_context');
+            
+            $genderHonorific = $request->input('gender_honorific', 'anh/chị');
+            if (!in_array($genderHonorific, ['anh', 'chị', 'anh/chị'])) {
+                $genderHonorific = 'anh/chị';
+            }
 
             // 1. Save user message to database
             \App\Models\AiChatMessage::create([
@@ -3222,11 +3228,11 @@ class PropertyController extends Controller
                 "1. Tư vấn, gợi ý bất động sản phù hợp với nhu cầu khách hàng.\n" .
                 "2. Trả lời các thắc mắc về pháp lý và tài chính BĐS Việt Nam.\n\n" .
                 "Quy tắc phản hồi nghiêm ngặt:\n" .
-                "- Luôn xưng hô là 'em' và gọi khách hàng là 'anh/chị'.\n" .
+                "- Luôn xưng hô là 'em' và gọi khách hàng là '{$genderHonorific}'.\n" .
                 "- Trả lời cực kỳ ngắn gọn, đi thẳng vào vấn đề, không dài dòng lan man.\n" .
-                "- Khi giới thiệu BĐS, HÃY CUNG CẤP LINK theo định dạng: [Tiêu đề BĐS](/properties/{slug}) kèm giá, diện tích, địa chỉ để anh/chị click xem trực tiếp.\n" .
-                "- Khi anh/chị hỏi thông tin cố định về 1 căn (như giá cả, chi tiết), chỉ trả lời các thông tin cơ bản cốt lõi nhất kèm link chi tiết, KHÔNG mô tả chi tiết quá hay viết các đoạn giới thiệu dài về căn đó.\n" .
-                "- Luôn luôn liệt kê/gợi ý thêm 2-3 bất động sản tương tự hoặc cùng khu vực/tầm giá từ danh sách dưới đây để anh/chị dễ dàng tham khảo.\n" .
+                "- Khi giới thiệu BĐS, HÃY CUNG CẤP LINK theo định dạng: [Tiêu đề BĐS](/properties/{slug}) kèm giá, diện tích, địa chỉ để {$genderHonorific} click xem trực tiếp.\n" .
+                "- Khi {$genderHonorific} hỏi thông tin cố định về 1 căn (như giá cả, chi tiết), chỉ trả lời các thông tin cơ bản cốt lõi nhất kèm link chi tiết, KHÔNG mô tả chi tiết quá hay viết các đoạn giới thiệu dài về căn đó.\n" .
+                "- Luôn luôn liệt kê/gợi ý thêm 2-3 bất động sản tương tự hoặc cùng khu vực/tầm giá từ danh sách dưới đây để {$genderHonorific} dễ dàng tham khảo.\n" .
                 "- Không nói chuyện ngoài lề không liên quan đến BĐS/tài chính/pháp lý nhà đất.\n\n" .
                 "Danh sách bất động sản đang có trên BDS NKS:\n" . $propertiesContext;
 
