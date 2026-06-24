@@ -647,10 +647,7 @@
                                                     <span class="font-bold text-white text-[10px] block leading-tight" x-text="cccdHometownInput || idHometownInput || hometownInput || 'N/A'"></span>
                                                 </div>
 
-                                                <div>
-                                                    <span class="block text-[8px] font-bold text-slate-400 uppercase">Nơi thường trú / Place of residence</span>
-                                                    <span class="font-bold text-white text-[10px] block leading-tight" x-text="cccdAddressInput || idAddressInput || 'N/A'"></span>
-                                                </div>
+
 
                                                 <div class="grid grid-cols-2 gap-2 pt-1 border-t border-white/5">
                                                     <div>
@@ -871,18 +868,12 @@
                                                placeholder="Ví dụ: Hải Hậu, Nam Định" 
                                                class="w-full bg-slate-50 border border-slate-200 rounded-2xl px-4 py-3 text-sm focus:outline-none focus:border-primary focus:bg-white transition-all text-slate-700 font-semibold">
                                     </div>
-                                    <div>
-                                        <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-2">Nơi thường trú</label>
-                                        <input type="text" 
-                                               x-model="cccdAddressInput" 
-                                               placeholder="Ví dụ: 123 Nguyễn Huệ, Quận 1, TP.HCM" 
-                                               class="w-full bg-slate-50 border border-slate-200 rounded-2xl px-4 py-3 text-sm focus:outline-none focus:border-primary focus:bg-white transition-all text-slate-700">
-                                    </div>
+
                                 </div>
 
                                 <!-- Action buttons -->
                                 <div class="flex items-center gap-3 pt-4 border-t border-slate-100">
-                                    <button @click="saveCccd" :disabled="!cccdFrontSrc || !cccdBackSrc || !cccdNumberInput || !cccdAddressInput" class="bg-primary hover:bg-primary-dark disabled:opacity-50 text-white font-bold px-8 py-3.5 rounded-full text-xs transition-all shadow-md">
+                                    <button @click="saveCccd" :disabled="!cccdFrontSrc || !cccdBackSrc || !cccdNumberInput" class="bg-primary hover:bg-primary-dark disabled:opacity-50 text-white font-bold px-8 py-3.5 rounded-full text-xs transition-all shadow-md">
                                         Xác thực & Lưu
                                     </button>
                                     <template x-if="idNumberInput">
@@ -3211,7 +3202,7 @@
             },
             
             async saveCccd() {
-                if (!this.cccdFrontSrc || !this.cccdBackSrc || !this.cccdNumberInput || !this.cccdDateInput || !this.cccdPlaceInput || !this.cccdAddressInput) {
+                if (!this.cccdFrontSrc || !this.cccdBackSrc || !this.cccdNumberInput || !this.cccdDateInput || !this.cccdPlaceInput) {
                     alert('Vui lòng nhập đầy đủ thông tin và chọn ảnh 2 mặt CCCD.');
                     return;
                 }
