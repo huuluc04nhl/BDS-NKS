@@ -19,6 +19,31 @@
                 <input type="text" x-model="searchKeyword" @input.debounce.300ms="filterProperties()" placeholder="Tìm theo địa chỉ, đường, phường..." class="w-full bg-transparent border-0 p-0 text-slate-800 placeholder-slate-400 font-bold focus:outline-none focus:ring-0 text-xs">
             </div>
 
+            <!-- Location Cascading Filters (2 levels) -->
+            <div class="grid grid-cols-2 gap-3">
+                <!-- Province Select -->
+                <div>
+                    <label class="block text-[9px] font-black text-slate-400 uppercase tracking-wider mb-1">Tỉnh / Thành</label>
+                    <select x-model="selectedProvince" @change="onProvinceChange()" class="w-full bg-slate-50 border border-slate-200/50 rounded-xl px-3 py-2 text-xs font-bold text-slate-700 focus:outline-none focus:border-primary">
+                        <option value="">Tất cả Tỉnh/Thành</option>
+                        <template x-for="p in provinces" :key="p.id">
+                            <option :value="p.id" x-text="p.name" :selected="selectedProvince == p.id"></option>
+                        </template>
+                    </select>
+                </div>
+
+                <!-- Ward Select -->
+                <div>
+                    <label class="block text-[9px] font-black text-slate-400 uppercase tracking-wider mb-1">Phường / Xã</label>
+                    <select x-model="selectedWard" @change="filterProperties()" :disabled="!selectedProvince" class="w-full bg-slate-50 border border-slate-200/50 rounded-xl px-3 py-2 text-xs font-bold text-slate-700 focus:outline-none focus:border-primary disabled:opacity-50">
+                        <option value="">Tất cả Phường/Xã</option>
+                        <template x-for="w in wards" :key="w.id">
+                            <option :value="w.id" x-text="w.name" :selected="selectedWard == w.id"></option>
+                        </template>
+                    </select>
+                </div>
+            </div>
+
             <!-- Filters Grid -->
             <div class="grid grid-cols-2 gap-3">
                 <!-- Type Select -->
@@ -436,6 +461,10 @@
             priceMax: 100,
             bedsCount: '',
             bathsCount: '',
+            provinces: [],
+            wards: [],
+            selectedProvince: '',
+            selectedWard: '',
             
             mobileView: 'list',
             map: null,
@@ -478,6 +507,7 @@
                 });
                 
                 this.filterProperties();
+                this.loadProvinces();
                 
                 this.$nextTick(() => {
                     this.initMap();
@@ -669,7 +699,33 @@
                     
                     const matchesBaths = !this.bathsCount || parseInt(p.bath || 0) === parseInt(this.bathsCount);
                     
-                    return matchesKeyword && matchesType && matchesPrice && matchesBeds && matchesBaths;
+                    // Province filter
+                    let matchesProvince = true;
+                    if (this.selectedProvince) {
+                        const provinceObj = this.provinces.find(prov => prov.id == this.selectedProvince);
+                        const provinceName = provinceObj ? (provinceObj.name || provinceObj.title) : '';
+                        if (provinceName) {
+                            matchesProvince = p.province && (
+                                p.province.toLowerCase().includes(provinceName.toLowerCase()) || 
+                                provinceName.toLowerCase().includes(p.province.toLowerCase())
+                            );
+                        }
+                    }
+                    
+                    // Ward filter
+                    let matchesWard = true;
+                    if (this.selectedWard) {
+                        const wardObj = this.wards.find(w => w.id == this.selectedWard);
+                        const wardName = wardObj ? (wardObj.name || wardObj.title) : '';
+                        if (wardName) {
+                            matchesWard = p.address && (
+                                p.address.toLowerCase().includes(wardName.toLowerCase()) ||
+                                (wardName.toLowerCase().startsWith('phường ') && p.address.toLowerCase().includes(wardName.toLowerCase().replace('phường ', 'p. ')))
+                            );
+                        }
+                    }
+                    
+                    return matchesKeyword && matchesType && matchesPrice && matchesBeds && matchesBaths && matchesProvince && matchesWard;
                 });
                 
                 this.updateMapMarkers();
@@ -681,6 +737,54 @@
                 this.priceMax = 100;
                 this.bedsCount = '';
                 this.bathsCount = '';
+                this.selectedProvince = '';
+                this.selectedWard = '';
+                this.wards = [];
+                this.filterProperties();
+            },
+
+            async loadProvinces() {
+                try {
+                    const res = await fetch('/nks-api/nks/provinces', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                        },
+                        body: JSON.stringify({ country_id: 192, slcBox: true })
+                    });
+                    if (res.ok) {
+                        this.provinces = await res.json();
+                    }
+                } catch (e) {
+                    console.error('Failed to load provinces:', e);
+                }
+            },
+
+            async onProvinceChange() {
+                this.selectedWard = '';
+                this.wards = [];
+                if (!this.selectedProvince) {
+                    this.filterProperties();
+                    return;
+                }
+                
+                try {
+                    const res = await fetch('/nks-api/nks/administratives', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                        },
+                        body: JSON.stringify({ province_id: Number(this.selectedProvince), slcBox: true })
+                    });
+                    if (res.ok) {
+                        this.wards = await res.json();
+                    }
+                } catch (e) {
+                    console.error('Failed to load wards:', e);
+                }
+                
                 this.filterProperties();
             },
             

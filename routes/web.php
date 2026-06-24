@@ -66,6 +66,9 @@ Route::prefix('nks-api')->group(function () {
     Route::post('/ai/chat', [PropertyController::class, 'apiAiChat']);
     Route::get('/ai/chat/history', [PropertyController::class, 'apiAiChatHistory']);
 
+    // Property suggestion route
+    Route::get('/properties/suggest', [PropertyController::class, 'apiSuggestProperties']);
+
     // Email routes
     Route::get('/emails/list', [PropertyController::class, 'apiGetEmailLogs']);
 });

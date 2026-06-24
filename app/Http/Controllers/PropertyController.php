@@ -3427,4 +3427,121 @@ class PropertyController extends Controller
             ], 500);
         }
     }
+
+    /**
+     * API: Suggest similar properties in the same area
+     */
+    public function apiSuggestProperties(Request $request)
+    {
+        try {
+            $currentId = intval($request->query('id', 0));
+            $province = $request->query('province', '');
+            $address = $request->query('address', '');
+            $price = floatval($request->query('price', 0));
+            $rstype = $request->query('rstype', '');
+            $transactionType = $request->query('transaction_type', '');
+
+            $items = $this->fetchAllItems();
+
+            // Normalizer for transaction type (bilingual)
+            $txNormal = function($type) {
+                if (empty($type)) return '';
+                $type = mb_strtolower($type);
+                if (strpos($type, 'rent') !== false || strpos($type, 'thuê') !== false) {
+                    return 'rent';
+                }
+                if (strpos($type, 'sale') !== false || strpos($type, 'bán') !== false) {
+                    return 'sale';
+                }
+                return $type;
+            };
+
+            $currentTxType = $txNormal($transactionType);
+
+            // Helper function to extract ward from address
+            $extractWard = function($addr) {
+                if (empty($addr)) return '';
+                // Matches "Phường X", "P. X", "Xã Y", "Thị trấn Z"
+                if (preg_match('/(Phường\s+\d+|Phường\s+[\p{L}\s\d]+|P\.\s*\d+|P\.\s*[\p{L}\s\d]+|Xã\s+[\p{L}\s\d]+|Thị trấn\s+[\p{L}\s\d]+)/ui', $addr, $matches)) {
+                    $ward = trim($matches[1]);
+                    // Normalize "P. 12" or "P.12" to "Phường 12"
+                    if (preg_match('/^P\.\s*(\d+)$/i', $ward, $sub)) {
+                        return 'Phường ' . $sub[1];
+                    }
+                    if (preg_match('/^P\.\s*([\p{L}\s]+)$/ui', $ward, $sub)) {
+                        return 'Phường ' . trim($sub[1]);
+                    }
+                    return $ward;
+                }
+                return '';
+            };
+
+            $currentWard = $extractWard($address);
+
+            $scored = [];
+            foreach ($items as $item) {
+                $itemId = intval($item['id'] ?? 0);
+                if ($itemId === $currentId) {
+                    continue;
+                }
+
+                $score = 0;
+
+                // Transaction type check (must match)
+                $itemTxType = $txNormal($item['transaction_type'] ?? '');
+                if ($currentTxType && $itemTxType !== $currentTxType) {
+                    continue; // Skip if transaction types mismatch
+                }
+                $score += 50;
+
+                // Same property type (rstype)
+                $itemRsType = $item['rstype'] ?? '';
+                if ($rstype && $itemRsType === $rstype) {
+                    $score += 30;
+                }
+
+                // Same Province
+                $itemProvince = $item['province'] ?? '';
+                if ($province && (mb_stripos($itemProvince, $province) !== false || mb_stripos($province, $itemProvince) !== false)) {
+                    $score += 20;
+                }
+
+                // Same Ward
+                $itemAddress = $item['address'] ?? '';
+                $itemWard = $extractWard($itemAddress);
+                if ($currentWard && $itemWard && mb_strtolower($itemWard) === mb_strtolower($currentWard)) {
+                    $score += 40;
+                }
+
+                // Price proximity
+                $itemPrice = floatval($item['price'] ?? $item['rentprice'] ?? 0);
+                if ($price > 0 && $itemPrice > 0) {
+                    $ratio = min($price, $itemPrice) / max($price, $itemPrice);
+                    $score += intval($ratio * 30);
+                }
+
+                $item['match_score'] = $score;
+                $scored[] = $item;
+            }
+
+            // Sort by match score desc
+            usort($scored, function($a, $b) {
+                return $b['match_score'] <=> $a['match_score'];
+            });
+
+            // Limit to top 4 suggestions
+            $suggestions = array_slice($scored, 0, 4);
+
+            return response()->json([
+                'success' => true,
+                'data' => $suggestions
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Lỗi gợi ý: ' . $e->getMessage()
+            ], 500);
+        }
+    }
 }

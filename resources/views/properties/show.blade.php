@@ -261,6 +261,84 @@
             </div>
             
         </div>
+
+        <!-- SIMILAR PROPERTIES SECTION -->
+        <div class="pt-16 border-t border-slate-200" x-data="similarProperties(@js($property))" x-show="loading || suggestions.length > 0" x-cloak>
+            <div class="space-y-6">
+                <div class="flex flex-col md:flex-row md:items-end justify-between gap-4">
+                    <div>
+                        <span class="text-[10px] font-black text-primary uppercase tracking-widest">Gợi ý thông minh</span>
+                        <h2 class="text-xl sm:text-2xl font-black text-slate-900 mt-1">Bất động sản cùng khu vực</h2>
+                        <p class="text-xs text-slate-400 font-medium mt-1">Những bất động sản tương đồng về vị trí và loại hình dành cho bạn.</p>
+                    </div>
+                </div>
+
+                <!-- Loading Skeleton Grid -->
+                <div x-show="loading" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                    <template x-for="i in 4" :key="i">
+                        <div class="bg-white rounded-[24px] border border-slate-100 shadow-sm p-3 space-y-4 animate-pulse">
+                            <div class="w-full h-44 bg-slate-100 rounded-[18px]"></div>
+                            <div class="space-y-3.5 px-1 py-2">
+                                <div class="h-3.5 bg-slate-100 rounded-md w-2/3"></div>
+                                <div class="h-5 bg-slate-100 rounded-md w-1/2"></div>
+                                <div class="h-3.5 bg-slate-100 rounded-md w-full"></div>
+                                <div class="flex justify-between pt-2 border-t border-slate-50">
+                                    <div class="h-3 bg-slate-100 rounded-md w-1/4"></div>
+                                    <div class="h-3 bg-slate-100 rounded-md w-1/4"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </template>
+                </div>
+
+                <!-- Suggestions Grid -->
+                <div x-show="!loading" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                    <template x-for="p in suggestions" :key="p.id">
+                        <div class="bg-white rounded-[24px] border border-slate-100 shadow-sm hover:shadow-premium card-hover-premium overflow-hidden flex flex-col group p-3 cursor-pointer"
+                             @click="window.location.href = '/properties/' + p.slug">
+                            <!-- Image Container with Verify Badge -->
+                            <div class="w-full h-44 rounded-[18px] overflow-hidden relative flex-shrink-0">
+                                <img :src="p.featureimg" :alt="p.title" class="w-full h-full object-cover group-hover:scale-103 transition-transform duration-700 ease-out">
+                                <div class="absolute top-2.5 left-2.5 flex flex-col gap-1.5">
+                                    <span class="inline-flex items-center gap-0.5 px-2 py-1 rounded-[6px] text-[8px] font-black tracking-widest bg-emerald-500 text-white uppercase shadow-sm">
+                                        <svg class="w-2.5 h-2.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" /></svg>
+                                        3 Thật
+                                    </span>
+                                </div>
+                            </div>
+
+                            <!-- Content Section -->
+                            <div class="p-3 pb-1 flex-grow flex flex-col justify-between">
+                                <div class="space-y-2">
+                                    <!-- Tags row -->
+                                    <div class="flex gap-2">
+                                        <span class="bg-slate-100 text-slate-600 text-[9px] font-bold px-2 py-0.5 rounded-[6px]" x-text="p.rstype">Căn hộ</span>
+                                        <span class="text-emerald-600 bg-emerald-50 text-[9px] font-extrabold px-2 py-0.5 rounded-[6px]" x-text="p.transaction_type === 'rent' ? 'Cho thuê' : 'Bán'">Cho thuê</span>
+                                    </div>
+
+                                    <!-- Pricing -->
+                                    <div class="flex justify-between items-end">
+                                        <span class="text-sm font-black text-primary leading-none" x-text="p.formatedPrice"></span>
+                                        <span class="text-[9px] font-bold text-slate-400" x-text="p.total_area + ' m²'"></span>
+                                    </div>
+
+                                    <!-- Title -->
+                                    <h3 class="font-extrabold text-slate-800 text-xs leading-snug line-clamp-2 hover:text-primary transition-colors duration-300" x-text="p.title"></h3>
+                                </div>
+
+                                <!-- Attributes Horizontal Row -->
+                                <div class="flex items-center justify-between text-slate-400 text-[10px] font-bold pt-3 border-t border-slate-100 mt-3">
+                                    <span class="flex items-center gap-0.5"><svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" /></svg> <span x-text="p.bed || 1"></span> PN</span>
+                                    <span class="flex items-center gap-0.5"><svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" /></svg> <span x-text="p.bath || 1"></span> WC</span>
+                                    <span class="flex items-center gap-0.5"><svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16" /></svg> <span x-text="p.floors || 1"></span> Tầng</span>
+                                </div>
+                            </div>
+                        </div>
+                    </template>
+                </div>
+            </div>
+        </div>
+
     </div>
 </div>
 @endsection
@@ -488,6 +566,35 @@
                 new maplibregl.Marker()
                     .setLngLat([lng, lat])
                     .addTo(map);
+            }
+        }));
+
+        Alpine.data('similarProperties', (propertyData) => ({
+            property: propertyData,
+            suggestions: [],
+            loading: true,
+            async init() {
+                try {
+                    const params = new URLSearchParams({
+                        id: this.property.id,
+                        province: this.property.province || '',
+                        address: this.property.address || '',
+                        price: this.property.price || this.property.rentprice || 0,
+                        rstype: this.property.rstype || '',
+                        transaction_type: this.property.transaction_type || ''
+                    });
+                    const res = await fetch(`/nks-api/properties/suggest?${params.toString()}`);
+                    if (res.ok) {
+                        const result = await res.json();
+                        if (result.success) {
+                            this.suggestions = result.data || [];
+                        }
+                    }
+                } catch (e) {
+                    console.error('Lỗi tải BĐS tương tự:', e);
+                } finally {
+                    this.loading = false;
+                }
             }
         }));
     });
