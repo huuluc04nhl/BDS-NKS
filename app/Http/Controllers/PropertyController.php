@@ -3109,15 +3109,33 @@ class PropertyController extends Controller
                 return response()->json(['success' => true, 'message' => 'Cập nhật CCCD thành công (Mock).']);
             }
             
-            $response = Http::timeout(10)->withoutVerifying()->post('https://account.nks.vn/api/nks/user/updateCccd', [
-                'access_token' => $accessToken,
-                'front' => $request->input('front'),
-                'back' => $request->input('back'),
-                'number' => $request->input('number'),
-                'date' => $request->input('date'),
-                'place' => $request->input('place'),
-                'permanent_address' => $request->input('permanent_address')
-            ]);
+            $front = $request->input('front');
+            $back = $request->input('back');
+            $isFrontBase64 = strpos($front, 'data:image/') === 0;
+            $isBackBase64 = strpos($back, 'data:image/') === 0;
+
+            if ($isFrontBase64 && $isBackBase64) {
+                // Call NKS updateCccd API since we have new base64 images
+                $response = Http::timeout(10)->withoutVerifying()->post('https://account.nks.vn/api/nks/user/updateCccd', [
+                    'access_token' => $accessToken,
+                    'front' => $front,
+                    'back' => $back,
+                    'number' => $request->input('number'),
+                    'date' => $request->input('date'),
+                    'place' => $request->input('place'),
+                    'permanent_address' => $request->input('permanent_address')
+                ]);
+            } else {
+                // Since images are already uploaded URLs, calling NKS updateCccd will fail with 500 "Undefined offset: 1" from NKS account API.
+                // We synchronize only the text fields (number, date, place, permanent address) using the stable NKS updateInfo API.
+                $response = Http::timeout(10)->withoutVerifying()->post('https://account.nks.vn/api/nks/user/updateInfo', [
+                    'access_token' => $accessToken,
+                    'id_number' => $request->input('number'),
+                    'id_date' => $request->input('date'),
+                    'id_place' => $request->input('place'),
+                    'permanent_address' => $request->input('permanent_address')
+                ]);
+            }
             
             if ($response->successful()) {
                 $data = $response->json();
