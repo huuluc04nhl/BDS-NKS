@@ -3274,13 +3274,14 @@ class PropertyController extends Controller
             $replyText = "";
             $isRateLimit = false;
 
-            // List of models to try in sequence to bypass the low daily limits (20 RPD) of individual preview/new models
+            // List of models to try in sequence. High-stability and high-quota models (like gemini-3.1-flash-lite and gemini-flash-lite-latest) are placed FIRST to ensure instant responses and bypass the low 20 RPD limit of other models.
             $models = [
+                'gemini-3.1-flash-lite',
+                'gemini-flash-lite-latest',
+                'gemini-flash-latest',
                 'gemini-3.5-flash',
                 'gemini-2.5-flash-lite',
-                'gemini-3-flash',
-                'gemini-2.5-flash',
-                'gemini-1.5-flash'
+                'gemini-2.5-flash'
             ];
 
             foreach ($models as $model) {
