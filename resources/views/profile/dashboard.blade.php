@@ -527,7 +527,9 @@
                                     Lưu ảnh đại diện
                                 </button>
                             </div>
-                                <!-- Step 4: Xác thực CCCD -->
+                        </div>
+
+                        <!-- Step 4: Xác thực CCCD -->
                         <div x-show="activeStep === 4"
                              x-transition:enter="transition ease-out duration-300 transform"
                              x-transition:enter-start="opacity-0 translate-y-4"
