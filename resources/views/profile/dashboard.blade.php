@@ -265,7 +265,8 @@
                                         <input type="text" x-model="pobInput" placeholder="Ví dụ: Hà Nội" class="w-full bg-slate-50 border border-slate-200 rounded-2xl px-4 py-3.5 text-sm focus:outline-none focus:border-primary focus:bg-white transition-all text-slate-700">
                                     </div>
                                     <div>
-                                        <!-- Keep empty column for grid symmetry -->
+                                        <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Quê quán</label>
+                                        <input type="text" x-model="hometownInput" placeholder="Ví dụ: Nam Định" class="w-full bg-slate-50 border border-slate-200 rounded-2xl px-4 py-3.5 text-sm focus:outline-none focus:border-primary focus:bg-white transition-all text-slate-700">
                                     </div>
                                 </div>
 
@@ -648,6 +649,11 @@
                                                 </div>
 
                                                 <div>
+                                                    <span class="block text-[8px] font-bold text-slate-400 uppercase">Quê quán / Place of origin</span>
+                                                    <span class="font-bold text-white text-[10px] block leading-tight" x-text="cccdHometownInput || idHometownInput || hometownInput || 'N/A'"></span>
+                                                </div>
+
+                                                <div>
                                                     <span class="block text-[8px] font-bold text-slate-400 uppercase">Nơi thường trú / Place of residence</span>
                                                     <span class="font-bold text-white text-[10px] block leading-tight" x-text="cccdAddressInput || idAddressInput || 'N/A'"></span>
                                                 </div>
@@ -670,7 +676,7 @@
 
                             <!-- CHẾ ĐỘ XEM (VIEW MODE) -->
                             <div x-show="!isEditingCccd" class="pt-2">
-                                <button @click="isEditingCccd = true; cccdNumberInput = idNumberInput; cccdDateInput = idDateInput; cccdPlaceInput = idPlaceInput; cccdAddressInput = idAddressInput;" 
+                                <button @click="isEditingCccd = true; cccdNumberInput = idNumberInput; cccdDateInput = idDateInput; cccdPlaceInput = idPlaceInput; cccdAddressInput = idAddressInput; cccdHometownInput = idHometownInput;" 
                                         class="bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 font-extrabold px-6 py-3 rounded-full text-xs transition-all shadow-sm flex items-center gap-1.5 hover:scale-[1.02]">
                                     <svg class="w-4 h-4 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                                         <path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
@@ -864,6 +870,22 @@
                                                    class="w-full bg-slate-50 border border-slate-200 rounded-2xl px-4 py-3 text-sm focus:outline-none focus:border-primary focus:bg-white transition-all text-slate-700">
                                         </div>
                                     </div>
+                                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                        <div>
+                                            <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-2">Quê quán</label>
+                                            <input type="text" 
+                                                   x-model="cccdHometownInput" 
+                                                   placeholder="Ví dụ: Hải Hậu, Nam Định" 
+                                                   class="w-full bg-slate-50 border border-slate-200 rounded-2xl px-4 py-3 text-sm focus:outline-none focus:border-primary focus:bg-white transition-all text-slate-700 font-semibold">
+                                        </div>
+                                        <div>
+                                            <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-2">Nơi sinh</label>
+                                            <input type="text" 
+                                                   x-model="pobInput" 
+                                                   placeholder="Ví dụ: Hà Nội" 
+                                                   class="w-full bg-slate-50 border border-slate-200 rounded-2xl px-4 py-3 text-sm focus:outline-none focus:border-primary focus:bg-white transition-all text-slate-700 font-semibold">
+                                        </div>
+                                    </div>
                                     <div>
                                         <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-2">Nơi thường trú</label>
                                         <input type="text" 
@@ -879,7 +901,7 @@
                                         Xác thực & Lưu
                                     </button>
                                     <template x-if="idNumberInput">
-                                        <button @click="isEditingCccd = false; cccdNumberInput = idNumberInput; cccdDateInput = idDateInput; cccdPlaceInput = idPlaceInput; cccdAddressInput = idAddressInput;" 
+                                        <button @click="isEditingCccd = false; cccdNumberInput = idNumberInput; cccdDateInput = idDateInput; cccdPlaceInput = idPlaceInput; cccdAddressInput = idAddressInput; cccdHometownInput = idHometownInput;" 
                                                 class="bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold px-6 py-3.5 rounded-full text-xs transition-all">
                                             Hủy bỏ
                                         </button>
@@ -1982,10 +2004,12 @@
             websiteInput: '',
             dobInput: '',
             pobInput: '',
+            hometownInput: '',
             idNumberInput: '',
             idDateInput: '',
             idPlaceInput: '',
             idAddressInput: '',
+            idHometownInput: '',
             provinceInput: '',
             wardInput: '',
             wards: [],
@@ -2015,6 +2039,7 @@
             cccdDateInput: '',
             cccdPlaceInput: '',
             cccdAddressInput: '',
+            cccdHometownInput: '',
             
             // Owner Register State
             companyInput: '',
@@ -2188,10 +2213,12 @@
                     this.websiteInput = this.user.website || '';
                     this.dobInput = this.user.dob || '';
                     this.pobInput = this.user.pob || '';
+                    this.hometownInput = this.user.hometown || '';
                     this.idNumberInput = this.user.id_number || '';
                     this.idDateInput = this.user.id_date || '';
                     this.idPlaceInput = this.user.id_place || '';
                     this.idAddressInput = this.user.permanent_address || '';
+                    this.idHometownInput = this.user.hometown || '';
                     this.provinceInput = this.user.province || '';
                     this.wardInput = this.user.ward || '';
                     
@@ -2539,6 +2566,7 @@
                             website: this.websiteInput,
                             dob: this.dobInput,
                             pob: this.pobInput,
+                            hometown: this.hometownInput,
                             id_number: this.idNumberInput,
                             id_date: this.idDateInput,
                             id_place: this.idPlaceInput,
@@ -2850,9 +2878,19 @@
                         const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
                         if (window.jsQR) {
                             const code = jsQR(imageData.data, imageData.width, imageData.height);
-                            if (code && code.data) {
-                                const qrData = code.data;
-                                const parts = qrData.split('|');
+                            if (code) {
+                                let qrData = '';
+                                if (code.binaryData && code.binaryData.length > 0) {
+                                    try {
+                                        qrData = new TextDecoder('utf-8').decode(new Uint8Array(code.binaryData));
+                                    } catch (e) {
+                                        qrData = code.data;
+                                    }
+                                } else {
+                                    qrData = code.data;
+                                }
+                                if (qrData) {
+                                    const parts = qrData.split('|');
                                 if (parts.length >= 5 && parts[0] && parts[2]) {
                                     qrSuccess = true;
                                     this.cccdScanType = 'qr';
@@ -3015,19 +3053,52 @@
                     }
 
                     // Extract Name
-                    const frontLines = frontText.split('\n');
+                    const frontLines = frontText.split('\n').map(l => l.trim()).filter(l => l.length > 0);
                     for (let i = 0; i < frontLines.length; i++) {
                         const lineLower = frontLines[i].toLowerCase();
-                        if (lineLower.includes('họ và tên') || lineLower.includes('full name') || lineLower.includes('họ tên')) {
-                            let candidate = frontLines[i].substring(frontLines[i].indexOf(':') + 1).trim();
-                            if (!candidate || candidate.length < 3) {
-                                if (i + 1 < frontLines.length) {
-                                    candidate = frontLines[i + 1].trim();
-                                }
+                        if (lineLower.includes('họ') || lineLower.includes('tên') || lineLower.includes('name')) {
+                            let candidate = '';
+                            const colonIdx = frontLines[i].indexOf(':');
+                            if (colonIdx !== -1) {
+                                candidate = frontLines[i].substring(colonIdx + 1).trim();
                             }
-                            candidate = candidate.replace(/[^A-Za-zÀ-ỹ\s]/g, '').trim();
+                            const isLabelOnly = !candidate || candidate.toLowerCase().includes('họ và tên') || candidate.toLowerCase().includes('full name') || candidate.toLowerCase().includes('họ tên') || candidate.length < 3;
+                            if (isLabelOnly && i + 1 < frontLines.length) {
+                                candidate = frontLines[i + 1].trim();
+                            }
+                            candidate = candidate
+                                .replace(/họ và tên|full name|họ tên/gi, '')
+                                .replace(/[^A-Za-zÀ-ỹ\s]/g, '')
+                                .replace(/\s+/g, ' ')
+                                .trim();
                             if (candidate.length > 3) {
                                 extractedName = candidate;
+                                break;
+                            }
+                        }
+                    }
+
+                    // Extract Hometown / Place of Origin (Quê quán)
+                    let extractedHometown = '';
+                    for (let i = 0; i < frontLines.length; i++) {
+                        const lineLower = frontLines[i].toLowerCase();
+                        if (lineLower.includes('quê quán') || lineLower.includes('place of origin') || lineLower.includes('quê quan') || lineLower.includes('origin')) {
+                            let candidate = '';
+                            const colonIdx = frontLines[i].indexOf(':');
+                            if (colonIdx !== -1) {
+                                candidate = frontLines[i].substring(colonIdx + 1).trim();
+                            }
+                            const isLabelOnly = !candidate || candidate.toLowerCase().includes('quê quán') || candidate.toLowerCase().includes('place of origin') || candidate.toLowerCase().includes('quê quan') || candidate.length < 3;
+                            if (isLabelOnly && i + 1 < frontLines.length) {
+                                candidate = frontLines[i + 1].trim();
+                            }
+                            candidate = candidate
+                                .replace(/quê quán|place of origin|quê quan/gi, '')
+                                .replace(/[^A-Za-z0-9À-ỹ\s,,.\/-]/g, '')
+                                .replace(/\s+/g, ' ')
+                                .trim();
+                            if (candidate.length > 3) {
+                                extractedHometown = candidate;
                                 break;
                             }
                         }
@@ -3095,6 +3166,7 @@
                     }
 
                     if (extractedDob) this.dobInput = extractedDob;
+                    if (extractedHometown) this.cccdHometownInput = extractedHometown;
                     
                     if (extractedName) {
                         const nameParts = extractedName.split(' ');
@@ -3184,6 +3256,8 @@
                         userObj.id_date = this.cccdDateInput;
                         userObj.id_place = this.cccdPlaceInput;
                         userObj.permanent_address = this.cccdAddressInput;
+                        userObj.pob = this.pobInput;
+                        userObj.hometown = this.cccdHometownInput;
                         
                         if (this.firstnameInput) userObj.firstname = this.firstnameInput;
                         if (this.lastnameInput) userObj.lastname = this.lastnameInput;
@@ -3197,9 +3271,11 @@
                         this.idDateInput = this.cccdDateInput;
                         this.idPlaceInput = this.cccdPlaceInput;
                         this.idAddressInput = this.cccdAddressInput;
+                        this.idHometownInput = this.cccdHometownInput;
+                        this.hometownInput = this.cccdHometownInput;
                         this.user = userObj;
                         
-                        // Async background sync to save additional fields (name, DOB, gender, permanent address) in Laravel database
+                        // Async background sync to save additional fields (name, DOB, gender, permanent address, pob, hometown) in Laravel database
                         try {
                             await fetch('/nks-api/profile/update', {
                                 method: 'POST',
@@ -3220,6 +3296,8 @@
                                     id_date: this.cccdDateInput,
                                     id_place: this.cccdPlaceInput,
                                     permanent_address: this.cccdAddressInput,
+                                    pob: this.pobInput,
+                                    hometown: this.cccdHometownInput,
                                     intro: this.introInput,
                                     phone: this.phoneInput,
                                     website: this.websiteInput,

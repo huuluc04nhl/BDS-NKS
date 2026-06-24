@@ -12,7 +12,7 @@ use Illuminate\Notifications\Notifiable;
 
 #[Fillable([
     'name', 'email', 'password', 'phone', 'avatar', 'role', 'status', 'point',
-    'firstname', 'lastname', 'intro', 'gender', 'website', 'dob', 'pob',
+    'firstname', 'lastname', 'intro', 'gender', 'website', 'dob', 'pob', 'hometown',
     'id_number', 'id_date', 'id_place', 'province', 'ward', 'permanent_address'
 ])]
 #[Hidden(['password', 'remember_token'])]
