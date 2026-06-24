@@ -172,7 +172,7 @@
                                     <svg class="w-4.5 h-4.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
                                     Ảnh đại diện
                                 </button>
-                                <button type="button" @click="cccdNumberInput = idNumberInput; cccdDateInput = idDateInput; cccdPlaceInput = idPlaceInput; cccdAddressInput = idAddressInput; activeStep = 4"
+                                <button type="button" @click="cccdNumberInput = idNumberInput; cccdDateInput = idDateInput; cccdPlaceInput = idPlaceInput; cccdAddressInput = idAddressInput; isEditingCccd = !idNumberInput; activeStep = 4"
                                         class="flex items-center gap-2 px-5 py-3 rounded-2xl font-extrabold text-xs uppercase tracking-wider transition-all duration-300 shadow-xs"
                                         :class="activeStep === 4 ? 'bg-primary text-white shadow-md shadow-primary/20 scale-[1.02]' : 'text-slate-500 hover:bg-slate-100/80 hover:text-slate-700'">
                                     <svg class="w-4.5 h-4.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M10 6H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V8a2 2 0 00-2-2h-5m-4 0V5a2 2 0 114 0v1m-4 0a2 2 0 104 0m-5 8a2 2 0 100-4 2 2 0 000 4zm0 0c1.378 0 2.5-1.122 2.5-2.5S10.378 9 9 9m9 2h-3m3 4h-3" /></svg>
@@ -527,21 +527,11 @@
                                     Lưu ảnh đại diện
                                 </button>
                             </div>
-                        </div>
-
-                        <!-- Step 4: Xác thực CCCD -->
+                                <!-- Step 4: Xác thực CCCD -->
                         <div x-show="activeStep === 4"
                              x-transition:enter="transition ease-out duration-300 transform"
-                             x-transition:enter-start="opacity-0 translate-y-4"
-                             x-transition:enter-end="opacity-100 translate-y-0"
-                             x-cloak class="space-y-6 max-w-2xl">
-                            <div>
-                                <h3 class="text-lg font-black text-slate-800">Xác thực CCCD / CMND</h3>
-                                <p class="text-xs text-slate-400 font-medium">Tải lên hình ảnh CCCD 2 mặt và cập nhật thông tin giấy tờ</p>
-                            </div>
-
-                            <!-- Verified Banner -->
-                            <template x-if="idNumberInput">
+                                          <!-- Verified Banner (Chỉ hiện khi đã xác minh và không chỉnh sửa) -->
+                            <template x-if="idNumberInput && !isEditingCccd">
                                 <div class="bg-emerald-50 border border-emerald-100 rounded-3xl p-5 flex gap-4 text-emerald-800 leading-relaxed shadow-sm">
                                     <div class="w-10 h-10 rounded-full bg-emerald-500/10 text-emerald-600 flex items-center justify-center flex-shrink-0">
                                         <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
@@ -550,199 +540,12 @@
                                     </div>
                                     <div>
                                         <p class="text-sm font-black mb-1">Tài khoản đã được xác minh danh tính (CCCD)</p>
-                                        <p class="text-xs text-emerald-700/90 font-medium">Thông tin CCCD của bạn đã được quét và đối chiếu hợp lệ. Bạn có thể cập nhật lại bằng cách tải ảnh mới bên dưới nếu cần thiết.</p>
+                                        <p class="text-xs text-emerald-700/90 font-medium">Thông tin CCCD của bạn đã được quét và đối chiếu hợp lệ. Bạn có thể bấm nút chỉnh sửa bên dưới nếu muốn cập nhật lại.</p>
                                     </div>
                                 </div>
                             </template>
 
-                            <!-- Info banner -->
-                            <div class="bg-amber-50 border border-amber-100 rounded-2xl p-4 flex gap-3 text-xs text-amber-700 leading-relaxed">
-                                <svg class="w-5 h-5 flex-shrink-0 text-amber-500 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                                </svg>
-                                <div>
-                                    <p class="font-extrabold mb-0.5">Yêu cầu hình ảnh:</p>
-                                    <p>Ảnh chụp rõ nét, không bị lóa sáng, không mất góc và không bị che khuất các thông tin cá nhân quan trọng.</p>
-                                </div>
-                            </div>
-
-                            <!-- Image Selectors side-by-side -->
-                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                <!-- Front Side Card -->
-                                <div class="space-y-2">
-                                    <span class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider">Mặt trước CCCD</span>
-                                    <div class="h-40 border-2 border-dashed border-slate-200 hover:border-primary/50 bg-slate-50/50 rounded-2xl overflow-hidden relative flex flex-col items-center justify-center p-4 transition-all group cursor-pointer">
-                                        <!-- Scanning Overlay -->
-                                        <div x-show="isScanningCccd" 
-                                             class="absolute inset-0 bg-slate-900/80 backdrop-blur-xs flex flex-col items-center justify-center p-4 z-20"
-                                             x-transition:enter="transition ease-out duration-200"
-                                             x-transition:enter-start="opacity-0"
-                                             x-transition:enter-end="opacity-100"
-                                             x-transition:leave="transition ease-in duration-200"
-                                             x-transition:leave-start="opacity-100"
-                                             x-transition:leave-end="opacity-0"
-                                             x-cloak>
-                                            <!-- Scanner Bar animation -->
-                                            <div class="absolute inset-x-0 h-1 bg-primary shadow-[0_0_8px_#0284c7] scanner-laser pointer-events-none"></div>
-                                            
-                                            <!-- Status Info -->
-                                            <div class="text-center space-y-2.5">
-                                                <div class="flex items-center justify-center gap-1.5">
-                                                    <svg class="animate-spin h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
-                                                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                                                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                                                    </svg>
-                                                    <span class="text-[10px] text-white font-extrabold uppercase tracking-widest" x-text="cccdScanType === 'qr' ? 'Giải mã QR...' : 'Nhận dạng OCR...'"></span>
-                                                </div>
-                                                <!-- Progress Bar -->
-                                                <div class="w-32 bg-slate-700/50 h-1.5 rounded-full overflow-hidden mx-auto border border-slate-600/30">
-                                                    <div class="bg-primary h-full transition-all duration-75" :style="`width: ${cccdScanProgress}%`"></div>
-                                                </div>
-                                                <span class="text-[10px] text-slate-400 font-bold" x-text="cccdScanProgress + '%'"></span>
-                                            </div>
-                                        </div>
-
-                                        <template x-if="!cccdFrontSrc">
-                                            <label class="w-full h-full flex flex-col items-center justify-center cursor-pointer text-center space-y-1.5">
-                                                <svg class="w-7 h-7 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
-                                                </svg>
-                                                <span class="text-xs font-bold text-slate-600">Chọn ảnh mặt trước</span>
-                                                <span class="text-[9px] text-slate-400 font-medium">Nhấp để tải lên</span>
-                                                <input type="file" class="hidden" accept="image/*" @change="handleCccdSelect($event, 'front')">
-                                            </label>
-                                        </template>
-                                        <template x-if="cccdFrontSrc">
-                                            <div class="w-full h-full relative group">
-                                                <img :src="cccdFrontSrc" alt="CCCD Front" class="w-full h-full object-cover rounded-xl">
-                                                <div class="absolute inset-0 bg-slate-900/50 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-all duration-200 rounded-xl">
-                                                    <label class="cursor-pointer bg-white text-slate-800 text-[10px] font-bold px-3 py-1.5 rounded-xl shadow-md hover:scale-105 transition-all">
-                                                        Thay đổi
-                                                        <input type="file" class="hidden" accept="image/*" @change="handleCccdSelect($event, 'front')">
-                                                    </label>
-                                                </div>
-                                            </div>
-                                        </template>
-                                    </div>
-                                </div>
-
-                                <!-- Back Side Card -->
-                                <div class="space-y-2">
-                                    <span class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider">Mặt sau CCCD</span>
-                                    <div class="h-40 border-2 border-dashed border-slate-200 hover:border-primary/50 bg-slate-50/50 rounded-2xl overflow-hidden relative flex flex-col items-center justify-center p-4 transition-all group cursor-pointer">
-                                        <!-- Scanning Overlay -->
-                                        <div x-show="isScanningCccd" 
-                                             class="absolute inset-0 bg-slate-900/80 backdrop-blur-xs flex flex-col items-center justify-center p-4 z-20"
-                                             x-transition:enter="transition ease-out duration-200"
-                                             x-transition:enter-start="opacity-0"
-                                             x-transition:enter-end="opacity-100"
-                                             x-transition:leave="transition ease-in duration-200"
-                                             x-transition:leave-start="opacity-100"
-                                             x-transition:leave-end="opacity-0"
-                                             x-cloak>
-                                            <!-- Scanner Bar animation -->
-                                            <div class="absolute inset-x-0 h-1 bg-primary shadow-[0_0_8px_#0284c7] scanner-laser pointer-events-none"></div>
-                                            
-                                            <!-- Status Info -->
-                                            <div class="text-center space-y-2.5">
-                                                <div class="flex items-center justify-center gap-1.5">
-                                                    <svg class="animate-spin h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
-                                                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                                                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                                                    </svg>
-                                                    <span class="text-[10px] text-white font-extrabold uppercase tracking-widest">Giải mã mặt sau...</span>
-                                                </div>
-                                                <!-- Progress Bar -->
-                                                <div class="w-32 bg-slate-700/50 h-1.5 rounded-full overflow-hidden mx-auto border border-slate-600/30">
-                                                    <div class="bg-primary h-full transition-all duration-75" :style="`width: ${cccdScanProgress}%`"></div>
-                                                </div>
-                                                <span class="text-[10px] text-slate-400 font-bold" x-text="cccdScanProgress + '%'"></span>
-                                            </div>
-                                        </div>
-
-                                        <template x-if="!cccdBackSrc">
-                                            <label class="w-full h-full flex flex-col items-center justify-center cursor-pointer text-center space-y-1.5">
-                                                <svg class="w-7 h-7 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
-                                                </svg>
-                                                <span class="text-xs font-bold text-slate-600">Chọn ảnh mặt sau</span>
-                                                <span class="text-[9px] text-slate-400 font-medium">Nhấp để tải lên</span>
-                                                <input type="file" class="hidden" accept="image/*" @change="handleCccdSelect($event, 'back')">
-                                            </label>
-                                        </template>
-                                        <template x-if="cccdBackSrc">
-                                            <div class="w-full h-full relative group">
-                                                <img :src="cccdBackSrc" alt="CCCD Back" class="w-full h-full object-cover rounded-xl">
-                                                <div class="absolute inset-0 bg-slate-900/50 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-all duration-200 rounded-xl">
-                                                    <label class="cursor-pointer bg-white text-slate-800 text-[10px] font-bold px-3 py-1.5 rounded-xl shadow-md hover:scale-105 transition-all">
-                                                        Thay đổi
-                                                        <input type="file" class="hidden" accept="image/*" @change="handleCccdSelect($event, 'back')">
-                                                    </label>
-                                                </div>
-                                            </div>
-                                        </template>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Info message about upload state -->
-                            <div class="text-center text-xs font-semibold py-2">
-                                <template x-if="cccdFrontSrc && !cccdBackSrc">
-                                    <span class="text-primary flex items-center justify-center gap-1">
-                                        <svg class="w-4 h-4 animate-bounce" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-                                        Đã nhận ảnh mặt trước. Vui lòng tải tiếp ảnh mặt sau để bắt đầu tự động quét thông tin.
-                                    </span>
-                                </template>
-                                <template x-if="!cccdFrontSrc && cccdBackSrc">
-                                    <span class="text-primary flex items-center justify-center gap-1">
-                                        <svg class="w-4 h-4 animate-bounce" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-                                        Đã nhận ảnh mặt sau. Vui lòng tải tiếp ảnh mặt trước để bắt đầu tự động quét thông tin.
-                                    </span>
-                                </template>
-                                <template x-if="cccdFrontSrc && cccdBackSrc">
-                                    <span class="text-emerald-600 flex items-center justify-center gap-1">
-                                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-                                        Đã tải lên đủ 2 mặt và hoàn thành phân tích dữ liệu.
-                                    </span>
-                                </template>
-                            </div>
-
-                            <!-- Input Fields Grid -->
-                            <div class="space-y-4 pt-2 border-t border-slate-100">
-                                <div>
-                                    <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-2">Số CCCD / CMND (12 số)</label>
-                                    <input type="text" 
-                                           x-model="cccdNumberInput" 
-                                           maxlength="12"
-                                           placeholder="Ví dụ: 012345678901" 
-                                           class="w-full bg-slate-50 border border-slate-200 rounded-2xl px-4 py-3 text-sm focus:outline-none focus:border-primary focus:bg-white transition-all text-slate-700 font-semibold">
-                                </div>
-
-                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                    <div>
-                                        <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-2">Ngày cấp</label>
-                                        <input type="date" 
-                                               x-model="cccdDateInput" 
-                                               class="w-full bg-slate-50 border border-slate-200 rounded-2xl px-4 py-3 text-sm focus:outline-none focus:border-primary focus:bg-white transition-all text-slate-700">
-                                    </div>
-                                    <div>
-                                        <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-2">Nơi cấp</label>
-                                        <input type="text" 
-                                               x-model="cccdPlaceInput" 
-                                               placeholder="Ví dụ: Cục Cảnh sát QLHC về TTXH" 
-                                               class="w-full bg-slate-50 border border-slate-200 rounded-2xl px-4 py-3 text-sm focus:outline-none focus:border-primary focus:bg-white transition-all text-slate-700">
-                                    </div>
-                                </div>
-                                <div>
-                                    <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-2">Nơi thường trú</label>
-                                    <input type="text" 
-                                           x-model="cccdAddressInput" 
-                                           placeholder="Ví dụ: 123 Nguyễn Huệ, Quận 1, TP.HCM" 
-                                           class="w-full bg-slate-50 border border-slate-200 rounded-2xl px-4 py-3 text-sm focus:outline-none focus:border-primary focus:bg-white transition-all text-slate-700">
-                                </div>
-                            </div>
-
-                            <!-- Virtual CCCD Card (Thẻ căn cước ảo) cao cấp -->
+                            <!-- Virtual CCCD Card (Thẻ căn cước ảo) cao cấp - Luôn hiện ở đầu nếu đã có dữ liệu hoặc đang quét -->
                             <template x-if="idNumberInput || cccdNumberInput">
                                 <div class="space-y-3">
                                     <span class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider">Thông tin Căn cước công dân</span>
@@ -765,14 +568,14 @@
                                             </div>
                                             <div class="text-right">
                                                 <!-- Đã xác minh State (đã lưu trùng khớp với input hiện tại và ko quét mới) -->
-                                                <template x-if="idNumberInput && cccdNumberInput === idNumberInput">
+                                                <template x-if="idNumberInput && cccdNumberInput === idNumberInput && !isEditingCccd">
                                                     <span class="inline-flex items-center gap-1 bg-emerald-500/20 border border-emerald-500/30 px-2 py-0.5 rounded-full text-[8px] font-bold text-emerald-400">
                                                         <span class="w-1 h-1 rounded-full bg-emerald-400 animate-pulse"></span>
                                                         ĐÃ XÁC MINH
                                                     </span>
                                                 </template>
-                                                <!-- Preview State (chưa lưu hoặc có input khác với id đã lưu) -->
-                                                <template x-if="!idNumberInput || cccdNumberInput !== idNumberInput">
+                                                <!-- Preview State (chưa lưu hoặc đang trong chế độ edit) -->
+                                                <template x-if="!idNumberInput || cccdNumberInput !== idNumberInput || isEditingCccd">
                                                     <span class="inline-flex items-center gap-1 bg-amber-500/20 border border-amber-500/30 px-2 py-0.5 rounded-full text-[8px] font-bold text-amber-400">
                                                         <span class="w-1 h-1 rounded-full bg-amber-400 animate-pulse"></span>
                                                         BẢN XEM TRƯỚC (PREVIEW)
@@ -855,11 +658,223 @@
                                 </div>
                             </template>
 
-                            <!-- Action buttons -->
-                            <div class="flex gap-3 pt-4 border-t border-slate-100">
-                                <button @click="saveCccd" :disabled="!cccdFrontSrc || !cccdBackSrc || !cccdNumberInput || !cccdAddressInput" class="bg-primary hover:bg-primary-dark disabled:opacity-50 text-white font-bold px-8 py-3.5 rounded-full text-xs transition-all shadow-md">
-                                    Xác thực & Lưu
+                            <!-- CHẾ ĐỘ XEM (VIEW MODE) -->
+                            <div x-show="!isEditingCccd" class="pt-2">
+                                <button @click="isEditingCccd = true; cccdNumberInput = idNumberInput; cccdDateInput = idDateInput; cccdPlaceInput = idPlaceInput; cccdAddressInput = idAddressInput;" 
+                                        class="bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 font-extrabold px-6 py-3 rounded-full text-xs transition-all shadow-sm flex items-center gap-1.5 hover:scale-[1.02]">
+                                    <svg class="w-4 h-4 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                    </svg>
+                                    Chỉnh sửa thông tin CCCD
                                 </button>
+                            </div>
+
+                            <!-- CHẾ ĐỘ SỬA/QUÉT (EDIT MODE) - Trượt mở mượt mà -->
+                            <div x-show="isEditingCccd" 
+                                 x-transition:enter="transition ease-out duration-300 transform"
+                                 x-transition:enter-start="opacity-0 -translate-y-4"
+                                 x-transition:enter-end="opacity-100 translate-y-0"
+                                 class="space-y-6">
+                                
+                                <!-- Info banner -->
+                                <div class="bg-amber-50 border border-amber-100 rounded-2xl p-4 flex gap-3 text-xs text-amber-700 leading-relaxed">
+                                    <svg class="w-5 h-5 flex-shrink-0 text-amber-500 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                                    </svg>
+                                    <div>
+                                        <p class="font-extrabold mb-0.5">Yêu cầu hình ảnh:</p>
+                                        <p>Ảnh chụp rõ nét, không bị lóa sáng, không mất góc và không bị che khuất các thông tin cá nhân quan trọng.</p>
+                                    </div>
+                                </div>
+
+                                <!-- Image Selectors side-by-side -->
+                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                    <!-- Front Side Card -->
+                                    <div class="space-y-2">
+                                        <span class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider">Mặt trước CCCD</span>
+                                        <div class="h-40 border-2 border-dashed border-slate-200 hover:border-primary/50 bg-slate-50/50 rounded-2xl overflow-hidden relative flex flex-col items-center justify-center p-4 transition-all group cursor-pointer">
+                                            <!-- Scanning Overlay -->
+                                            <div x-show="isScanningCccd" 
+                                                 class="absolute inset-0 bg-slate-900/80 backdrop-blur-xs flex flex-col items-center justify-center p-4 z-20"
+                                                 x-transition:enter="transition ease-out duration-200"
+                                                 x-transition:enter-start="opacity-0"
+                                                 x-transition:enter-end="opacity-100"
+                                                 x-transition:leave="transition ease-in duration-200"
+                                                 x-transition:leave-start="opacity-100"
+                                                 x-transition:leave-end="opacity-0"
+                                                 x-cloak>
+                                                <!-- Scanner Bar animation -->
+                                                <div class="absolute inset-x-0 h-1 bg-primary shadow-[0_0_8px_#0284c7] scanner-laser pointer-events-none"></div>
+                                                
+                                                <!-- Status Info -->
+                                                <div class="text-center space-y-2.5">
+                                                    <div class="flex items-center justify-center gap-1.5">
+                                                        <svg class="animate-spin h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
+                                                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                                        </svg>
+                                                        <span class="text-[10px] text-white font-extrabold uppercase tracking-widest" x-text="cccdScanType === 'qr' ? 'Giải mã QR...' : 'Nhận dạng OCR...'"></span>
+                                                    </div>
+                                                    <!-- Progress Bar -->
+                                                    <div class="w-32 bg-slate-700/50 h-1.5 rounded-full overflow-hidden mx-auto border border-slate-600/30">
+                                                        <div class="bg-primary h-full transition-all duration-75" :style="`width: ${cccdScanProgress}%`"></div>
+                                                    </div>
+                                                    <span class="text-[10px] text-slate-400 font-bold" x-text="cccdScanProgress + '%'"></span>
+                                                </div>
+                                            </div>
+
+                                            <template x-if="!cccdFrontSrc">
+                                                <label class="w-full h-full flex flex-col items-center justify-center cursor-pointer text-center space-y-1.5">
+                                                    <svg class="w-7 h-7 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                                                    </svg>
+                                                    <span class="text-xs font-bold text-slate-600">Chọn ảnh mặt trước</span>
+                                                    <span class="text-[9px] text-slate-400 font-medium">Nhấp để tải lên</span>
+                                                    <input type="file" class="hidden" accept="image/*" @change="handleCccdSelect($event, 'front')">
+                                                </label>
+                                            </template>
+                                            <template x-if="cccdFrontSrc">
+                                                <div class="w-full h-full relative group">
+                                                    <img :src="cccdFrontSrc" alt="CCCD Front" class="w-full h-full object-cover rounded-xl">
+                                                    <div class="absolute inset-0 bg-slate-900/50 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-all duration-200 rounded-xl">
+                                                        <label class="cursor-pointer bg-white text-slate-800 text-[10px] font-bold px-3 py-1.5 rounded-xl shadow-md hover:scale-105 transition-all">
+                                                            Thay đổi
+                                                            <input type="file" class="hidden" accept="image/*" @change="handleCccdSelect($event, 'front')">
+                                                        </label>
+                                                    </div>
+                                                </div>
+                                            </template>
+                                        </div>
+                                    </div>
+
+                                    <!-- Back Side Card -->
+                                    <div class="space-y-2">
+                                        <span class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider">Mặt sau CCCD</span>
+                                        <div class="h-40 border-2 border-dashed border-slate-200 hover:border-primary/50 bg-slate-50/50 rounded-2xl overflow-hidden relative flex flex-col items-center justify-center p-4 transition-all group cursor-pointer">
+                                            <!-- Scanning Overlay -->
+                                            <div x-show="isScanningCccd" 
+                                                 class="absolute inset-0 bg-slate-900/80 backdrop-blur-xs flex flex-col items-center justify-center p-4 z-20"
+                                                 x-transition:enter="transition ease-out duration-200"
+                                                 x-transition:enter-start="opacity-0"
+                                                 x-transition:enter-end="opacity-100"
+                                                 x-transition:leave="transition ease-in duration-200"
+                                                 x-transition:leave-start="opacity-100"
+                                                 x-transition:leave-end="opacity-0"
+                                                 x-cloak>
+                                                <!-- Scanner Bar animation -->
+                                                <div class="absolute inset-x-0 h-1 bg-primary shadow-[0_0_8px_#0284c7] scanner-laser pointer-events-none"></div>
+                                                
+                                                <!-- Status Info -->
+                                                <div class="text-center space-y-2.5">
+                                                    <div class="flex items-center justify-center gap-1.5">
+                                                        <svg class="animate-spin h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
+                                                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                                        </svg>
+                                                        <span class="text-[10px] text-white font-extrabold uppercase tracking-widest">Giải mã mặt sau...</span>
+                                                    </div>
+                                                    <!-- Progress Bar -->
+                                                    <div class="w-32 bg-slate-700/50 h-1.5 rounded-full overflow-hidden mx-auto border border-slate-600/30">
+                                                        <div class="bg-primary h-full transition-all duration-75" :style="`width: ${cccdScanProgress}%`"></div>
+                                                    </div>
+                                                    <span class="text-[10px] text-slate-400 font-bold" x-text="cccdScanProgress + '%'"></span>
+                                                </div>
+                                            </div>
+
+                                            <template x-if="!cccdBackSrc">
+                                                <label class="w-full h-full flex flex-col items-center justify-center cursor-pointer text-center space-y-1.5">
+                                                    <svg class="w-7 h-7 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                                                    </svg>
+                                                    <span class="text-xs font-bold text-slate-600">Chọn ảnh mặt sau</span>
+                                                    <span class="text-[9px] text-slate-400 font-medium">Nhấp để tải lên</span>
+                                                    <input type="file" class="hidden" accept="image/*" @change="handleCccdSelect($event, 'back')">
+                                                </label>
+                                            </template>
+                                            <template x-if="cccdBackSrc">
+                                                <div class="w-full h-full relative group">
+                                                    <img :src="cccdBackSrc" alt="CCCD Back" class="w-full h-full object-cover rounded-xl">
+                                                    <div class="absolute inset-0 bg-slate-900/50 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-all duration-200 rounded-xl">
+                                                        <label class="cursor-pointer bg-white text-slate-800 text-[10px] font-bold px-3 py-1.5 rounded-xl shadow-md hover:scale-105 transition-all">
+                                                            Thay đổi
+                                                            <input type="file" class="hidden" accept="image/*" @change="handleCccdSelect($event, 'back')">
+                                                        </label>
+                                                    </div>
+                                                </div>
+                                            </template>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Info message about upload state -->
+                                <div class="text-center text-xs font-semibold py-2">
+                                    <template x-if="cccdFrontSrc && !cccdBackSrc">
+                                        <span class="text-primary flex items-center justify-center gap-1">
+                                            <svg class="w-4 h-4 animate-bounce" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                                            Đã nhận ảnh mặt trước. Vui lòng tải tiếp ảnh mặt sau để bắt đầu tự động quét thông tin.
+                                        </span>
+                                    </template>
+                                    <template x-if="!cccdFrontSrc && cccdBackSrc">
+                                        <span class="text-primary flex items-center justify-center gap-1">
+                                            <svg class="w-4 h-4 animate-bounce" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                                            Đã nhận ảnh mặt sau. Vui lòng tải tiếp ảnh mặt trước để bắt đầu tự động quét thông tin.
+                                        </span>
+                                    </template>
+                                    <template x-if="cccdFrontSrc && cccdBackSrc">
+                                        <span class="text-emerald-600 flex items-center justify-center gap-1">
+                                            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                                            Đã tải lên đủ 2 mặt và hoàn thành phân tích dữ liệu.
+                                        </span>
+                                    </template>
+                                </div>
+
+                                <!-- Input Fields Grid -->
+                                <div class="space-y-4 pt-2 border-t border-slate-100">
+                                    <div>
+                                        <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-2">Số CCCD / CMND (12 số)</label>
+                                        <input type="text" 
+                                               x-model="cccdNumberInput" 
+                                               maxlength="12"
+                                               placeholder="Ví dụ: 012345678901" 
+                                               class="w-full bg-slate-50 border border-slate-200 rounded-2xl px-4 py-3 text-sm focus:outline-none focus:border-primary focus:bg-white transition-all text-slate-700 font-semibold">
+                                    </div>
+
+                                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                        <div>
+                                            <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-2">Ngày cấp</label>
+                                            <input type="date" 
+                                                   x-model="cccdDateInput" 
+                                                   class="w-full bg-slate-50 border border-slate-200 rounded-2xl px-4 py-3 text-sm focus:outline-none focus:border-primary focus:bg-white transition-all text-slate-700">
+                                        </div>
+                                        <div>
+                                            <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-2">Nơi cấp</label>
+                                            <input type="text" 
+                                                   x-model="cccdPlaceInput" 
+                                                   placeholder="Ví dụ: Cục Cảnh sát QLHC về TTXH" 
+                                                   class="w-full bg-slate-50 border border-slate-200 rounded-2xl px-4 py-3 text-sm focus:outline-none focus:border-primary focus:bg-white transition-all text-slate-700">
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-2">Nơi thường trú</label>
+                                        <input type="text" 
+                                               x-model="cccdAddressInput" 
+                                               placeholder="Ví dụ: 123 Nguyễn Huệ, Quận 1, TP.HCM" 
+                                               class="w-full bg-slate-50 border border-slate-200 rounded-2xl px-4 py-3 text-sm focus:outline-none focus:border-primary focus:bg-white transition-all text-slate-700">
+                                    </div>
+                                </div>
+
+                                <!-- Action buttons -->
+                                <div class="flex items-center gap-3 pt-4 border-t border-slate-100">
+                                    <button @click="saveCccd" :disabled="!cccdFrontSrc || !cccdBackSrc || !cccdNumberInput || !cccdAddressInput" class="bg-primary hover:bg-primary-dark disabled:opacity-50 text-white font-bold px-8 py-3.5 rounded-full text-xs transition-all shadow-md">
+                                        Xác thực & Lưu
+                                    </button>
+                                    <template x-if="idNumberInput">
+                                        <button @click="isEditingCccd = false; cccdNumberInput = idNumberInput; cccdDateInput = idDateInput; cccdPlaceInput = idPlaceInput; cccdAddressInput = idAddressInput;" 
+                                                class="bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold px-6 py-3.5 rounded-full text-xs transition-all">
+                                            Hủy bỏ
+                                        </button>
+                                    </template>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -2758,6 +2773,7 @@
             isScanningCccd: false,
             cccdScanProgress: 0,
             cccdScanType: 'ocr',
+            isEditingCccd: false,
             
             handleCccdSelect(event, side) {
                 const file = event.target.files[0];
@@ -3206,6 +3222,7 @@
                         }
                         
                         this.showUpdateCccdModal = false;
+                        this.isEditingCccd = false;
                         alert('🎉 Xác thực và cập nhật CCCD thành công!');
                     } else {
                         const err = await res.json();
