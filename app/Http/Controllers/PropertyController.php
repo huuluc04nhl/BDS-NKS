@@ -3274,44 +3274,21 @@ class PropertyController extends Controller
             $replyText = "";
             $isRateLimit = false;
 
-            // Try primary model (gemini-3.5-flash) with a 15-second timeout
-            try {
-                $model = 'gemini-3.5-flash';
-                $url = "https://generativelanguage.googleapis.com/v1beta/models/{$model}:generateContent?key=" . $apiKey;
-                
-                $response = Http::timeout(15)->withoutVerifying()->post($url, [
-                    'contents' => $contents,
-                    'systemInstruction' => [
-                        'parts' => [
-                            ['text' => $systemInstruction]
-                        ]
-                    ]
-                ]);
+            // List of models to try in sequence to bypass the low daily limits (20 RPD) of individual preview/new models
+            $models = [
+                'gemini-3.5-flash',
+                'gemini-2.5-flash-lite',
+                'gemini-3-flash',
+                'gemini-2.5-flash',
+                'gemini-1.5-flash'
+            ];
 
-                if ($response->status() === 429) {
-                    $isRateLimit = true;
-                }
-
-                if ($response->successful()) {
-                    $resData = $response->json();
-                    $replyText = $resData['candidates'][0]['content']['parts'][0]['text'] ?? '';
-                    if (!empty($replyText)) {
-                        $success = true;
-                    }
-                } else {
-                    Log::error("Gemini 3.5-flash failed. Status: " . $response->status() . " Body: " . $response->body());
-                }
-            } catch (\Exception $ex) {
-                Log::warning("Gemini 3.5-flash call threw exception: " . $ex->getMessage());
-            }
-
-            // Fallback to gemini-2.5-flash-lite if primary fails, BUT skip fallback if error was Rate Limit (429)
-            if (!$success && !$isRateLimit) {
+            foreach ($models as $model) {
                 try {
-                    $fallbackModel = 'gemini-2.5-flash-lite';
-                    $fallbackUrl = "https://generativelanguage.googleapis.com/v1beta/models/{$fallbackModel}:generateContent?key=" . $apiKey;
+                    $url = "https://generativelanguage.googleapis.com/v1beta/models/{$model}:generateContent?key=" . $apiKey;
                     
-                    $response = Http::timeout(15)->withoutVerifying()->post($fallbackUrl, [
+                    // Call the model with a 10-second timeout
+                    $response = Http::timeout(10)->withoutVerifying()->post($url, [
                         'contents' => $contents,
                         'systemInstruction' => [
                             'parts' => [
@@ -3321,7 +3298,9 @@ class PropertyController extends Controller
                     ]);
 
                     if ($response->status() === 429) {
+                        Log::warning("Gemini model {$model} returned 429 Rate Limit. Trying next model...");
                         $isRateLimit = true;
+                        continue;
                     }
 
                     if ($response->successful()) {
@@ -3329,12 +3308,15 @@ class PropertyController extends Controller
                         $replyText = $resData['candidates'][0]['content']['parts'][0]['text'] ?? '';
                         if (!empty($replyText)) {
                             $success = true;
+                            $isRateLimit = false; // Reset since we had success
+                            Log::info("Gemini call succeeded using model: {$model}");
+                            break;
                         }
                     } else {
-                        Log::error("Gemini 2.5-flash-lite fallback failed. Status: " . $response->status() . " Body: " . $response->body());
+                        Log::warning("Gemini model {$model} failed. Status: " . $response->status() . " Body: " . $response->body() . ". Trying next model...");
                     }
                 } catch (\Exception $ex) {
-                    Log::error("Gemini fallback model threw exception: " . $ex->getMessage());
+                    Log::warning("Gemini model {$model} threw exception: " . $ex->getMessage() . ". Trying next model...");
                 }
             }
 
