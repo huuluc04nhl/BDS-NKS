@@ -3047,6 +3047,7 @@
                             candidate = candidate
                                 .replace(/họ và tên|full name|họ tên/gi, '')
                                 .replace(/[^A-Za-zÀ-ỹ\s]/g, '')
+                                .replace(/\bYA\b/gi, '')
                                 .replace(/\s+/g, ' ')
                                 .trim();
                             if (candidate.length > 3) {
@@ -3147,6 +3148,7 @@
                     if (extractedHometown) this.cccdHometownInput = extractedHometown;
                     
                     if (extractedName) {
+                        extractedName = extractedName.replace(/\bYA\b/gi, '').replace(/\s+/g, ' ').trim();
                         const nameParts = extractedName.split(' ');
                         this.lastnameInput = nameParts.pop() || '';
                         this.firstnameInput = nameParts.join(' ') || '';
