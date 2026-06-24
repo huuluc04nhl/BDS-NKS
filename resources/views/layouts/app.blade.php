@@ -719,7 +719,7 @@
                          </svg>
                      </div>
                      <div class="bg-white rounded-2xl rounded-tl-none px-4 py-3 border border-slate-100 shadow-sm text-sm text-slate-700 leading-relaxed">
-                         Chào bạn! Tôi là trợ lý AI của BDS NKS. Tôi có thể giúp gì cho bạn hôm nay? Bạn có thể hỏi tôi về:
+                         Chào anh/chị! Em là trợ lý ảo của BDS NKS. Em có thể hỗ trợ anh/chị tìm kiếm thông tin gì hôm nay ạ? Anh/chị có thể hỏi em về:
                          <ul class="list-disc pl-4 mt-1.5 space-y-1 text-slate-600">
                              <li>Tìm nhà/căn hộ thuê theo khu vực & tầm giá</li>
                              <li>Thủ tục đặt cọc, pháp lý thuê nhà</li>
