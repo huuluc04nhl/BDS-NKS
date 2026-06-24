@@ -768,6 +768,8 @@
                  <div class="flex gap-2 overflow-x-auto pb-1.5 pt-0.5 scrollbar-none snap-x snap-mandatory">
                      <template x-for="tag in suggestions" :key="tag">
                          <button @click="sendSuggestion(tag)" 
+                                 :disabled="isTyping"
+                                 :class="isTyping ? 'opacity-50 cursor-not-allowed' : ''"
                                  class="shrink-0 snap-start px-3 py-1.5 rounded-full bg-white hover:bg-indigo-50 border border-slate-100 text-xs font-bold text-slate-600 hover:text-indigo-600 hover:border-indigo-200 transition-all shadow-2xs active:scale-95">
                              <span x-text="tag"></span>
                          </button>
@@ -936,6 +938,10 @@
                                 role: 'model',
                                 content: data.reply
                             });
+                            // Update suggestion questions dynamically
+                            if (data.suggestions && data.suggestions.length > 0) {
+                                this.suggestions = data.suggestions;
+                            }
                         } else {
                             this.messages.push({
                                 id: 'ai_error_' + Date.now(),

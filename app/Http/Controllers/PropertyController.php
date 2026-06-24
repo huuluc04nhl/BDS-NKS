@@ -3187,11 +3187,12 @@ class PropertyController extends Controller
                 'context_data' => $areaContext ? ['area_context' => $areaContext] : null
             ]);
 
-            // 2. Fetch history for context (last 30 messages)
+            // 2. Fetch history for context (last 12 messages, newest first, then reverse to chronological)
             $history = \App\Models\AiChatMessage::where('session_id', $sessionId)
-                ->orderBy('created_at', 'asc')
-                ->take(30)
-                ->get();
+                ->orderBy('created_at', 'desc')
+                ->take(12)
+                ->get()
+                ->reverse();
 
             // 3. Retrieve properties from BOTH local DB and NKS remote API via fetchAllItems with 30 mins Cache
             $propertiesContext = Cache::remember('chatbot_properties_context_cache', 1800, function() {
@@ -3233,7 +3234,11 @@ class PropertyController extends Controller
                 "- Khi giới thiệu BĐS, HÃY CUNG CẤP LINK theo định dạng: [Tiêu đề BĐS](/properties/{slug}) kèm giá, diện tích, địa chỉ để {$genderHonorific} click xem trực tiếp.\n" .
                 "- Khi {$genderHonorific} hỏi thông tin cố định về 1 căn (như giá cả, chi tiết), chỉ trả lời các thông tin cơ bản cốt lõi nhất kèm link chi tiết, KHÔNG mô tả chi tiết quá hay viết các đoạn giới thiệu dài về căn đó.\n" .
                 "- Luôn luôn liệt kê/gợi ý thêm 2-3 bất động sản tương tự hoặc cùng khu vực/tầm giá từ danh sách dưới đây để {$genderHonorific} dễ dàng tham khảo.\n" .
-                "- Không nói chuyện ngoài lề không liên quan đến BĐS/tài chính/pháp lý nhà đất.\n\n" .
+                "- Không nói chuyện ngoài lề không liên quan đến BĐS/tài chính/pháp lý nhà đất.\n" .
+                "- Cuối câu trả lời, hãy luôn tự đề xuất 3 câu hỏi tiếp theo (follow-up suggestions) liên quan nhất đến nội dung vừa hội thoại để {$genderHonorific} có thể bấm hỏi tiếp. Viết chính xác theo định dạng sau ở dòng cuối cùng của câu trả lời (không thêm bất kỳ ký tự nào khác ở dòng này):\n" .
+                "[SUGGESTIONS]: Câu hỏi gợi ý 1|Câu hỏi gợi ý 2|Câu hỏi gợi ý 3\n" .
+                "Ví dụ:\n" .
+                "[SUGGESTIONS]: Em còn căn nào ở Quận 7 giá thấp hơn không?|Thủ tục đặt cọc căn hộ này cần lưu ý gì hả em?|Anh muốn xem thêm nhà ở Quận 1\n\n" .
                 "Danh sách bất động sản đang có trên BDS NKS:\n" . $propertiesContext;
 
             if ($areaContext) {
@@ -3267,13 +3272,14 @@ class PropertyController extends Controller
 
             $success = false;
             $replyText = "";
+            $isRateLimit = false;
 
-            // Try primary model (gemini-2.5-flash) with a tight 8-second timeout
+            // Try primary model (gemini-3.1-pro-preview) with a 15-second timeout
             try {
-                $model = 'gemini-2.5-flash';
+                $model = 'gemini-3.1-pro-preview';
                 $url = "https://generativelanguage.googleapis.com/v1beta/models/{$model}:generateContent?key=" . $apiKey;
                 
-                $response = Http::timeout(8)->withoutVerifying()->post($url, [
+                $response = Http::timeout(15)->withoutVerifying()->post($url, [
                     'contents' => $contents,
                     'systemInstruction' => [
                         'parts' => [
@@ -3282,24 +3288,30 @@ class PropertyController extends Controller
                     ]
                 ]);
 
+                if ($response->status() === 429) {
+                    $isRateLimit = true;
+                }
+
                 if ($response->successful()) {
                     $resData = $response->json();
                     $replyText = $resData['candidates'][0]['content']['parts'][0]['text'] ?? '';
                     if (!empty($replyText)) {
                         $success = true;
                     }
+                } else {
+                    Log::error("Gemini 3.1-pro-preview failed. Status: " . $response->status() . " Body: " . $response->body());
                 }
             } catch (\Exception $ex) {
-                Log::warning("Gemini 2.5-flash failed or timed out: " . $ex->getMessage());
+                Log::warning("Gemini 3.1-pro-preview call threw exception: " . $ex->getMessage());
             }
 
-            // Fallback to gemini-flash-latest (Gemini 1.5 Flash) if 2.5 fails
-            if (!$success) {
+            // Fallback to gemini-3.1-flash-lite if primary fails, BUT skip fallback if error was Rate Limit (429)
+            if (!$success && !$isRateLimit) {
                 try {
-                    $fallbackModel = 'gemini-flash-latest';
+                    $fallbackModel = 'gemini-3.1-flash-lite';
                     $fallbackUrl = "https://generativelanguage.googleapis.com/v1beta/models/{$fallbackModel}:generateContent?key=" . $apiKey;
                     
-                    $response = Http::timeout(8)->withoutVerifying()->post($fallbackUrl, [
+                    $response = Http::timeout(15)->withoutVerifying()->post($fallbackUrl, [
                         'contents' => $contents,
                         'systemInstruction' => [
                             'parts' => [
@@ -3308,20 +3320,53 @@ class PropertyController extends Controller
                         ]
                     ]);
 
+                    if ($response->status() === 429) {
+                        $isRateLimit = true;
+                    }
+
                     if ($response->successful()) {
                         $resData = $response->json();
                         $replyText = $resData['candidates'][0]['content']['parts'][0]['text'] ?? '';
                         if (!empty($replyText)) {
                             $success = true;
                         }
+                    } else {
+                        Log::error("Gemini 3.1-flash-lite fallback failed. Status: " . $response->status() . " Body: " . $response->body());
                     }
                 } catch (\Exception $ex) {
-                    Log::error("Gemini fallback model failed or timed out: " . $ex->getMessage());
+                    Log::error("Gemini fallback model threw exception: " . $ex->getMessage());
                 }
             }
 
-            if (!$success) {
-                $replyText = "Hiện tại máy chủ AI tư vấn đang phản hồi hơi chậm do quá tải lượng truy cập. Xin quý khách vui lòng thử lại sau vài giây hoặc liên hệ trực tiếp Hotline để được hỗ trợ tức thì!";
+            // Default suggestion questions fallback
+            $suggestions = [
+                'Tìm thuê nhà Quận 7',
+                'Thuê căn hộ Bình Thạnh',
+                'Thủ tục cọc thuê nhà',
+                'Tư vấn vay vốn ngân hàng'
+            ];
+
+            if ($success) {
+                // Parse suggestions from replyText
+                if (preg_match('/\[SUGGESTIONS\]:\s*(.*)$/im', $replyText, $matches)) {
+                    $suggestionsStr = trim($matches[1]);
+                    $replyText = trim(str_replace($matches[0], '', $replyText));
+                    
+                    $parsedSuggestions = array_map('trim', explode('|', $suggestionsStr));
+                    $parsedSuggestions = array_filter($parsedSuggestions, function($val) {
+                        return !empty($val);
+                    });
+                    
+                    if (count($parsedSuggestions) > 0) {
+                        $suggestions = array_values($parsedSuggestions);
+                    }
+                }
+            } else {
+                if ($isRateLimit) {
+                    $replyText = "Dạ, hiện tại em đang nhận được nhiều câu hỏi dồn dập cùng lúc nên hệ thống quá giới hạn lượt gọi (Rate Limit) một chút ạ. {$genderHonorific} vui lòng đợi khoảng 10-15 giây rồi gửi lại giúp em nhé. Em cảm ơn {$genderHonorific}!";
+                } else {
+                    $replyText = "Dạ, hiện tại máy chủ AI tư vấn đang phản hồi hơi chậm do quá tải lượng truy cập. {$genderHonorific} vui lòng gửi lại câu hỏi sau vài giây hoặc liên hệ trực tiếp Hotline để em hỗ trợ {$genderHonorific} tức thì ạ!";
+                }
             }
 
             // 7. Save model reply to database
@@ -3335,7 +3380,8 @@ class PropertyController extends Controller
 
             return response()->json([
                 'success' => true,
-                'reply' => $replyText
+                'reply' => $replyText,
+                'suggestions' => $suggestions
             ]);
 
         } catch (\Illuminate\Validation\ValidationException $ve) {
