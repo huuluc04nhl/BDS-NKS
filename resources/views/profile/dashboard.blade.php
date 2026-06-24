@@ -611,7 +611,7 @@
                                                 <!-- Membership ID -->
                                                 <div class="mt-4 text-center">
                                                     <span class="block text-[8px] font-extrabold text-indigo-300 uppercase tracking-widest">MÃ THÀNH VIÊN</span>
-                                                    <span class="text-[10px] font-black text-cyan-300 tracking-wider" x-text="cccdNumberInput ? cccdNumberInput.substring(0, 4) + ' ' + cccdNumberInput.substring(4, 8) + ' ' + cccdNumberInput.substring(8) : (idNumberInput ? idNumberInput.substring(0, 4) + ' ' + idNumberInput.substring(4, 8) + ' ' + idNumberInput.substring(8) : 'N/A')"></span>
+                                                    <span class="text-[10px] font-black text-cyan-300 tracking-wider" x-text="cccdNumberInput ? cccdNumberInput.substring(0, 4) + ' •••• ' + cccdNumberInput.substring(8) : (idNumberInput ? idNumberInput.substring(0, 4) + ' •••• ' + idNumberInput.substring(8) : 'N/A')"></span>
                                                 </div>
                                             </div>
 
@@ -641,12 +641,12 @@
 
                                                 <div class="grid grid-cols-2 gap-2 text-[9px] text-slate-400 font-semibold border-t border-white/5 pt-2">
                                                     <div>
-                                                        <span class="block text-[7px] font-extrabold text-slate-500 uppercase">Ngày cấp CCCD</span>
-                                                        <span x-text="cccdDateInput ? formatDateDisplay(cccdDateInput) : (idDateInput ? formatDateDisplay(idDateInput) : 'N/A')"></span>
+                                                        <span class="block text-[7px] font-extrabold text-slate-500 uppercase">Ngày tham gia</span>
+                                                        <span x-text="user && user.created_at ? formatDateDisplay(user.created_at.split('T')[0]) : 'Tháng 06/2026'"></span>
                                                     </div>
                                                     <div>
-                                                        <span class="block text-[7px] font-extrabold text-slate-500 uppercase">Nơi cấp CCCD</span>
-                                                        <span class="block truncate" :title="cccdPlaceInput || idPlaceInput" x-text="cccdPlaceInput || idPlaceInput || 'N/A'"></span>
+                                                        <span class="block text-[7px] font-extrabold text-slate-500 uppercase">Hạng thành viên</span>
+                                                        <span class="text-indigo-400 font-extrabold uppercase tracking-wide">Verified</span>
                                                     </div>
                                                 </div>
                                             </div>
