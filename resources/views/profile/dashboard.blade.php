@@ -1016,7 +1016,7 @@
                                 <h3 class="font-bold text-primary-dark">Đăng tin cho thuê chính chủ miễn phí</h3>
                                 <p class="text-xs text-slate-500 mt-1">Chỉ mất 2 phút để tin đăng của bạn hiển thị tiếp cận hàng ngàn khách thuê có nhu cầu thực tế.</p>
                             </div>
-                            <button @click="showAddPropertyModal = true" class="bg-primary text-white font-bold text-xs px-6 py-3 rounded-full shadow-md btn-hover-premium">Đăng tin mới +</button>
+                            <button @click="showAddPropertyModal = true; newPropStep = 1" class="bg-primary text-white font-bold text-xs px-6 py-3 rounded-full shadow-md btn-hover-premium">Đăng tin mới +</button>
                         </div>
                         
                         <template x-if="ownerProperties.length === 0">
@@ -1218,56 +1218,242 @@
                             <p class="text-sm">Tài khoản của bạn đã được nâng cấp lên Chủ nhà chính chủ. Đang chuyển hướng...</p>
                         </div>
                         
-                        <div x-show="!isOwnerRegSuccess" class="flex flex-col md:flex-row gap-12 items-center">
-                            <form @submit.prevent="registerHost()" class="space-y-6 w-full md:w-1/2">
-                                <div>
-                                    <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Họ và tên chủ nhà</label>
-                                    <input type="text" x-model="nameInput" required class="w-full bg-slate-50 border border-slate-200 rounded-2xl px-4 py-3.5 text-sm focus:outline-none focus:border-primary focus:bg-white transition-all">
-                                </div>
-                                <div>
-                                    <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Số điện thoại chính chủ (Nhận Zalo/Cuộc gọi)</label>
-                                    <input type="tel" x-model="phoneInput" required class="w-full bg-slate-50 border border-slate-200 rounded-2xl px-4 py-3.5 text-sm focus:outline-none focus:border-primary focus:bg-white transition-all">
-                                </div>
-                                <div>
-                                    <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Công ty/Tổ chức (Nếu có)</label>
-                                    <input type="text" x-model="companyInput" placeholder="Ví dụ: Căn hộ dịch vụ Hùng Phát" class="w-full bg-slate-50 border border-slate-200 rounded-2xl px-4 py-3.5 text-sm focus:outline-none focus:border-primary focus:bg-white transition-all">
-                                </div>
+                        <div x-show="!isOwnerRegSuccess" class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                            <!-- Left: 3-Step Wizard (Span 2 columns on lg) -->
+                            <div class="lg:col-span-2 bg-white border border-slate-100 rounded-[32px] p-6 sm:p-8 shadow-xl shadow-slate-100/50 space-y-8">
                                 
-                                <div class="bg-amber-50 border border-amber-200 text-amber-800 p-4 rounded-2xl text-xs space-y-1">
-                                    <p class="font-bold flex items-center gap-1"><svg class="w-4 h-4 text-amber-500 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg> Cam kết chính chủ</p>
-                                    <p class="text-slate-600">Bằng việc gửi thông tin, bạn xác nhận mình là chủ sở hữu hoặc người quản lý trực tiếp bất động sản này. Hệ thống sẽ khóa tài khoản nếu phát hiện môi giới giả danh.</p>
+                                <!-- Horizontal Progress Bar -->
+                                <div class="relative flex items-center justify-between">
+                                    <!-- Background Line -->
+                                    <div class="absolute left-0 right-0 top-1/2 -translate-y-1/2 h-1 bg-slate-100 rounded-full z-0"></div>
+                                    <!-- Active Progress Gradient Line -->
+                                    <div class="absolute left-0 top-1/2 -translate-y-1/2 h-1 bg-gradient-to-r from-primary to-indigo-500 rounded-full transition-all duration-500 z-0"
+                                         :style="hostRegStep === 1 ? 'width: 0%' : (hostRegStep === 2 ? 'width: 50%' : 'width: 100%')"></div>
+                                    
+                                    <!-- Step 1 Indicator -->
+                                    <div class="relative z-10 flex flex-col items-center">
+                                        <div class="w-10 h-10 rounded-full flex items-center justify-center font-bold text-xs transition-all duration-500"
+                                             :class="hostRegStep >= 1 ? 'bg-primary text-white ring-4 ring-primary/20 scale-105' : 'bg-slate-100 text-slate-400'">
+                                            <span x-show="idNumberInput">✓</span>
+                                            <span x-show="!idNumberInput">1</span>
+                                        </div>
+                                        <span class="text-[10px] font-black uppercase tracking-wider mt-2.5"
+                                              :class="hostRegStep >= 1 ? 'text-primary' : 'text-slate-400'">Xác minh CCCD</span>
+                                    </div>
+
+                                    <!-- Step 2 Indicator -->
+                                    <div class="relative z-10 flex flex-col items-center">
+                                        <div class="w-10 h-10 rounded-full flex items-center justify-center font-bold text-xs transition-all duration-500"
+                                             :class="hostRegStep >= 2 ? 'bg-indigo-500 text-white ring-4 ring-indigo-500/20 scale-105' : 'bg-slate-100 text-slate-400'">
+                                            <span>2</span>
+                                        </div>
+                                        <span class="text-[10px] font-black uppercase tracking-wider mt-2.5"
+                                              :class="hostRegStep >= 2 ? 'text-indigo-500' : 'text-slate-400'">Thông tin liên hệ</span>
+                                    </div>
+
+                                    <!-- Step 3 Indicator -->
+                                    <div class="relative z-10 flex flex-col items-center">
+                                        <div class="w-10 h-10 rounded-full flex items-center justify-center font-bold text-xs transition-all duration-500"
+                                             :class="hostRegStep >= 3 ? 'bg-gradient-to-r from-indigo-500 to-cyan-500 text-white ring-4 ring-cyan-500/20 scale-105' : 'bg-slate-100 text-slate-400'">
+                                            <span>3</span>
+                                        </div>
+                                        <span class="text-[10px] font-black uppercase tracking-wider mt-2.5"
+                                              :class="hostRegStep >= 3 ? 'text-indigo-600' : 'text-slate-400'">Cam kết</span>
+                                    </div>
                                 </div>
+
+                                <!-- Step Contents -->
+                                <div class="mt-8">
+                                    <!-- Step 1: Xác thực CCCD -->
+                                    <div x-show="hostRegStep === 1" class="space-y-6" x-transition>
+                                        <div class="space-y-2">
+                                            <h3 class="text-base font-extrabold text-slate-800">Bước 1: Xác thực danh tính pháp lý</h3>
+                                            <p class="text-xs text-slate-500 font-medium">NKS là nền tảng BĐS sạch, yêu cầu xác thực CCCD để đảm bảo tiêu chí "3 Thật" (Người thật, Tin thật, Giao dịch thật).</p>
+                                        </div>
+
+                                        <!-- Nếu đã có CCCD -->
+                                        <div x-show="idNumberInput" class="bg-emerald-50/50 border border-emerald-100 rounded-3xl p-6 flex items-start gap-4">
+                                            <div class="w-12 h-12 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center flex-shrink-0 shadow-inner">
+                                                <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+                                                </svg>
+                                            </div>
+                                            <div class="space-y-1">
+                                                <h4 class="text-sm font-bold text-emerald-800">Căn cước công dân đã xác minh</h4>
+                                                <p class="text-xs text-slate-500">Mã định danh: <span class="font-extrabold font-mono text-emerald-700" x-text="idNumberInput ? idNumberInput.substring(0, 4) + ' •••• ' + idNumberInput.substring(8) : ''"></span></p>
+                                                <p class="text-xs text-emerald-600 font-medium mt-1 flex items-center gap-1">
+                                                    <span class="inline-block w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                                                    Đã đủ điều kiện pháp lý để đăng ký Chủ nhà chính chủ.
+                                                </p>
+                                            </div>
+                                        </div>
+
+                                        <!-- Nếu chưa có CCCD -->
+                                        <div x-show="!idNumberInput" class="bg-rose-50/50 border border-rose-100 rounded-3xl p-6 flex items-start gap-4">
+                                            <div class="w-12 h-12 rounded-full bg-rose-100 text-rose-600 flex items-center justify-center flex-shrink-0 shadow-inner">
+                                                <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                                                </svg>
+                                            </div>
+                                            <div class="space-y-2">
+                                                <h4 class="text-sm font-bold text-rose-800">Chưa tìm thấy thông tin CCCD</h4>
+                                                <p class="text-xs text-slate-500">Tài khoản của bạn chưa thực hiện xác thực căn cước công dân. Bạn bắt buộc phải thực hiện bước này để tránh các vấn đề pháp lý và bảo vệ quyền lợi.</p>
+                                                <button type="button" @click="activeTab = 'info'; activeStep = 4; cccdNumberInput = idNumberInput; cccdDateInput = idDateInput; cccdPlaceInput = idPlaceInput; cccdAddressInput = idAddressInput; isEditingCccd = !idNumberInput;"
+                                                        class="bg-rose-600 hover:bg-rose-700 text-white font-extrabold px-4 py-2.5 rounded-2xl text-xs shadow-md shadow-rose-200 transition-all flex items-center gap-1.5 mt-2">
+                                                    <span>Liên kết xác thực CCCD ngay</span>
+                                                    <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M14 5l7 7m0 0l-7 7m7-7H3" /></svg>
+                                                </button>
+                                            </div>
+                                        </div>
+
+                                        <!-- Step Navigation -->
+                                        <div class="flex justify-end pt-4 border-t border-slate-100">
+                                            <button type="button" @click="hostRegStep = 2" :disabled="!idNumberInput"
+                                                    class="bg-primary hover:bg-primary-dark disabled:bg-slate-100 disabled:text-slate-400 text-white font-extrabold px-6 py-3.5 rounded-full text-xs shadow-md hover:shadow-lg transition-all flex items-center gap-2"
+                                                    :class="!idNumberInput ? 'cursor-not-allowed opacity-50' : 'btn-hover-premium'">
+                                                <span>Tiếp tục</span>
+                                                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" /></svg>
+                                            </button>
+                                        </div>
+                                    </div>
+
+                                    <!-- Step 2: Thông tin chủ quản -->
+                                    <div x-show="hostRegStep === 2" class="space-y-6" x-transition>
+                                        <div class="space-y-2">
+                                            <h3 class="text-base font-extrabold text-slate-800">Bước 2: Thông tin chủ quản liên hệ</h3>
+                                            <p class="text-xs text-slate-500 font-medium">Các thông tin hiển thị trực tiếp để khách thuê liên lạc trực tiếp khi xem tin đăng.</p>
+                                        </div>
+
+                                        <div class="space-y-5 max-w-xl">
+                                            <div>
+                                                <label class="block text-[10px] font-black text-slate-400 uppercase tracking-wider mb-2">Họ và tên chủ nhà *</label>
+                                                <input type="text" x-model="nameInput" required placeholder="Ví dụ: Nguyễn Văn A..."
+                                                       class="w-full bg-slate-50 border border-slate-200 rounded-2xl px-4 py-3.5 text-sm focus:outline-none focus:border-primary focus:bg-white transition-all text-slate-700">
+                                            </div>
+                                            <div>
+                                                <label class="block text-[10px] font-black text-slate-400 uppercase tracking-wider mb-2">Số điện thoại liên hệ chính chủ (Nhận Zalo/Cuộc gọi) *</label>
+                                                <input type="tel" x-model="phoneInput" required placeholder="Ví dụ: 0901234567..."
+                                                       class="w-full bg-slate-50 border border-slate-200 rounded-2xl px-4 py-3.5 text-sm focus:outline-none focus:border-primary focus:bg-white transition-all text-slate-700">
+                                            </div>
+                                            <div>
+                                                <label class="block text-[10px] font-black text-slate-400 uppercase tracking-wider mb-2">Tên công ty / Căn hộ dịch vụ (Nếu có)</label>
+                                                <input type="text" x-model="companyInput" placeholder="Ví dụ: Căn hộ dịch vụ Hùng Phát..."
+                                                       class="w-full bg-slate-50 border border-slate-200 rounded-2xl px-4 py-3.5 text-sm focus:outline-none focus:border-primary focus:bg-white transition-all text-slate-700">
+                                            </div>
+                                        </div>
+
+                                        <!-- Step Navigation -->
+                                        <div class="flex justify-between pt-6 border-t border-slate-100">
+                                            <button type="button" @click="hostRegStep = 1"
+                                                    class="border border-slate-200 hover:bg-slate-50 text-slate-500 font-extrabold px-6 py-3.5 rounded-full text-xs transition-all flex items-center gap-2">
+                                                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" /></svg>
+                                                <span>Quay lại</span>
+                                            </button>
+                                            <button type="button" @click="hostRegStep = 3" :disabled="!nameInput || !phoneInput"
+                                                    class="bg-primary hover:bg-primary-dark disabled:bg-slate-100 disabled:text-slate-400 text-white font-extrabold px-6 py-3.5 rounded-full text-xs shadow-md hover:shadow-lg transition-all flex items-center gap-2"
+                                                    :class="(!nameInput || !phoneInput) ? 'cursor-not-allowed opacity-50' : 'btn-hover-premium'">
+                                                <span>Tiếp tục</span>
+                                                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" /></svg>
+                                            </button>
+                                        </div>
+                                    </div>
+
+                                    <!-- Step 3: Cam kết chính chủ -->
+                                    <div x-show="hostRegStep === 3" class="space-y-6" x-transition>
+                                        <div class="space-y-2">
+                                            <h3 class="text-base font-extrabold text-slate-800">Bước 3: Cam kết & Điều khoản</h3>
+                                            <p class="text-xs text-slate-500 font-medium">Đọc kỹ và đồng ý các điều khoản pháp lý để hoàn tất nâng cấp tài khoản.</p>
+                                        </div>
+
+                                        <div class="space-y-4 max-w-xl bg-slate-50/50 border border-slate-100 rounded-3xl p-6">
+                                            <label class="flex items-start gap-3.5 cursor-pointer group">
+                                                <input type="checkbox" x-model="hostAgree1" class="w-5 h-5 rounded-md border-slate-300 text-primary focus:ring-primary/20 mt-0.5 cursor-pointer">
+                                                <div class="select-none">
+                                                    <p class="text-xs font-bold text-slate-700 group-hover:text-slate-900 transition-colors">Xác nhận chính chủ / đại diện quản lý</p>
+                                                    <p class="text-[11px] text-slate-400 mt-0.5 leading-relaxed">Tôi cam kết mình là chủ sở hữu hợp pháp hoặc người quản lý trực tiếp được ủy quyền của tất cả bất động sản sẽ đăng.</p>
+                                                </div>
+                                            </label>
+
+                                            <label class="flex items-start gap-3.5 cursor-pointer group">
+                                                <input type="checkbox" x-model="hostAgree2" class="w-5 h-5 rounded-md border-slate-300 text-primary focus:ring-primary/20 mt-0.5 cursor-pointer">
+                                                <div class="select-none">
+                                                    <p class="text-xs font-bold text-slate-700 group-hover:text-slate-900 transition-colors">Đồng ý tiếp nhận khách thuê trực tiếp</p>
+                                                    <p class="text-[11px] text-slate-400 mt-0.5 leading-relaxed">Tôi đồng ý hiển thị công khai số điện thoại chính chủ và tiếp nhận cuộc gọi, tin nhắn Zalo từ khách hàng tìm thuê trực tiếp.</p>
+                                                </div>
+                                            </label>
+
+                                            <label class="flex items-start gap-3.5 cursor-pointer group">
+                                                <input type="checkbox" x-model="hostAgree3" class="w-5 h-5 rounded-md border-slate-300 text-primary focus:ring-primary/20 mt-0.5 cursor-pointer">
+                                                <div class="select-none">
+                                                    <p class="text-xs font-bold text-rose-600 group-hover:text-rose-800 transition-colors">Chấp nhận điều khoản phạt khi vi phạm</p>
+                                                    <p class="text-[11px] text-slate-400 mt-0.5 leading-relaxed">Tôi hiểu và đồng ý hệ thống sẽ khóa tài khoản vĩnh viễn không báo trước nếu phát hiện có hành vi giả danh môi giới, spam tin đăng hoặc cung cấp thông tin sai sự thật.</p>
+                                                </div>
+                                            </label>
+                                        </div>
+
+                                        <!-- Step Navigation -->
+                                        <div class="flex justify-between pt-6 border-t border-slate-100">
+                                            <button type="button" @click="hostRegStep = 2"
+                                                    class="border border-slate-200 hover:bg-slate-50 text-slate-500 font-extrabold px-6 py-3.5 rounded-full text-xs transition-all flex items-center gap-2">
+                                                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" /></svg>
+                                                <span>Quay lại</span>
+                                            </button>
+                                            <button type="button" @click="registerHost()" :disabled="!hostAgree1 || !hostAgree2 || !hostAgree3"
+                                                    class="bg-gradient-to-r from-primary to-indigo-600 text-white font-extrabold px-8 py-3.5 rounded-full text-xs shadow-md shadow-indigo-100 disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none hover:shadow-lg transition-all flex items-center gap-2"
+                                                    :class="(hostAgree1 && hostAgree2 && hostAgree3) ? 'btn-hover-premium hover:scale-[1.02]' : ''">
+                                                <span>Hoàn tất & Đăng ký</span>
+                                                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" /></svg>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Right: Benefits Cards -->
+                            <div class="space-y-5">
+                                <h3 class="text-sm font-black text-slate-500 uppercase tracking-wider">Đặc quyền chủ nhà</h3>
                                 
-                                <button type="submit" class="w-full bg-primary text-white font-bold px-6 py-4 rounded-full text-sm shadow-md btn-hover-premium">Đăng ký làm chủ nhà ngay</button>
-                            </form>
-                            
-                            <div class="w-full md:w-1/2 space-y-6">
-                                <h3 class="text-lg font-bold text-slate-800">Quyền lợi đặc quyền khi là chủ nhà NKS</h3>
-                                <ul class="space-y-4">
-                                    <li class="flex items-start gap-3">
-                                        <div class="w-8 h-8 rounded-full bg-primary/10 text-primary flex items-center justify-center flex-shrink-0"><svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" /></svg></div>
-                                        <div>
-                                            <p class="font-bold text-sm text-slate-700">Đăng tin miễn phí 100%</p>
-                                            <p class="text-xs text-slate-400 mt-0.5">Không phụ thu, không chiết khấu hoa hồng khi giao dịch thành công.</p>
+                                <!-- Benefit 1 -->
+                                <div class="bg-white border border-slate-100 rounded-3xl p-5 hover:shadow-xl hover:shadow-slate-100/50 transition-all duration-300 hover:-translate-y-0.5 group">
+                                    <div class="flex items-start gap-4">
+                                        <div class="w-10 h-10 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center flex-shrink-0 group-hover:bg-indigo-600 group-hover:text-white transition-all duration-300 shadow-xs">
+                                            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
                                         </div>
-                                    </li>
-                                    <li class="flex items-start gap-3">
-                                        <div class="w-8 h-8 rounded-full bg-primary/10 text-primary flex items-center justify-center flex-shrink-0"><svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" /></svg></div>
-                                        <div>
-                                            <p class="font-bold text-sm text-slate-700">Quản lý lịch hẹn tự động</p>
-                                            <p class="text-xs text-slate-400 mt-0.5">Hệ thống thông báo và theo dõi lịch hẹn xem nhà trực tuyến của khách thuê một cách thông minh.</p>
+                                        <div class="space-y-1">
+                                            <p class="font-extrabold text-xs text-slate-700">Đăng tin miễn phí 100%</p>
+                                            <p class="text-[11px] text-slate-400 leading-relaxed">Không phụ thu phí đăng tin, không chiết khấu hay hoa hồng khi giao dịch bất động sản thành công.</p>
                                         </div>
-                                    </li>
-                                    <li class="flex items-start gap-3">
-                                        <div class="w-8 h-8 rounded-full bg-primary/10 text-primary flex items-center justify-center flex-shrink-0"><svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" /></svg></div>
-                                        <div>
-                                            <p class="font-bold text-sm text-slate-700">Liên hệ trực tiếp qua Zalo/Cuộc gọi</p>
-                                            <p class="text-xs text-slate-400 mt-0.5">Khách thuê chủ động liên lạc trực tiếp tới số điện thoại cá nhân không thông qua trung gian.</p>
+                                    </div>
+                                </div>
+
+                                <!-- Benefit 2 -->
+                                <div class="bg-white border border-slate-100 rounded-3xl p-5 hover:shadow-xl hover:shadow-slate-100/50 transition-all duration-300 hover:-translate-y-0.5 group">
+                                    <div class="flex items-start gap-4">
+                                        <div class="w-10 h-10 rounded-2xl bg-cyan-50 text-cyan-600 flex items-center justify-center flex-shrink-0 group-hover:bg-cyan-600 group-hover:text-white transition-all duration-300 shadow-xs">
+                                            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
                                         </div>
-                                    </li>
-                                </ul>
+                                        <div class="space-y-1">
+                                            <p class="font-extrabold text-xs text-slate-700">Quản lý lịch hẹn tự động</p>
+                                            <p class="text-[11px] text-slate-400 leading-relaxed">Hệ thống thông báo và theo dõi lịch hẹn xem nhà trực tuyến của khách thuê một cách thông minh, mượt mà.</p>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Benefit 3 -->
+                                <div class="bg-white border border-slate-100 rounded-3xl p-5 hover:shadow-xl hover:shadow-slate-100/50 transition-all duration-300 hover:-translate-y-0.5 group">
+                                    <div class="flex items-start gap-4">
+                                        <div class="w-10 h-10 rounded-2xl bg-rose-50 text-rose-600 flex items-center justify-center flex-shrink-0 group-hover:bg-rose-600 group-hover:text-white transition-all duration-300 shadow-xs">
+                                            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.94.725l.548 2.2a1 1 0 01-.321.988l-1.305.98a10.582 10.582 0 004.872 4.872l.98-1.305a1 1 0 01.988-.321l2.2.548a1 1 0 01.725.94V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" /></svg>
+                                        </div>
+                                        <div class="space-y-1">
+                                            <p class="font-extrabold text-xs text-slate-700">Giao dịch trực tiếp chính chủ</p>
+                                            <p class="text-[11px] text-slate-400 leading-relaxed">Khách thuê chủ động liên lạc trực tiếp tới SĐT cá nhân của bạn, hoàn toàn không thông qua trung gian.</p>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
+
                     </div>
                     
                     <!-- TAB: LOGIN -->
@@ -1424,87 +1610,6 @@
              x-transition:leave="transition ease-in duration-200 transform"
              x-transition:leave-start="opacity-100 scale-100 translate-y-0"
              x-transition:leave-end="opacity-0 scale-95 translate-y-4"
-             class="bg-white rounded-[32px] shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-hidden border border-slate-100 flex flex-col relative">
-            
-            <button @click="showAddPropertyModal = false" class="absolute top-4 right-4 z-50 w-9 h-9 rounded-full bg-white/95 hover:bg-white text-slate-500 hover:text-slate-800 shadow-md flex items-center justify-center transition-all active:scale-95 border border-slate-100">
-                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
-            </button>
-
-            <div class="p-6 sm:p-8 overflow-y-auto space-y-6">
-                <div>
-                    <h2 class="text-xl font-black text-slate-900 leading-snug">Đăng tin bất động sản mới</h2>
-                    <p class="text-xs text-slate-400">Điền thông số chính xác để xác thực 3 Thật và đăng trực tuyến miễn phí.</p>
-                </div>
-
-                <form @submit.prevent="addProperty()" class="space-y-4">
-                    <!-- Title -->
-                    <div>
-                        <label class="block text-[10px] font-black text-slate-400 uppercase tracking-wider mb-1.5">Tiêu đề tin đăng *</label>
-                        <input type="text" x-model="newPropTitle" required placeholder="Ví dụ: Căn hộ Studio view sông cao cấp 45m²..." class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-3 text-xs font-semibold focus:outline-none focus:border-primary focus:bg-white transition-all text-slate-700">
-                    </div>
-
-                    <!-- Address & GPS -->
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        <div>
-                            <label class="block text-[10px] font-black text-slate-400 uppercase tracking-wider mb-1.5">Địa chỉ chi tiết *</label>
-                            <input type="text" x-model="newPropAddress" required placeholder="Ví dụ: 123 Nguyễn Huệ, Quận 1..." class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-3 text-xs font-semibold focus:outline-none focus:border-primary focus:bg-white transition-all text-slate-700">
-                        </div>
-                        <div>
-                            <label class="block text-[10px] font-black text-slate-400 uppercase tracking-wider mb-1.5">Tọa độ GPS (Lat, Lng) *</label>
-                            <input type="text" x-model="newPropGeolocation" required placeholder="10.7932,106.6710" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-3 text-xs font-semibold focus:outline-none focus:border-primary focus:bg-white transition-all text-slate-700">
-                        </div>
-                    </div>
-
-                    <!-- Type, TxType, Price, Area -->
-                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                        <div>
-                            <label class="block text-[10px] font-black text-slate-400 uppercase tracking-wider mb-1.5">Loại hình</label>
-                            <select x-model="newPropType" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-3 text-xs font-semibold focus:outline-none focus:border-primary focus:bg-white text-slate-700">
-                                <option value="Căn hộ">Căn hộ</option>
-                                <option value="Nhà phố">Nhà phố</option>
-                                <option value="Biệt thự">Biệt thự</option>
-                                <option value="Phòng trọ">Phòng trọ</option>
-                            </select>
-                        </div>
-                        <div>
-                            <label class="block text-[10px] font-black text-slate-400 uppercase tracking-wider mb-1.5">Loại tin</label>
-                            <select x-model="newPropTxType" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-3 text-xs font-semibold focus:outline-none focus:border-primary focus:bg-white text-slate-700">
-                                <option value="Cho thuê">Cho thuê</option>
-                                <option value="Bán">Bán</option>
-                            </select>
-                        </div>
-                        <div>
-                            <label class="block text-[10px] font-black text-slate-400 uppercase tracking-wider mb-1.5">Giá (VND) *</label>
-                            <input type="number" x-model="newPropPrice" required placeholder="Ví dụ: 12000000" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-3 text-xs font-semibold focus:outline-none focus:border-primary focus:bg-white transition-all text-slate-700">
-                        </div>
-                        <div>
-                            <label class="block text-[10px] font-black text-slate-400 uppercase tracking-wider mb-1.5">Diện tích (m²) *</label>
-                            <input type="number" step="0.1" x-model="newPropArea" required placeholder="45.0" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-3 text-xs font-semibold focus:outline-none focus:border-primary focus:bg-white transition-all text-slate-700">
-                        </div>
-                    </div>
-
-                    <!-- Bed, Bath, Floors, Direction -->
-                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                        <div>
-                            <label class="block text-[10px] font-black text-slate-400 uppercase tracking-wider mb-1.5">Phòng ngủ</label>
-                            <input type="number" x-model="newPropBed" required class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-3 text-xs font-semibold focus:outline-none focus:border-primary focus:bg-white text-slate-700">
-                        </div>
-                        <div>
-                            <label class="block text-[10px] font-black text-slate-400 uppercase tracking-wider mb-1.5">Phòng tắm</label>
-                            <input type="number" x-model="newPropBath" required class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-3 text-xs font-semibold focus:outline-none focus:border-primary focus:bg-white text-slate-700">
-                        </div>
-                        <div>
-                            <label class="block text-[10px] font-black text-slate-400 uppercase tracking-wider mb-1.5">Số tầng</label>
-                            <input type="number" x-model="newPropFloors" required class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-3 text-xs font-semibold focus:outline-none focus:border-primary focus:bg-white text-slate-700">
-                        </div>
-                        <div>
-                            <label class="block text-[10px] font-black text-slate-400 uppercase tracking-wider mb-1.5">Hướng nhà</label>
-                            <select x-model="newPropDirection" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-3 text-xs font-semibold focus:outline-none focus:border-primary focus:bg-white text-slate-700">
-                                <option value="Đông">Đông</option>
-                                <option value="Tây">Tây</option>
-                                <option value="Nam">Nam</option>
-                                <option value="Bắc">Bắc</option>
-                                <option value="Đông Bắc">Đông Bắc</option>
                                 <option value="Đông Nam">Đông Nam</option>
                                 <option value="Tây Bắc">Tây Bắc</option>
                                 <option value="Tây Nam">Tây Nam</option>
@@ -1553,110 +1658,282 @@
              x-transition:leave="transition ease-in duration-200 transform"
              x-transition:leave-start="opacity-100 scale-100 translate-y-0"
              x-transition:leave-end="opacity-0 scale-95 translate-y-4"
-             class="bg-white rounded-[32px] shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-hidden border border-slate-100 flex flex-col relative">
+             class="bg-white rounded-[32px] shadow-2xl max-w-5xl w-full max-h-[92vh] overflow-hidden border border-slate-100 flex flex-col relative">
             
             <button @click="showEditPropertyModal = false" class="absolute top-4 right-4 z-50 w-9 h-9 rounded-full bg-white/95 hover:bg-white text-slate-500 hover:text-slate-800 shadow-md flex items-center justify-center transition-all active:scale-95 border border-slate-100">
                 <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
             </button>
 
-            <div class="p-6 sm:p-8 overflow-y-auto space-y-6">
-                <div>
-                    <h2 class="text-xl font-black text-slate-900 leading-snug">Chỉnh sửa tin đăng</h2>
-                    <p class="text-xs text-slate-400">Cập nhật thông số chính xác để xác thực 3 Thật và lưu trực tuyến.</p>
+            <!-- Modal Header with Progress Line -->
+            <div class="px-6 pt-6 sm:px-8 sm:pt-8 border-b border-slate-100 pb-5">
+                <div class="flex justify-between items-end mb-4">
+                    <div>
+                        <h2 class="text-xl font-black text-slate-900 leading-none">Chỉnh sửa tin đăng</h2>
+                        <p class="text-xs text-slate-400 mt-1.5">Cập nhật thông số chính xác để xác thực 3 Thật và lưu trực tuyến.</p>
+                    </div>
+                    <span class="text-xs font-extrabold text-primary" x-text="'Bước ' + editPropStep + ' / 4'"></span>
                 </div>
+                
+                <!-- Progress Line -->
+                <div class="relative w-full h-1.5 bg-slate-100 rounded-full overflow-hidden">
+                    <div class="absolute left-0 top-0 h-full bg-gradient-to-r from-primary to-indigo-500 rounded-full transition-all duration-300"
+                         :style="'width: ' + ((editPropStep / 4) * 100) + '%'"></div>
+                </div>
+            </div>
 
-                <form @submit.prevent="updateProperty()" class="space-y-4">
-                    <!-- Title -->
-                    <div>
-                        <label class="block text-[10px] font-black text-slate-400 uppercase tracking-wider mb-1.5">Tiêu đề tin đăng *</label>
-                        <input type="text" x-model="editPropTitle" required placeholder="Ví dụ: Căn hộ Studio view sông..." class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-3 text-xs font-semibold focus:outline-none focus:border-primary focus:bg-white transition-all text-slate-700">
+            <!-- Two Column Layout -->
+            <div class="flex-grow overflow-y-auto p-6 sm:p-8 grid grid-cols-1 lg:grid-cols-5 gap-8">
+                <!-- Left: Form steps (lg:col-span-3) -->
+                <form @submit.prevent="updateProperty()" class="lg:col-span-3 flex flex-col justify-between min-h-[40vh] space-y-6">
+                    
+                    <!-- STEP 1: Basic info -->
+                    <div x-show="editPropStep === 1" class="space-y-5" x-transition>
+                        <div class="border-b border-slate-100 pb-2">
+                            <h3 class="font-extrabold text-sm text-slate-800 font-bold">1. Thông tin cơ bản</h3>
+                        </div>
+                        
+                        <!-- Title -->
+                        <div>
+                            <label class="block text-[10px] font-black text-slate-400 uppercase tracking-wider mb-2">Tiêu đề tin đăng *</label>
+                            <input type="text" x-model="editPropTitle" required placeholder="Ví dụ: Căn hộ Studio view sông..." 
+                                   class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-xs font-semibold focus:outline-none focus:border-primary focus:bg-white transition-all text-slate-700">
+                        </div>
+
+                        <!-- Transaction type toggles -->
+                        <div>
+                            <label class="block text-[10px] font-black text-slate-400 uppercase tracking-wider mb-2">Loại tin đăng *</label>
+                            <div class="grid grid-cols-2 gap-2 bg-slate-50 p-1.5 rounded-xl border border-slate-200/50">
+                                <button type="button" @click="editPropTxType = 'Cho thuê'"
+                                        class="py-2.5 rounded-lg font-extrabold text-xs transition-all"
+                                        :class="editPropTxType === 'Cho thuê' ? 'bg-white text-primary shadow-sm ring-1 ring-slate-100' : 'text-slate-500 hover:text-slate-700'">
+                                    Cho thuê
+                                </button>
+                                <button type="button" @click="editPropTxType = 'Bán'"
+                                        class="py-2.5 rounded-lg font-extrabold text-xs transition-all"
+                                        :class="editPropTxType === 'Bán' ? 'bg-white text-primary shadow-sm ring-1 ring-slate-100' : 'text-slate-500 hover:text-slate-700'">
+                                    Bán
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Property type toggles -->
+                        <div>
+                            <label class="block text-[10px] font-black text-slate-400 uppercase tracking-wider mb-2">Phân loại BĐS *</label>
+                            <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                                <button type="button" @click="editPropType = 'Căn hộ'"
+                                        class="py-3 rounded-xl font-bold text-xs border transition-all flex flex-col items-center gap-1.5"
+                                        :class="editPropType === 'Căn hộ' ? 'border-primary bg-primary/5 text-primary' : 'border-slate-200 text-slate-500 hover:bg-slate-50'">
+                                    <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" /></svg>
+                                    <span>Căn hộ</span>
+                                </button>
+                                <button type="button" @click="editPropType = 'Nhà phố'"
+                                        class="py-3 rounded-xl font-bold text-xs border transition-all flex flex-col items-center gap-1.5"
+                                        :class="editPropType === 'Nhà phố' ? 'border-primary bg-primary/5 text-primary' : 'border-slate-200 text-slate-500 hover:bg-slate-50'">
+                                    <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" /></svg>
+                                    <span>Nhà phố</span>
+                                </button>
+                                <button type="button" @click="editPropType = 'Biệt thự'"
+                                        class="py-3 rounded-xl font-bold text-xs border transition-all flex flex-col items-center gap-1.5"
+                                        :class="editPropType === 'Biệt thự' ? 'border-primary bg-primary/5 text-primary' : 'border-slate-200 text-slate-500 hover:bg-slate-50'">
+                                    <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M8 14v3m4-3v3m4-3v3M3 21h18M3 10h18M3 7l9-4 9 4M4 10h16v11H4V10z" /></svg>
+                                    <span>Biệt thự</span>
+                                </button>
+                                <button type="button" @click="editPropType = 'Phòng trọ'"
+                                        class="py-3 rounded-xl font-bold text-xs border transition-all flex flex-col items-center gap-1.5"
+                                        :class="editPropType === 'Phòng trọ' ? 'border-primary bg-primary/5 text-primary' : 'border-slate-200 text-slate-500 hover:bg-slate-50'">
+                                    <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" /></svg>
+                                    <span>Phòng trọ</span>
+                                </button>
+                            </div>
+                        </div>
                     </div>
 
-                    <!-- Address & GPS -->
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        <div>
-                            <label class="block text-[10px] font-black text-slate-400 uppercase tracking-wider mb-1.5">Địa chỉ chi tiết *</label>
-                            <input type="text" x-model="editPropAddress" required placeholder="Ví dụ: 123 Nguyễn Huệ..." class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-3 text-xs font-semibold focus:outline-none focus:border-primary focus:bg-white transition-all text-slate-700">
+                    <!-- STEP 2: Price & Area -->
+                    <div x-show="editPropStep === 2" class="space-y-5" x-transition>
+                        <div class="border-b border-slate-100 pb-2">
+                            <h3 class="font-extrabold text-sm text-slate-800 font-bold">2. Giá tiền & Diện tích</h3>
                         </div>
-                        <div>
-                            <label class="block text-[10px] font-black text-slate-400 uppercase tracking-wider mb-1.5">Tọa độ GPS (Lat, Lng) *</label>
-                            <input type="text" x-model="editPropGeolocation" required placeholder="10.7932,106.6710" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-3 text-xs font-semibold focus:outline-none focus:border-primary focus:bg-white transition-all text-slate-700">
+                        
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-[10px] font-black text-slate-400 uppercase tracking-wider mb-2">Giá (VND) *</label>
+                                <input type="number" x-model="editPropPrice" required placeholder="Ví dụ: 12000000" 
+                                       class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-xs font-semibold focus:outline-none focus:border-primary focus:bg-white transition-all text-slate-700">
+                                <p class="text-[10px] text-slate-400 mt-1">Đọc trực quan: <span class="font-bold text-primary" x-text="formatPriceLive(editPropPrice, editPropTxType)"></span></p>
+                            </div>
+                            <div>
+                                <label class="block text-[10px] font-black text-slate-400 uppercase tracking-wider mb-2">Diện tích (m²) *</label>
+                                <input type="number" step="0.1" x-model="editPropArea" required placeholder="Ví dụ: 45.0" 
+                                       class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-xs font-semibold focus:outline-none focus:border-primary focus:bg-white transition-all text-slate-700">
+                            </div>
+                        </div>
+
+                        <!-- Price/m2 display banner -->
+                        <div x-show="editPropPrice && editPropArea && parseFloat(editPropArea) > 0" 
+                             class="bg-indigo-50 border border-indigo-100 rounded-2xl p-4 flex items-center justify-between text-xs text-indigo-800">
+                            <div class="flex items-center gap-2">
+                                <svg class="w-5 h-5 text-indigo-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" /></svg>
+                                <span class="font-bold">Đơn giá ước tính theo diện tích:</span>
+                            </div>
+                            <span class="font-extrabold text-sm" x-text="calculatePricePerM2(editPropPrice, editPropArea)"></span>
                         </div>
                     </div>
 
-                    <!-- Type, TxType, Price, Area -->
-                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                    <!-- STEP 3: Location -->
+                    <div x-show="editPropStep === 3" class="space-y-5" x-transition>
+                        <div class="border-b border-slate-100 pb-2">
+                            <h3 class="font-extrabold text-sm text-slate-800 font-bold">3. Vị trí địa lý</h3>
+                        </div>
+
                         <div>
-                            <label class="block text-[10px] font-black text-slate-400 uppercase tracking-wider mb-1.5">Loại hình</label>
-                            <select x-model="editPropType" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-3 text-xs font-semibold focus:outline-none focus:border-primary focus:bg-white text-slate-700">
-                                <option value="Căn hộ">Căn hộ</option>
-                                <option value="Nhà phố">Nhà phố</option>
-                                <option value="Biệt thự">Biệt thự</option>
-                                <option value="Phòng trọ">Phòng trọ</option>
-                            </select>
+                            <label class="block text-[10px] font-black text-slate-400 uppercase tracking-wider mb-2">Địa chỉ chi tiết *</label>
+                            <input type="text" x-model="editPropAddress" required placeholder="Ví dụ: 123 Nguyễn Huệ, Phường Bến Nghé, Quận 1, TP. HCM..." 
+                                   class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-xs font-semibold focus:outline-none focus:border-primary focus:bg-white transition-all text-slate-700">
                         </div>
                         <div>
-                            <label class="block text-[10px] font-black text-slate-400 uppercase tracking-wider mb-1.5">Loại tin</label>
-                            <select x-model="editPropTxType" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-3 text-xs font-semibold focus:outline-none focus:border-primary focus:bg-white text-slate-700">
-                                <option value="Cho thuê">Cho thuê</option>
-                                <option value="Bán">Bán</option>
-                            </select>
-                        </div>
-                        <div>
-                            <label class="block text-[10px] font-black text-slate-400 uppercase tracking-wider mb-1.5">Giá (VND) *</label>
-                            <input type="number" x-model="editPropPrice" required placeholder="Ví dụ: 12000000" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-3 text-xs font-semibold focus:outline-none focus:border-primary focus:bg-white transition-all text-slate-700">
-                        </div>
-                        <div>
-                            <label class="block text-[10px] font-black text-slate-400 uppercase tracking-wider mb-1.5">Diện tích (m²) *</label>
-                            <input type="number" step="0.1" x-model="editPropArea" required placeholder="45.0" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-3 text-xs font-semibold focus:outline-none focus:border-primary focus:bg-white transition-all text-slate-700">
+                            <label class="block text-[10px] font-black text-slate-400 uppercase tracking-wider mb-2">Tọa độ GPS (Lat, Lng) *</label>
+                            <input type="text" x-model="editPropGeolocation" required placeholder="Ví dụ: 10.7932,106.6710" 
+                                   class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-xs font-semibold focus:outline-none focus:border-primary focus:bg-white transition-all text-slate-700">
+                            <p class="text-[10px] text-slate-400 mt-1 flex items-center gap-1">
+                                <svg class="w-3.5 h-3.5 text-slate-300" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                                Dùng Google Maps để lấy tọa độ Lat, Lng chính xác giúp định vị trên bản đồ tìm kiếm.
+                            </p>
                         </div>
                     </div>
 
-                    <!-- Bed, Bath, Floors, Direction -->
-                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                        <div>
-                            <label class="block text-[10px] font-black text-slate-400 uppercase tracking-wider mb-1.5">Phòng ngủ</label>
-                            <input type="number" x-model="editPropBed" required class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-3 text-xs font-semibold focus:outline-none focus:border-primary focus:bg-white text-slate-700">
+                    <!-- STEP 4: Features & Image -->
+                    <div x-show="editPropStep === 4" class="space-y-5" x-transition>
+                        <div class="border-b border-slate-100 pb-2">
+                            <h3 class="font-extrabold text-sm text-slate-800 font-bold">4. Thông số chi tiết & Ảnh</h3>
                         </div>
-                        <div>
-                            <label class="block text-[10px] font-black text-slate-400 uppercase tracking-wider mb-1.5">Phòng tắm</label>
-                            <input type="number" x-model="editPropBath" required class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-3 text-xs font-semibold focus:outline-none focus:border-primary focus:bg-white text-slate-700">
+
+                        <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                            <div>
+                                <label class="block text-[10px] font-black text-slate-400 uppercase tracking-wider mb-1.5">Phòng ngủ</label>
+                                <input type="number" x-model="editPropBed" required class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs font-semibold focus:outline-none focus:border-primary focus:bg-white text-slate-700">
+                            </div>
+                            <div>
+                                <label class="block text-[10px] font-black text-slate-400 uppercase tracking-wider mb-1.5">Phòng tắm</label>
+                                <input type="number" x-model="editPropBath" required class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs font-semibold focus:outline-none focus:border-primary focus:bg-white text-slate-700">
+                            </div>
+                            <div>
+                                <label class="block text-[10px] font-black text-slate-400 uppercase tracking-wider mb-1.5">Số tầng</label>
+                                <input type="number" x-model="editPropFloors" required class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs font-semibold focus:outline-none focus:border-primary focus:bg-white text-slate-700">
+                            </div>
+                            <div>
+                                <label class="block text-[10px] font-black text-slate-400 uppercase tracking-wider mb-1.5">Hướng nhà</label>
+                                <select x-model="editPropDirection" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 text-xs font-semibold focus:outline-none focus:border-primary focus:bg-white text-slate-700">
+                                    <option value="Đông">Đông</option>
+                                    <option value="Tây">Tây</option>
+                                    <option value="Nam">Nam</option>
+                                    <option value="Bắc">Bắc</option>
+                                    <option value="Đông Bắc">Đông Bắc</option>
+                                    <option value="Đông Nam">Đông Nam</option>
+                                    <option value="Tây Bắc">Tây Bắc</option>
+                                    <option value="Tây Nam">Tây Nam</option>
+                                </select>
+                            </div>
                         </div>
+
+                        <!-- Image URL -->
                         <div>
-                            <label class="block text-[10px] font-black text-slate-400 uppercase tracking-wider mb-1.5">Số tầng</label>
-                            <input type="number" x-model="editPropFloors" required class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-3 text-xs font-semibold focus:outline-none focus:border-primary focus:bg-white text-slate-700">
+                            <label class="block text-[10px] font-black text-slate-400 uppercase tracking-wider mb-2">Ảnh đại diện (Link ảnh) *</label>
+                            <input type="url" x-model="editPropFeatureImg" required placeholder="Dán link ảnh bất động sản..." 
+                                   class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-xs font-semibold focus:outline-none focus:border-primary focus:bg-white transition-all text-slate-700">
                         </div>
+
+                        <!-- Description -->
                         <div>
-                            <label class="block text-[10px] font-black text-slate-400 uppercase tracking-wider mb-1.5">Hướng nhà</label>
-                            <select x-model="editPropDirection" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-3 text-xs font-semibold focus:outline-none focus:border-primary focus:bg-white text-slate-700">
-                                <option value="Đông">Đông</option>
-                                <option value="Tây">Tây</option>
-                                <option value="Nam">Nam</option>
-                                <option value="Bắc">Bắc</option>
-                                <option value="Đông Bắc">Đông Bắc</option>
-                                <option value="Đông Nam">Đông Nam</option>
-                                <option value="Tây Bắc">Tây Bắc</option>
-                                <option value="Tây Nam">Tây Nam</option>
-                            </select>
+                            <label class="block text-[10px] font-black text-slate-400 uppercase tracking-wider mb-2">Mô tả bất động sản</label>
+                            <textarea rows="3" x-model="editPropDesc" placeholder="Mô tả các tiện ích đi kèm, khu vực lân cận, giờ giấc..." 
+                                      class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-xs font-semibold focus:outline-none focus:border-primary focus:bg-white transition-all text-slate-700"></textarea>
                         </div>
                     </div>
 
-                    <!-- Feature Image Link -->
-                    <div>
-                        <label class="block text-[10px] font-black text-slate-400 uppercase tracking-wider mb-1.5">Ảnh đại diện (Link ảnh) *</label>
-                        <input type="url" x-model="editPropFeatureImg" required class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-3 text-xs font-semibold focus:outline-none focus:border-primary focus:bg-white transition-all text-slate-700">
-                    </div>
+                    <!-- Step controls -->
+                    <div class="flex justify-between pt-6 border-t border-slate-100 mt-auto">
+                        <!-- Back button -->
+                        <button type="button" x-show="editPropStep > 1" @click="editPropStep--"
+                                class="border border-slate-200 hover:bg-slate-50 text-slate-500 font-extrabold px-5 py-3 rounded-full text-xs transition-all flex items-center gap-1.5">
+                            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" /></svg>
+                            <span>Quay lại</span>
+                        </button>
+                        <div x-show="editPropStep === 1" class="w-1"></div> <!-- spacer -->
 
-                    <!-- Description -->
-                    <div>
-                        <label class="block text-[10px] font-black text-slate-400 uppercase tracking-wider mb-1.5">Mô tả bất động sản</label>
-                        <textarea rows="3" x-model="editPropDesc" placeholder="Mô tả các tiện ích đi kèm, khu vực lân cận..." class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-3 text-xs font-semibold focus:outline-none focus:border-primary focus:bg-white transition-all text-slate-700"></textarea>
-                    </div>
+                        <!-- Next button -->
+                        <button type="button" x-show="editPropStep < 4" @click="editPropStep++"
+                                :disabled="(editPropStep === 1 && !editPropTitle.trim()) || (editPropStep === 2 && (!editPropPrice || !editPropArea || parseFloat(editPropPrice) <= 0 || parseFloat(editPropArea) <= 0)) || (editPropStep === 3 && (!editPropAddress.trim() || !editPropGeolocation.trim()))"
+                                class="bg-primary hover:bg-primary-dark disabled:bg-slate-100 disabled:text-slate-400 text-white font-extrabold px-6 py-3.5 rounded-full text-xs shadow-md hover:shadow-lg transition-all flex items-center gap-1.5"
+                                :class="((editPropStep === 1 && !editPropTitle.trim()) || (editPropStep === 2 && (!editPropPrice || !editPropArea || parseFloat(editPropPrice) <= 0 || parseFloat(editPropArea) <= 0)) || (editPropStep === 3 && (!editPropAddress.trim() || !editPropGeolocation.trim()))) ? 'cursor-not-allowed opacity-50' : 'btn-hover-premium'">
+                            <span>Tiếp tục</span>
+                            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" /></svg>
+                        </button>
 
-                    <button type="submit" class="w-full bg-primary hover:bg-primary-dark text-white font-extrabold py-4 rounded-xl shadow-md shadow-primary/20 hover:shadow-lg transition-all hover:scale-[1.01] active:scale-95 text-xs uppercase tracking-wider">
-                        Lưu thay đổi
-                    </button>
+                        <!-- Submit button -->
+                        <button type="submit" x-show="editPropStep === 4"
+                                :disabled="!editPropFeatureImg.trim()"
+                                class="bg-gradient-to-r from-primary to-indigo-600 text-white font-extrabold px-8 py-3.5 rounded-full text-xs shadow-md shadow-indigo-100 disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none hover:shadow-lg transition-all flex items-center gap-1.5"
+                                :class="editPropFeatureImg.trim() ? 'btn-hover-premium hover:scale-[1.01]' : ''">
+                            <span>Lưu thay đổi</span>
+                            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" /></svg>
+                        </button>
+                    </div>
                 </form>
+
+                <!-- Right: Live Preview Card (lg:col-span-2) -->
+                <div class="lg:col-span-2 hidden lg:flex flex-col items-center justify-start border-l border-slate-100 pl-8 space-y-4">
+                    <h3 class="text-xs font-black text-slate-400 uppercase tracking-wider self-start">Xem trước tin đăng</h3>
+                    
+                    <!-- Live card mock -->
+                    <div class="bg-slate-50 border border-slate-200/60 rounded-3xl overflow-hidden shadow-md flex flex-col w-full max-w-sm transition-all duration-300 hover:shadow-lg">
+                        <div class="h-44 overflow-hidden relative bg-slate-200">
+                            <img :src="editPropFeatureImg ? editPropFeatureImg : 'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?auto=format&fit=crop&q=80&w=800'" 
+                                 alt="Live Preview" class="w-full h-full object-cover">
+                            <span class="absolute top-3 left-3 bg-emerald-500 text-white text-[9px] font-bold px-2 py-0.5 rounded-md uppercase">Đã duyệt</span>
+                            <span class="absolute top-3 right-3 bg-primary text-white text-[9px] font-bold px-2 py-0.5 rounded-md uppercase" x-text="editPropTxType">Cho thuê</span>
+                        </div>
+                        <div class="p-5 flex-grow flex flex-col justify-between space-y-4">
+                            <div>
+                                <span class="inline-block px-2.5 py-0.5 bg-primary/10 text-primary text-[10px] font-bold rounded-md uppercase mb-2" x-text="editPropType">Căn hộ</span>
+                                <h4 class="font-extrabold text-slate-800 text-sm line-clamp-2" x-text="editPropTitle ? editPropTitle : 'Chưa nhập tiêu đề...' "></h4>
+                                <p class="text-xs text-slate-400 mt-2 truncate flex items-center gap-1">
+                                    <svg class="w-3.5 h-3.5 text-slate-300 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /></svg>
+                                    <span x-text="editPropAddress ? editPropAddress : 'Chưa có địa chỉ...'"></span>
+                                </p>
+                            </div>
+                            
+                            <!-- Stats info (PN, PT, m2) -->
+                            <div class="grid grid-cols-3 gap-2 py-2 border-y border-slate-200/50 text-[10px] text-slate-500 font-bold">
+                                <div class="flex items-center gap-1">
+                                    <span>🛏️</span>
+                                    <span x-text="editPropBed + ' PN'"></span>
+                                </div>
+                                <div class="flex items-center gap-1">
+                                    <span>🛁</span>
+                                    <span x-text="editPropBath + ' PT'"></span>
+                                </div>
+                                <div class="flex items-center gap-1">
+                                    <span>📐</span>
+                                    <span x-text="editPropArea ? editPropArea + ' m²' : '0.0 m²'"></span>
+                                </div>
+                            </div>
+
+                            <div class="flex justify-between items-center mt-2">
+                                <div class="space-y-0.5">
+                                    <p class="text-xs text-slate-400">Giá giao dịch</p>
+                                    <p class="text-base font-extrabold text-primary" x-text="formatPriceLive(editPropPrice, editPropTxType)"></p>
+                                </div>
+                                <div x-show="editPropPrice && editPropArea && parseFloat(editPropArea) > 0" class="text-right">
+                                    <p class="text-[10px] text-slate-400">Đơn giá</p>
+                                    <p class="text-xs font-bold text-slate-600" x-text="calculatePricePerM2(editPropPrice, editPropArea)"></p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
             </div>
         </div>
     </div>
@@ -1924,6 +2201,12 @@
     document.addEventListener('alpine:init', () => {
         Alpine.data('memberDashboard', () => ({
             activeTab: 'info',
+            hostRegStep: 1,
+            hostAgree1: false,
+            hostAgree2: false,
+            hostAgree3: false,
+            newPropStep: 1,
+            editPropStep: 1,
             isLoggedIn: false,
             user: null,
             appointments: [],
@@ -2350,6 +2633,7 @@
                 this.editPropDirection = item.direction || 'Đông';
                 this.editPropFeatureImg = item.feature_img || item.featureimg;
                 this.editPropDesc = item.description || '';
+                this.editPropStep = 1;
                 this.showEditPropertyModal = true;
             },
 
@@ -3174,6 +3458,34 @@
                     return `${parts[2]}/${parts[1]}/${parts[0]}`;
                 }
                 return dateStr;
+            },
+
+            formatPriceLive(price, txType) {
+                if (!price || isNaN(price)) return 'Liên hệ';
+                const num = parseFloat(price);
+                let display = '';
+                if (num >= 1000000000) {
+                    display = (num / 1000000000).toFixed(1).replace('.0', '') + ' tỷ';
+                } else if (num >= 1000000) {
+                    display = (num / 1000000).toFixed(0) + ' triệu';
+                } else {
+                    display = num.toLocaleString('vi-VN') + ' đ';
+                }
+                
+                if (txType === 'Cho thuê') {
+                    return display + ' / tháng';
+                }
+                return display;
+            },
+
+            calculatePricePerM2(price, area) {
+                if (!price || !area || isNaN(price) || isNaN(area) || parseFloat(area) <= 0) return '';
+                const priceM2 = parseFloat(price) / parseFloat(area);
+                if (priceM2 >= 1000000) {
+                    return (priceM2 / 1000000).toFixed(1).replace('.0', '') + ' triệu/m²';
+                } else {
+                    return Math.round(priceM2).toLocaleString('vi-VN') + ' đ/m²';
+                }
             },
 
             simulateScanProgress(duration, callback) {
