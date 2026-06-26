@@ -67,7 +67,7 @@
 
         <!-- Rendered Content Box (Styled Markdown Reader Mode) -->
         <div class="prose max-w-none text-slate-600 text-sm sm:text-base leading-relaxed space-y-6">
-            {!! \Illuminate\Support\Str::markdown($post->content ?? '') !!}
+            {!! \Illuminate\Support\Str::markdown(str_replace('\n', "\n", $post->content ?? '')) !!}
         </div>
 
         <!-- Social Share Bar (Interactive) -->
