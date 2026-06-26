@@ -96,7 +96,7 @@
                                 </div>
                                 <div class="flex items-center gap-1.5">
                                     <svg class="w-4 h-4 text-slate-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" /></svg>
-                                    <span>Dự án đăng ký: <span class="text-primary font-black">{{ $ent->properties->count() }} BĐS</span></span>
+                                    <span>Dự án đăng ký: <span class="text-primary font-black">{{ $ent->api_properties_count ?? $ent->properties->count() }} BĐS</span></span>
                                 </div>
                             </div>
 

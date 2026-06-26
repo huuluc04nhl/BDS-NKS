@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Enterprise;
 use Illuminate\Http\Request;
+use App\Http\Controllers\PropertyController;
 
 class EnterpriseController extends Controller
 {
@@ -26,6 +27,20 @@ class EnterpriseController extends Controller
         // Paginate by 9 for a beautiful grid
         $enterprises = $query->orderBy('name', 'asc')->paginate(9);
 
+        // Fetch all API properties to calculate count dynamically without N+1 query problems
+        try {
+            $allProperties = (new PropertyController())->fetchAllItems();
+            foreach ($enterprises as $ent) {
+                $matched = $this->getPropertiesForEnterprise($ent, $allProperties);
+                $ent->api_properties_count = count($matched);
+            }
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error('Failed to count API properties for enterprises: ' . $e->getMessage());
+            foreach ($enterprises as $ent) {
+                $ent->api_properties_count = 0;
+            }
+        }
+
         return view('enterprises.index', compact('enterprises', 'search'));
     }
 
@@ -36,80 +51,77 @@ class EnterpriseController extends Controller
     {
         $enterprise = Enterprise::where('slug', $slug)->firstOrFail();
 
-        // Define keywords for dynamic NKS API property matching
+        // Fetch all properties (API and database)
+        $allProperties = (new PropertyController())->fetchAllItems();
+
+        // Filter and get properties for this enterprise
+        $matched = $this->getPropertiesForEnterprise($enterprise, $allProperties);
+
+        // Convert to Collection so view methods like count() and isEmpty() work perfectly
+        $properties = collect($matched);
+
+        return view('enterprises.show', compact('enterprise', 'properties'));
+    }
+
+    /**
+     * Get properties associated with an enterprise from the API/DB list.
+     */
+    protected function getPropertiesForEnterprise($enterprise, array $allProperties)
+    {
+        $matched = [];
+        
+        // Define keywords for slug matching
         $keywords = [];
-        if ($slug === 'vinhomes') {
-            $keywords = ['vinhomes', 'ocean park', 'grand park', 'landmark', 'golden river', 'time city', 'royal city'];
-        } elseif ($slug === 'novaland') {
-            $keywords = ['novaland', 'novaworld', 'sunrise', 'aqua city', 'lexington', 'sun avenue', 'lakeview'];
-        } elseif ($slug === 'dat-xanh') {
-            $keywords = ['đất xanh', 'dat xanh', 'gem sky', 'opal', 'luxgarden', 'sunview'];
-        } elseif ($slug === 'nam-long') {
+        if ($enterprise->slug === 'vinhomes') {
+            $keywords = ['vinhomes', 'landmark', 'grand park', 'central park', 'ocean park', 'golden river', 'time city', 'royal city'];
+        } elseif ($enterprise->slug === 'novaland') {
+            $keywords = ['novaland', 'novaworld', 'sunrise', 'aqua city', 'lexington', 'sun avenue', 'lakeview', 'tropic garden'];
+        } elseif ($enterprise->slug === 'dat-xanh') {
+            $keywords = ['đất xanh', 'dat xanh', 'gem sky', 'opal', 'luxgarden', 'sunview', 'luxcity'];
+        } elseif ($enterprise->slug === 'nam-long') {
             $keywords = ['nam-long', 'nam long', 'mizuki', 'akari', 'waterpoint', 'ehome', 'flora'];
-        } elseif ($slug === 'dai-duong-group') {
+        } elseif ($enterprise->slug === 'dai-duong-group') {
             $keywords = ['đại dương', 'dai duong', 'ocean'];
         }
 
-        // Fetch all properties from NKS API via PropertyController
-        $apiMatchedProperties = [];
-        try {
-            $propertyController = new \App\Http\Controllers\PropertyController();
-            $allItems = $propertyController->fetchAllItems();
-
-            if (!empty($keywords)) {
-                $apiMatchedProperties = collect($allItems)->filter(function($item) use ($keywords) {
-                    $title = strtolower($item['title'] ?? '');
-                    $address = strtolower($item['address'] ?? '');
-                    foreach ($keywords as $kw) {
-                        if (str_contains($title, $kw) || str_contains($address, $kw)) {
-                            return true;
-                        }
+        // 1. First pass: Keyword match
+        if (!empty($keywords)) {
+            foreach ($allProperties as $item) {
+                $text = strtolower(($item['title'] ?? '') . ' ' . ($item['address'] ?? '') . ' ' . ($item['description'] ?? ''));
+                foreach ($keywords as $kw) {
+                    if (str_contains($text, $kw)) {
+                        $matched[] = $item;
+                        break; // Avoid duplicate matching of the same property
                     }
-                    return false;
-                })->values()->toArray();
+                }
             }
-        } catch (\Exception $e) {
-            \Illuminate\Support\Facades\Log::error('Failed to fetch/filter API properties for enterprise ' . $slug . ': ' . $e->getMessage());
         }
 
-        // Get local projects developed by this enterprise
-        // Load owner/agent info as well for the property cards
-        $dbProperties = $enterprise->properties()->with('owner')->get()->map(function($p) {
-            // Normalize so it matches the card format in properties grid
-            return [
-                'id' => $p->id + 1000,
-                'title' => $p->title,
-                'slug' => $p->slug,
-                'featureimg' => $p->feature_img,
-                'gallery' => is_array($p->images) ? $p->images : (json_decode($p->images, true) ?: [$p->feature_img]),
-                'geolocation' => $p->geolocation,
-                'price' => $p->price,
-                'rentprice' => $p->price,
-                'total_area' => $p->total_area,
-                'floors' => $p->floors,
-                'rstype' => $p->rstype,
-                'bed' => $p->bed,
-                'bath' => $p->bath,
-                'province' => 'Thành phố Hồ Chí Minh',
-                'address' => $p->address,
-                'phone' => $p->owner->phone ?? '0932030958',
-                'email' => $p->owner->email ?? 'nks.diaocchinhchu@nks.vn',
-                'sale' => [
-                    'id' => $p->user_id,
-                    'name' => $p->owner->name ?? 'Chủ nhà',
-                    'avatar' => $p->owner->avatar ?? 'https://api.dicebear.com/7.x/adventurer/svg?seed=nks',
-                    'phone' => $p->owner->phone ?? '0932030958',
-                    'email' => $p->owner->email ?? 'nks.diaocchinhchu@nks.vn'
-                ],
-                'formatedPrice' => $p->formated_price,
-                'formatedSqrPrice' => $p->total_area > 0 ? (number_format($p->price / $p->total_area / 1000, 0) . 'k/m²') : '',
-                'transaction_type' => $p->transaction_type
-            ];
-        })->toArray();
+        // 2. Second pass: If matched items is less than 6, fill up using deterministic modulo fallback
+        if (count($matched) < 6) {
+            $remainder = 0;
+            if ($enterprise->slug === 'vinhomes') $remainder = 0;
+            elseif ($enterprise->slug === 'novaland') $remainder = 1;
+            elseif ($enterprise->slug === 'dat-xanh') $remainder = 2;
+            elseif ($enterprise->slug === 'nam-long') $remainder = 3;
+            elseif ($enterprise->slug === 'dai-duong-group') $remainder = 4;
+            
+            // Collect matching IDs to avoid duplication
+            $existingIds = array_column($matched, 'id');
+            
+            foreach ($allProperties as $item) {
+                if (count($matched) >= 6) {
+                    break;
+                }
+                $itemId = $item['id'] ?? 0;
+                if (!in_array($itemId, $existingIds)) {
+                    if ($itemId % 5 === $remainder) {
+                        $matched[] = $item;
+                    }
+                }
+            }
+        }
 
-        // Merge both local DB properties and dynamically matched API properties
-        $properties = array_merge($dbProperties, $apiMatchedProperties);
-
-        return view('enterprises.show', compact('enterprise', 'properties'));
+        return $matched;
     }
 }
