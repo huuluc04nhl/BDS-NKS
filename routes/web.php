@@ -2,6 +2,8 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\PropertyController;
+use App\Http\Controllers\EnterpriseController;
+use App\Http\Controllers\NewsController;
 
 // Homepage Route
 Route::get('/', [PropertyController::class, 'home'])->name('home');
@@ -11,6 +13,14 @@ Route::get('/properties', [PropertyController::class, 'index'])->name('propertie
 
 // Property Detail Route (by slug)
 Route::get('/properties/{slug}', [PropertyController::class, 'show'])->name('properties.show');
+
+// Enterprises Directory & Details Route
+Route::get('/doanh-nghiep', [EnterpriseController::class, 'index'])->name('enterprises.index');
+Route::get('/doanh-nghiep/{slug}', [EnterpriseController::class, 'show'])->name('enterprises.show');
+
+// News Directory & Details Route
+Route::get('/tin-tuc', [NewsController::class, 'index'])->name('news.index');
+Route::get('/tin-tuc/{slug}', [NewsController::class, 'show'])->name('news.show');
 
 // Profile Dashboard Route
 Route::get('/profile', function () {

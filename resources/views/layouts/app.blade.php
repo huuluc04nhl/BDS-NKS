@@ -228,7 +228,8 @@
                     </div>
 
                     <a href="/properties" class="text-sm font-bold text-slate-800 hover:text-primary transition-colors">Kho dự án</a>
-                    <a href="#" class="text-sm font-bold text-slate-800 hover:text-primary transition-colors">Vay thế chấp</a>
+                    <a href="/doanh-nghiep" class="text-sm font-bold text-slate-800 hover:text-primary transition-colors">Doanh nghiệp</a>
+                    <a href="/tin-tuc" class="text-sm font-bold text-slate-800 hover:text-primary transition-colors">Tin tức</a>
                     
                     <div class="relative" x-data="{ open: false }" @click.away="open = false">
                         <button @click="open = !open" class="text-sm font-bold text-slate-800 hover:text-primary flex items-center gap-1 focus:outline-none transition-colors">
@@ -395,7 +396,8 @@
                      <!-- Direct Links -->
                      <div class="space-y-4">
                          <a href="/properties" @click="mobileMenuOpen = false" class="block text-sm font-black text-slate-800 hover:text-primary transition-colors">Kho dự án</a>
-                         <a href="#" @click="mobileMenuOpen = false" class="block text-sm font-black text-slate-800 hover:text-primary transition-colors">Vay thế chấp</a>
+                         <a href="/doanh-nghiep" @click="mobileMenuOpen = false" class="block text-sm font-black text-slate-800 hover:text-primary transition-colors">Doanh nghiệp</a>
+                         <a href="/tin-tuc" @click="mobileMenuOpen = false" class="block text-sm font-black text-slate-800 hover:text-primary transition-colors">Tin tức</a>
                      </div>
 
                      <!-- Category: Đối tác -->
@@ -455,6 +457,8 @@
                     <ul class="space-y-3 text-xs">
                         <li><a href="/" class="hover:text-white transition-colors duration-300">Trang chủ</a></li>
                         <li><a href="/properties" class="hover:text-white transition-colors duration-300">Bản đồ thuê</a></li>
+                        <li><a href="/doanh-nghiep" class="hover:text-white transition-colors duration-300">Doanh nghiệp BĐS</a></li>
+                        <li><a href="/tin-tuc" class="hover:text-white transition-colors duration-300">Tin tức Wiki</a></li>
                         <li><a href="/profile?tab=host" class="hover:text-white transition-colors duration-300">Đăng ký làm chủ nhà</a></li>
                     </ul>
                 </div>
@@ -908,7 +912,35 @@
                     if (window.location.pathname.startsWith('/properties/')) {
                         areaContext = `Người dùng đang xem trang chi tiết: ${document.title} (${window.location.href})`;
                     } else if (window.location.pathname === '/properties') {
-                        areaContext = 'Người dùng đang duyệt danh sách tìm kiếm BĐS';
+                        // Grab active dropdown and input values from DOM
+                        const provEl = document.querySelector('select[x-model="selectedProvince"]');
+                        const wardEl = document.querySelector('select[x-model="selectedWard"]');
+                        const kwEl = document.querySelector('input[x-model="searchKeyword"]');
+                        
+                        let activeFilters = [];
+                        if (provEl && provEl.options[provEl.selectedIndex] && provEl.value) {
+                            activeFilters.push(`Tỉnh/Thành: ${provEl.options[provEl.selectedIndex].text}`);
+                        }
+                        if (wardEl && wardEl.options[wardEl.selectedIndex] && wardEl.value) {
+                            activeFilters.push(`Phường/Xã: ${wardEl.options[wardEl.selectedIndex].text}`);
+                        }
+                        if (kwEl && kwEl.value.trim()) {
+                            activeFilters.push(`Từ khóa: "${kwEl.value.trim()}"`);
+                        }
+                        
+                        if (activeFilters.length > 0) {
+                            areaContext = `Người dùng đang duyệt danh sách tìm kiếm BĐS với bộ lọc active: ${activeFilters.join(', ')}`;
+                        } else {
+                            areaContext = 'Người dùng đang duyệt danh sách tìm kiếm BĐS';
+                        }
+                    } else if (window.location.pathname.startsWith('/doanh-nghiep/')) {
+                        areaContext = `Người dùng đang xem chi tiết Doanh nghiệp phát triển: ${document.title} (${window.location.href})`;
+                    } else if (window.location.pathname === '/doanh-nghiep') {
+                        areaContext = 'Người dùng đang xem danh sách các doanh nghiệp bất động sản';
+                    } else if (window.location.pathname.startsWith('/tin-tuc/')) {
+                        areaContext = `Người dùng đang đọc bài viết tin tức: ${document.title} (${window.location.href})`;
+                    } else if (window.location.pathname === '/tin-tuc') {
+                        areaContext = 'Người dùng đang đọc tin tức/Wiki bất động sản';
                     }
 
                     try {

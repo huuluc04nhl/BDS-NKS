@@ -13,6 +13,8 @@ class Post extends Model
         'title',
         'category',
         'summary',
-        'feature_img'
+        'feature_img',
+        'slug',
+        'content'
     ];
 }

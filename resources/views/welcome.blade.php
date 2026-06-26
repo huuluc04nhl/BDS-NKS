@@ -400,7 +400,7 @@
              }">
         <div class="flex justify-between items-end">
             <h2 class="text-2xl font-black text-slate-900">Tin tức bất động sản</h2>
-            <a href="#" class="text-xs font-bold text-slate-400 hover:text-primary flex items-center gap-1 transition-colors">
+            <a href="/tin-tuc" class="text-xs font-bold text-slate-400 hover:text-primary flex items-center gap-1 transition-colors">
                 Xem thêm
                 <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" /></svg>
             </a>
@@ -419,7 +419,7 @@
         <!-- News grid -->
         <div class="grid grid-cols-1 sm:grid-cols-4 gap-8" x-show="filteredPosts.length > 0" x-transition>
             <template x-for="post in filteredPosts" :key="post.id">
-                <div class="space-y-4 group cursor-pointer">
+                <div class="space-y-4 group cursor-pointer" @click="window.location.href = '/tin-tuc/' + (post.slug || post.id)">
                     <div class="h-44 rounded-2xl overflow-hidden shadow-sm relative border border-slate-100">
                         <img :src="post.feature_img" alt="News Image" class="w-full h-full object-cover group-hover:scale-102 transition-transform duration-500">
                     </div>

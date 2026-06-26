@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 class Property extends Model
 {
     protected $fillable = [
-        'user_id', 'title', 'slug', 'address', 'geolocation', 'rstype', 
+        'user_id', 'enterprise_id', 'title', 'slug', 'address', 'geolocation', 'rstype', 
         'transaction_type', 'price', 'formated_price', 'total_area', 
         'bed', 'bath', 'floors', 'direction', 'feature_img', 'images', 
         'description', 'is_verified'
@@ -26,6 +26,11 @@ class Property extends Model
     public function owner()
     {
         return $this->belongsTo(User::class, 'user_id');
+    }
+
+    public function enterprise()
+    {
+        return $this->belongsTo(Enterprise::class, 'enterprise_id');
     }
 
     public function appointments()

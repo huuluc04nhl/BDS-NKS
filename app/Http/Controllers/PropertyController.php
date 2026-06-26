@@ -60,7 +60,7 @@ class PropertyController extends Controller
 
         // Merge database properties dynamically outside cache
         try {
-            $dbProperties = \App\Models\Property::with('owner')->get();
+            $dbProperties = \App\Models\Property::with(['owner', 'enterprise'])->get();
             $dbNormalized = [];
             foreach ($dbProperties as $p) {
                 $dbNormalized[] = [
@@ -81,6 +81,13 @@ class PropertyController extends Controller
                     'address' => $p->address,
                     'phone' => $p->owner->phone ?? '0932030958',
                     'email' => $p->owner->email ?? 'nks.diaocchinhchu@nks.vn',
+                    'enterprise_id' => $p->enterprise_id,
+                    'enterprise' => $p->enterprise ? [
+                        'id' => $p->enterprise->id,
+                        'name' => $p->enterprise->name,
+                        'slug' => $p->enterprise->slug,
+                        'logo' => $p->enterprise->logo
+                    ] : null,
                     'sale' => [
                         'id' => $p->user_id,
                         'name' => $p->owner->name ?? 'Chủ nhà',
