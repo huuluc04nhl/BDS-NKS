@@ -93,6 +93,40 @@ Route::get('/run-migrations-secure-nks', function () {
                 \Illuminate\Support\Facades\DB::purge('pgsql');
             }
 
+            // Cleanup option to run database cleanup without migrate:fresh timeout
+            if (request()->query('cleanup') === 'true') {
+                // 1. Delete properties that are mock data
+                $deletedProperties = \App\Models\Property::whereIn('slug', [
+                    'can-ho-studio-vinhomes-grand-park-quan-9',
+                    'can-ho-sunrise-city-2-phong-ngu-view-ho-boi-quan-7',
+                    'biet-thu-don-lap-phu-tho-du-an-ocean-park'
+                ])->delete();
+
+                // 2. Delete posts with null or empty slugs
+                $deletedNullPosts = \App\Models\Post::whereNull('slug')->orWhere('slug', '')->delete();
+
+                // 3. Keep only the post with the lowest ID for each unique slug
+                $posts = \App\Models\Post::orderBy('id', 'asc')->get();
+                $seenSlugs = [];
+                $deletedDuplicatePosts = 0;
+                foreach ($posts as $post) {
+                    if (in_array($post->slug, $seenSlugs)) {
+                        $post->delete();
+                        $deletedDuplicatePosts++;
+                    } else {
+                        $seenSlugs[] = $post->slug;
+                    }
+                }
+
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Database cleanup executed successfully',
+                    'deleted_properties' => $deletedProperties,
+                    'deleted_null_posts' => $deletedNullPosts,
+                    'deleted_duplicate_posts' => $deletedDuplicatePosts
+                ]);
+            }
+
             $command = request()->query('fresh') === 'true' ? 'migrate:fresh' : 'migrate';
             $params = ['--force' => true];
             if (request()->query('fresh') === 'true' || request()->query('seed') === 'true') {
