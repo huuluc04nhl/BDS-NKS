@@ -17,7 +17,7 @@ class PropertyController extends Controller
     /**
      * Fetch all items from the NKS API with SSL bypass, caching, and robust high-fidelity fallback
      */
-    protected function fetchAllItems(string $keyword = null)
+    public function fetchAllItems(string $keyword = null)
     {
         $cacheKey = 'nks_properties_list_' . md5($keyword ?? 'all');
 

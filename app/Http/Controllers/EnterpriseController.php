@@ -36,9 +36,45 @@ class EnterpriseController extends Controller
     {
         $enterprise = Enterprise::where('slug', $slug)->firstOrFail();
 
+        // Define keywords for dynamic NKS API property matching
+        $keywords = [];
+        if ($slug === 'vinhomes') {
+            $keywords = ['vinhomes', 'ocean park', 'grand park', 'landmark', 'golden river', 'time city', 'royal city'];
+        } elseif ($slug === 'novaland') {
+            $keywords = ['novaland', 'novaworld', 'sunrise', 'aqua city', 'lexington', 'sun avenue', 'lakeview'];
+        } elseif ($slug === 'dat-xanh') {
+            $keywords = ['đất xanh', 'dat xanh', 'gem sky', 'opal', 'luxgarden', 'sunview'];
+        } elseif ($slug === 'nam-long') {
+            $keywords = ['nam-long', 'nam long', 'mizuki', 'akari', 'waterpoint', 'ehome', 'flora'];
+        } elseif ($slug === 'dai-duong-group') {
+            $keywords = ['đại dương', 'dai duong', 'ocean'];
+        }
+
+        // Fetch all properties from NKS API via PropertyController
+        $apiMatchedProperties = [];
+        try {
+            $propertyController = new \App\Http\Controllers\PropertyController();
+            $allItems = $propertyController->fetchAllItems();
+
+            if (!empty($keywords)) {
+                $apiMatchedProperties = collect($allItems)->filter(function($item) use ($keywords) {
+                    $title = strtolower($item['title'] ?? '');
+                    $address = strtolower($item['address'] ?? '');
+                    foreach ($keywords as $kw) {
+                        if (str_contains($title, $kw) || str_contains($address, $kw)) {
+                            return true;
+                        }
+                    }
+                    return false;
+                })->values()->toArray();
+            }
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error('Failed to fetch/filter API properties for enterprise ' . $slug . ': ' . $e->getMessage());
+        }
+
         // Get local projects developed by this enterprise
         // Load owner/agent info as well for the property cards
-        $properties = $enterprise->properties()->with('owner')->get()->map(function($p) {
+        $dbProperties = $enterprise->properties()->with('owner')->get()->map(function($p) {
             // Normalize so it matches the card format in properties grid
             return [
                 'id' => $p->id + 1000,
@@ -69,7 +105,10 @@ class EnterpriseController extends Controller
                 'formatedSqrPrice' => $p->total_area > 0 ? (number_format($p->price / $p->total_area / 1000, 0) . 'k/m²') : '',
                 'transaction_type' => $p->transaction_type
             ];
-        });
+        })->toArray();
+
+        // Merge both local DB properties and dynamically matched API properties
+        $properties = array_merge($dbProperties, $apiMatchedProperties);
 
         return view('enterprises.show', compact('enterprise', 'properties'));
     }
