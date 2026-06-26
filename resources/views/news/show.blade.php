@@ -46,7 +46,7 @@
                 </div>
                 <div>
                     <span class="text-slate-700 block">Ban Biên Tập BDS NKS</span>
-                    <span class="text-[10px] text-slate-400 block font-semibold mt-0.5">Đăng ngày {{ $post->created_at ? $post->created_at->toLocaleDateString('vi-VN') : 'Vừa đăng' }} • 3 phút đọc</span>
+                    <span class="text-[10px] text-slate-400 block font-semibold mt-0.5">Đăng ngày {{ $post->created_at ? $post->created_at->format('d/m/Y') : 'Vừa đăng' }} • 3 phút đọc</span>
                 </div>
             </div>
         </div>
@@ -121,7 +121,7 @@
                             <h4 class="text-xs font-bold text-slate-800 group-hover:text-primary transition-colors leading-snug line-clamp-2">
                                 {{ $rel->title }}
                             </h4>
-                            <span class="text-[9px] text-slate-400 font-bold block">{{ $rel->created_at ? $rel->created_at->toLocaleDateString('vi-VN') : 'Vừa đăng' }}</span>
+                            <span class="text-[9px] text-slate-400 font-bold block">{{ $rel->created_at ? $rel->created_at->format('d/m/Y') : 'Vừa đăng' }}</span>
                         </div>
 
                     </div>

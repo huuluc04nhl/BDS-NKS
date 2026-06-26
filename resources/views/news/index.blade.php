@@ -61,7 +61,7 @@
                             </p>
 
                             <div class="flex items-center justify-between pt-2 text-[10px] text-white/60 font-bold border-t border-white/10">
-                                <span>{{ $spotlight->created_at ? $spotlight->created_at->toLocaleDateString('vi-VN') : 'Vừa đăng' }}</span>
+                                <span>{{ $spotlight->created_at ? $spotlight->created_at->format('d/m/Y') : 'Vừa đăng' }}</span>
                                 <span class="flex items-center gap-1">Đọc bài viết <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" /></svg></span>
                             </div>
                         </div>
@@ -115,7 +115,7 @@
                                         {{ $post->summary }}
                                     </p>
                                     <p class="text-[10px] text-slate-400 font-bold pt-1">
-                                        {{ $post->created_at ? $post->created_at->toLocaleDateString('vi-VN') : 'Vừa đăng' }}
+                                        {{ $post->created_at ? $post->created_at->format('d/m/Y') : 'Vừa đăng' }}
                                     </p>
                                 </div>
 
@@ -167,7 +167,7 @@
                                     <h4 class="text-xs font-bold text-slate-800 leading-snug line-clamp-2 group-hover:text-primary transition-colors">
                                         {{ $pop->title }}
                                     </h4>
-                                    <span class="text-[9px] text-slate-400 font-bold block">{{ $pop->created_at ? $pop->created_at->toLocaleDateString('vi-VN') : 'Vừa đăng' }}</span>
+                                    <span class="text-[9px] text-slate-400 font-bold block">{{ $pop->created_at ? $pop->created_at->format('d/m/Y') : 'Vừa đăng' }}</span>
                                 </div>
                             </div>
                         @endforeach

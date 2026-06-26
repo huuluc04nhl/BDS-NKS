@@ -127,6 +127,13 @@ Route::get('/run-migrations-secure-nks', function () {
                 ]);
             }
 
+            if (request()->query('inspect') === 'true') {
+                return response()->json([
+                    'posts' => \App\Models\Post::all(),
+                    'properties' => \App\Models\Property::all()
+                ]);
+            }
+
             $command = request()->query('fresh') === 'true' ? 'migrate:fresh' : 'migrate';
             $params = ['--force' => true];
             if (request()->query('fresh') === 'true' || request()->query('seed') === 'true') {
