@@ -20,9 +20,11 @@
                 <a href="{{ route('news.index', ['category' => $post->category]) }}" class="text-primary font-black">
                     @switch($post->category)
                         @case('report') Báo cáo thị trường @break
-                        @case('news') Tin tức BĐS @break
+                        @case('view') Góc nhìn NKS @break
                         @case('interior') Nội thất @break
                         @case('fengshui') Phong thủy @break
+                        @case('news') Tin tức @break
+                        @case('knowledge') Kiến thức @break
                     @endswitch
                 </a>
             </li>

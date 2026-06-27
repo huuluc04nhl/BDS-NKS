@@ -46,7 +46,7 @@ class NewsController extends Controller
         $posts = $postsQuery->orderBy('id', 'desc')->paginate(6);
 
         // Sidebar content: popular posts
-        $popular = Post::orderBy('id', 'asc')->take(4)->get();
+        $popular = Post::where('category', 'report')->orderBy('id', 'asc')->take(4)->get();
 
         return view('news.index', compact('posts', 'spotlight', 'category', 'search', 'popular'));
     }

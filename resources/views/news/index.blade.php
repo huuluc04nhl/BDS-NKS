@@ -22,7 +22,7 @@
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-10 items-start">
             
             <!-- Main Content Area (Spotlight & Grid) -->
-            <div class="lg:col-span-2 space-y-12">
+            <div class="lg:col-span-2 space-y-12" id="news-articles-section">
                 
                 <!-- Spotlight Featured Post (If available) -->
                 @if($spotlight)
@@ -43,9 +43,11 @@
                             <span class="inline-block bg-primary text-white text-[9px] font-black px-3 py-1 rounded-[6px] uppercase tracking-wider">
                                 @switch($spotlight->category)
                                     @case('report') Báo cáo thị trường @break
-                                    @case('news') Tin tức BĐS @break
+                                    @case('view') Góc nhìn NKS @break
                                     @case('interior') Nội thất @break
                                     @case('fengshui') Phong thủy @break
+                                    @case('news') Tin tức @break
+                                    @case('knowledge') Kiến thức @break
                                     @default Tin tức BĐS
                                 @endswitch
                             </span>
@@ -69,10 +71,12 @@
 
                 <!-- Category Filtering Navigation Menu -->
                 <div class="flex flex-wrap gap-2 border-b border-slate-100 pb-4">
-                    <a href="{{ route('news.index', ['category' => 'report']) }}" class="px-5 py-2.5 rounded-2xl text-xs font-black transition-all {{ $category === 'report' ? 'bg-primary text-white shadow-sm' : 'bg-slate-50 text-slate-500 hover:bg-slate-100' }}">Báo cáo Thị trường</a>
-                    <a href="{{ route('news.index', ['category' => 'news']) }}" class="px-5 py-2.5 rounded-2xl text-xs font-black transition-all {{ $category === 'news' ? 'bg-primary text-white shadow-sm' : 'bg-slate-50 text-slate-500 hover:bg-slate-100' }}">Tin Tức BĐS</a>
-                    <a href="{{ route('news.index', ['category' => 'interior']) }}" class="px-5 py-2.5 rounded-2xl text-xs font-black transition-all {{ $category === 'interior' ? 'bg-primary text-white shadow-sm' : 'bg-slate-50 text-slate-500 hover:bg-slate-100' }}">Nội Thất</a>
-                    <a href="{{ route('news.index', ['category' => 'fengshui']) }}" class="px-5 py-2.5 rounded-2xl text-xs font-black transition-all {{ $category === 'fengshui' ? 'bg-primary text-white shadow-sm' : 'bg-slate-50 text-slate-500 hover:bg-slate-100' }}">Phong Thủy</a>
+                    <a href="{{ route('news.index', ['category' => 'report']) }}" class="category-tab px-5 py-2.5 rounded-2xl text-xs font-black transition-all {{ $category === 'report' ? 'bg-primary text-white shadow-sm' : 'bg-slate-50 text-slate-500 hover:bg-slate-100' }}">Báo cáo Thị trường BĐS</a>
+                    <a href="{{ route('news.index', ['category' => 'view']) }}" class="category-tab px-5 py-2.5 rounded-2xl text-xs font-black transition-all {{ $category === 'view' ? 'bg-primary text-white shadow-sm' : 'bg-slate-50 text-slate-500 hover:bg-slate-100' }}">Góc Nhìn NKS</a>
+                    <a href="{{ route('news.index', ['category' => 'interior']) }}" class="category-tab px-5 py-2.5 rounded-2xl text-xs font-black transition-all {{ $category === 'interior' ? 'bg-primary text-white shadow-sm' : 'bg-slate-50 text-slate-500 hover:bg-slate-100' }}">Nội Thất</a>
+                    <a href="{{ route('news.index', ['category' => 'fengshui']) }}" class="category-tab px-5 py-2.5 rounded-2xl text-xs font-black transition-all {{ $category === 'fengshui' ? 'bg-primary text-white shadow-sm' : 'bg-slate-50 text-slate-500 hover:bg-slate-100' }}">Phong Thủy</a>
+                    <a href="{{ route('news.index', ['category' => 'news']) }}" class="category-tab px-5 py-2.5 rounded-2xl text-xs font-black transition-all {{ $category === 'news' ? 'bg-primary text-white shadow-sm' : 'bg-slate-50 text-slate-500 hover:bg-slate-100' }}">Tin Tức</a>
+                    <a href="{{ route('news.index', ['category' => 'knowledge']) }}" class="category-tab px-5 py-2.5 rounded-2xl text-xs font-black transition-all {{ $category === 'knowledge' ? 'bg-primary text-white shadow-sm' : 'bg-slate-50 text-slate-500 hover:bg-slate-100' }}">Kiến Thức</a>
                 </div>
 
                 <!-- Articles Grid -->
@@ -97,9 +101,11 @@
                                     <span class="text-[9px] font-black text-slate-400 uppercase tracking-widest">
                                         @switch($post->category)
                                             @case('report') Báo cáo @break
-                                            @case('news') Tin tức BĐS @break
+                                            @case('view') Góc nhìn @break
                                             @case('interior') Nội thất @break
                                             @case('fengshui') Phong thủy @break
+                                            @case('news') Tin tức @break
+                                            @case('knowledge') Kiến thức @break
                                         @endswitch
                                     </span>
                                     <h4 class="text-sm font-extrabold text-slate-800 group-hover:text-primary transition-colors leading-snug line-clamp-2">
@@ -174,4 +180,75 @@
     </div>
 
 </div>
+
+@section('scripts')
+<style>
+    #news-articles-section {
+        transition: opacity 0.3s ease-in-out;
+    }
+</style>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const section = document.getElementById('news-articles-section');
+    if (!section) return;
+
+    section.addEventListener('click', function(e) {
+        const anchor = e.target.closest('a');
+        if (!anchor) return;
+
+        const isTab = anchor.classList.contains('category-tab');
+        const isPagination = anchor.closest('.pagination') || anchor.closest('[role="navigation"]');
+
+        if (!isTab && !isPagination) return;
+
+        e.preventDefault();
+        const url = anchor.href;
+
+        section.style.opacity = '0.3';
+        section.style.pointerEvents = 'none';
+
+        // Scroll to the top of the news section smoothly
+        section.scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+        fetch(url)
+            .then(response => response.text())
+            .then(html => {
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(html, 'text/html');
+                const newContent = doc.getElementById('news-articles-section');
+                
+                if (newContent) {
+                    section.innerHTML = newContent.innerHTML;
+                    section.style.opacity = '1';
+                    section.style.pointerEvents = 'auto';
+
+                    window.history.pushState(null, '', url);
+
+                    // Update category in the sidebar search form if present
+                    const searchCategoryInput = document.querySelector('form[action*="news"] input[name="category"]');
+                    if (searchCategoryInput) {
+                        try {
+                            const urlObj = new URL(url, window.location.origin);
+                            const cat = urlObj.searchParams.get('category') || 'report';
+                            searchCategoryInput.value = cat;
+                        } catch(e) {
+                            console.error(e);
+                        }
+                    }
+                } else {
+                    window.location.href = url;
+                }
+            })
+            .catch(err => {
+                console.error('AJAX news load failed:', err);
+                window.location.href = url;
+            });
+    });
+
+    window.addEventListener('popstate', function() {
+        window.location.reload();
+    });
+});
+</script>
+@endsection
 @endsection
