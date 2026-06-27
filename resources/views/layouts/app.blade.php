@@ -724,16 +724,29 @@
                      </div>
                      <div class="bg-white rounded-2xl rounded-tl-none px-4 py-3 border border-slate-100 shadow-sm text-sm text-slate-700 leading-relaxed">
                          Chào <span x-text="getGenderHonorific()">anh/chị</span>! Em là trợ lý ảo của BDS NKS. Em có thể hỗ trợ <span x-text="getGenderHonorific()">anh/chị</span> tìm kiếm thông tin gì hôm nay ạ? <span class="capitalize" x-text="getGenderHonorific()">Anh/chị</span> có thể hỏi em về:
-                         <ul class="list-disc pl-4 mt-1.5 space-y-1 text-slate-600">
+                         <ul class="list-disc pl-4 mt-1.5 space-y-1 text-slate-600 mb-3">
                              <li>Tìm nhà/căn hộ thuê theo khu vực & tầm giá</li>
                              <li>Thủ tục đặt cọc, pháp lý thuê nhà</li>
                              <li>Tính toán lãi vay mua nhà trả góp</li>
                          </ul>
+
+                         <!-- Suggestions inside welcome bubble when messages is empty -->
+                         <div x-show="messages.length === 0 && suggestions.length > 0 && !isTyping" class="mt-3 pt-3 border-t border-slate-100 flex flex-col gap-2">
+                             <span class="text-[10px] font-black text-slate-400 uppercase tracking-wider block">Gợi ý câu hỏi:</span>
+                             <div class="flex flex-wrap gap-1.5">
+                                 <template x-for="tag in suggestions" :key="tag">
+                                     <button @click="sendSuggestion(tag)" 
+                                             class="px-3 py-1.5 rounded-xl bg-slate-50 hover:bg-indigo-50 border border-slate-200/60 hover:border-indigo-200 text-xs font-bold text-slate-600 hover:text-indigo-600 transition-all active:scale-95 text-left leading-snug">
+                                         <span x-text="tag"></span>
+                                     </button>
+                                 </template>
+                             </div>
+                         </div>
                      </div>
                  </div>
                  
                  <!-- Chat messages dynamic list -->
-                 <template x-for="msg in messages" :key="msg.id">
+                 <template x-for="(msg, index) in messages" :key="msg.id">
                      <div :class="msg.role === 'user' ? 'justify-end' : ''" class="flex gap-2.5 items-start w-full">
                          <!-- Bot Avatar -->
                          <template x-if="msg.role !== 'user'">
@@ -746,8 +759,24 @@
                          
                          <!-- Message bubble -->
                          <div :class="msg.role === 'user' ? 'bg-primary text-white rounded-tr-none ml-auto shadow-sm shadow-primary/10' : 'bg-white text-slate-700 border border-slate-100 rounded-tl-none shadow-sm'" 
-                              class="rounded-2xl px-4 py-3 text-sm leading-relaxed whitespace-pre-line break-words max-w-[85%]"
-                              x-html="renderMarkdown(msg.content)">
+                              class="rounded-2xl px-4 py-3 text-sm leading-relaxed whitespace-pre-line break-words max-w-[85%]">
+                              <!-- Message body content -->
+                              <div x-html="renderMarkdown(msg.content)"></div>
+                              
+                              <!-- Dynamic Suggestions inside last bot response bubble -->
+                              <template x-if="msg.role !== 'user' && index === messages.length - 1">
+                                  <div x-show="suggestions.length > 0 && !isTyping" class="mt-3 pt-3 border-t border-slate-100 flex flex-col gap-2">
+                                      <span class="text-[10px] font-black text-slate-400 uppercase tracking-wider block">Gợi ý câu hỏi:</span>
+                                      <div class="flex flex-wrap gap-1.5">
+                                          <template x-for="tag in suggestions" :key="tag">
+                                              <button @click="sendSuggestion(tag)" 
+                                                      class="px-3 py-1.5 rounded-xl bg-slate-50 hover:bg-indigo-50 border border-slate-200/60 hover:border-indigo-200 text-xs font-bold text-slate-600 hover:text-indigo-600 transition-all active:scale-95 text-left leading-snug">
+                                                  <span x-text="tag"></span>
+                                              </button>
+                                          </template>
+                                      </div>
+                                  </div>
+                              </template>
                          </div>
                      </div>
                  </template>
@@ -764,18 +793,6 @@
                          <span class="w-2 h-2 rounded-full bg-indigo-500 animate-bounce" style="animation-delay: 150ms"></span>
                          <span class="w-2 h-2 rounded-full bg-indigo-500 animate-bounce" style="animation-delay: 300ms"></span>
                      </div>
-                 </div>
-
-                 <!-- Dynamic Suggestion Tags inside conversation stream (Messenger style) -->
-                 <div x-show="suggestions.length > 0 && !isTyping" 
-                      class="flex flex-wrap gap-2 pl-10 max-w-[90%] pb-2 pt-1"
-                      style="display: none;">
-                     <template x-for="tag in suggestions" :key="tag">
-                         <button @click="sendSuggestion(tag)" 
-                                 class="px-3.5 py-2 rounded-2xl bg-white hover:bg-indigo-50 border border-slate-200/85 hover:border-indigo-300 text-xs font-bold text-slate-600 hover:text-indigo-600 transition-all shadow-2xs hover:shadow-xs active:scale-95 select-none text-left leading-snug">
-                             <span x-text="tag"></span>
-                         </button>
-                     </template>
                  </div>
              </div>
              
