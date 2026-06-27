@@ -765,16 +765,14 @@
                          <span class="w-2 h-2 rounded-full bg-indigo-500 animate-bounce" style="animation-delay: 300ms"></span>
                      </div>
                  </div>
-             </div>
-             
-             <!-- Suggestion Tags -->
-             <div class="px-4 py-2 bg-slate-50 border-t border-slate-100">
-                 <div class="flex gap-2 overflow-x-auto pb-1.5 pt-0.5 scrollbar-none snap-x snap-mandatory">
+
+                 <!-- Dynamic Suggestion Tags inside conversation stream (Messenger style) -->
+                 <div x-show="suggestions.length > 0 && !isTyping" 
+                      class="flex flex-wrap gap-2 pl-10 max-w-[90%] pb-2 pt-1"
+                      style="display: none;">
                      <template x-for="tag in suggestions" :key="tag">
                          <button @click="sendSuggestion(tag)" 
-                                 :disabled="isTyping"
-                                 :class="isTyping ? 'opacity-50 cursor-not-allowed' : ''"
-                                 class="shrink-0 snap-start px-3 py-1.5 rounded-full bg-white hover:bg-indigo-50 border border-slate-100 text-xs font-bold text-slate-600 hover:text-indigo-600 hover:border-indigo-200 transition-all shadow-2xs active:scale-95">
+                                 class="px-3.5 py-2 rounded-2xl bg-white hover:bg-indigo-50 border border-slate-200/85 hover:border-indigo-300 text-xs font-bold text-slate-600 hover:text-indigo-600 transition-all shadow-2xs hover:shadow-xs active:scale-95 select-none text-left leading-snug">
                              <span x-text="tag"></span>
                          </button>
                      </template>
