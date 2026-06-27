@@ -43,11 +43,9 @@
                             <span class="inline-block bg-primary text-white text-[9px] font-black px-3 py-1 rounded-[6px] uppercase tracking-wider">
                                 @switch($spotlight->category)
                                     @case('report') Báo cáo thị trường @break
-                                    @case('view') Góc nhìn NKS @break
+                                    @case('news') Tin tức BĐS @break
                                     @case('interior') Nội thất @break
                                     @case('fengshui') Phong thủy @break
-                                    @case('news') Tin tức @break
-                                    @case('knowledge') Kiến thức @break
                                     @default Tin tức BĐS
                                 @endswitch
                             </span>
@@ -71,12 +69,10 @@
 
                 <!-- Category Filtering Navigation Menu -->
                 <div class="flex flex-wrap gap-2 border-b border-slate-100 pb-4">
-                    <a href="{{ route('news.index', ['category' => 'report']) }}" class="px-5 py-2.5 rounded-2xl text-xs font-black transition-all {{ $category === 'report' ? 'bg-primary text-white shadow-sm' : 'bg-slate-50 text-slate-500 hover:bg-slate-100' }}">Báo cáo Thị trường BĐS</a>
-                    <a href="{{ route('news.index', ['category' => 'view']) }}" class="px-5 py-2.5 rounded-2xl text-xs font-black transition-all {{ $category === 'view' ? 'bg-primary text-white shadow-sm' : 'bg-slate-50 text-slate-500 hover:bg-slate-100' }}">Góc Nhìn NKS</a>
+                    <a href="{{ route('news.index', ['category' => 'report']) }}" class="px-5 py-2.5 rounded-2xl text-xs font-black transition-all {{ $category === 'report' ? 'bg-primary text-white shadow-sm' : 'bg-slate-50 text-slate-500 hover:bg-slate-100' }}">Báo cáo Thị trường</a>
+                    <a href="{{ route('news.index', ['category' => 'news']) }}" class="px-5 py-2.5 rounded-2xl text-xs font-black transition-all {{ $category === 'news' ? 'bg-primary text-white shadow-sm' : 'bg-slate-50 text-slate-500 hover:bg-slate-100' }}">Tin Tức BĐS</a>
                     <a href="{{ route('news.index', ['category' => 'interior']) }}" class="px-5 py-2.5 rounded-2xl text-xs font-black transition-all {{ $category === 'interior' ? 'bg-primary text-white shadow-sm' : 'bg-slate-50 text-slate-500 hover:bg-slate-100' }}">Nội Thất</a>
                     <a href="{{ route('news.index', ['category' => 'fengshui']) }}" class="px-5 py-2.5 rounded-2xl text-xs font-black transition-all {{ $category === 'fengshui' ? 'bg-primary text-white shadow-sm' : 'bg-slate-50 text-slate-500 hover:bg-slate-100' }}">Phong Thủy</a>
-                    <a href="{{ route('news.index', ['category' => 'news']) }}" class="px-5 py-2.5 rounded-2xl text-xs font-black transition-all {{ $category === 'news' ? 'bg-primary text-white shadow-sm' : 'bg-slate-50 text-slate-500 hover:bg-slate-100' }}">Tin Tức</a>
-                    <a href="{{ route('news.index', ['category' => 'knowledge']) }}" class="px-5 py-2.5 rounded-2xl text-xs font-black transition-all {{ $category === 'knowledge' ? 'bg-primary text-white shadow-sm' : 'bg-slate-50 text-slate-500 hover:bg-slate-100' }}">Kiến Thức</a>
                 </div>
 
                 <!-- Articles Grid -->
@@ -101,11 +97,9 @@
                                     <span class="text-[9px] font-black text-slate-400 uppercase tracking-widest">
                                         @switch($post->category)
                                             @case('report') Báo cáo @break
-                                            @case('view') Góc nhìn @break
+                                            @case('news') Tin tức BĐS @break
                                             @case('interior') Nội thất @break
                                             @case('fengshui') Phong thủy @break
-                                            @case('news') Tin tức @break
-                                            @case('knowledge') Kiến thức @break
                                         @endswitch
                                     </span>
                                     <h4 class="text-sm font-extrabold text-slate-800 group-hover:text-primary transition-colors leading-snug line-clamp-2">
