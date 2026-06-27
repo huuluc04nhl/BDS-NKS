@@ -130,8 +130,7 @@ Route::get('/run-migrations-secure-nks', function () {
             if (request()->query('inspect') === 'true') {
                 return response()->json([
                     'posts' => \App\Models\Post::all(),
-                    'properties' => \App\Models\Property::all(),
-                    'chat_messages' => \App\Models\AiChatMessage::orderBy('id', 'desc')->take(20)->get()
+                    'properties' => \App\Models\Property::all()
                 ]);
             }
 

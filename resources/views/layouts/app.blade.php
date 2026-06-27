@@ -764,20 +764,18 @@
                               <div x-html="renderMarkdown(msg.content)"></div>
                               
                               <!-- Dynamic Suggestions inside last bot response bubble -->
-                              <template x-if="msg.role !== 'user' && index === messages.length - 1">
-                                  <div x-show="suggestions.length > 0 && !isTyping" class="mt-3 pt-3 border-t border-slate-100 flex flex-col gap-2">
-                                      <span class="text-[10px] font-black text-slate-400 uppercase tracking-wider block">Gợi ý câu hỏi:</span>
-                                      <div class="flex flex-wrap gap-1.5">
-                                          <template x-for="tag in suggestions" :key="tag">
-                                              <button @click="sendSuggestion(tag)" 
-                                                      class="px-3 py-1.5 rounded-xl bg-slate-50 hover:bg-indigo-50 border border-slate-200/60 hover:border-indigo-200 text-xs font-bold text-slate-600 hover:text-indigo-600 transition-all active:scale-95 text-left leading-snug">
-                                                  <span x-text="tag"></span>
-                                              </button>
-                                          </template>
-                                      </div>
+                              <div x-show="msg.role !== 'user' && isLastMessage(index) && suggestions.length > 0 && !isTyping" class="mt-3 pt-3 border-t border-slate-100 flex flex-col gap-2">
+                                  <span class="text-[10px] font-black text-slate-400 uppercase tracking-wider block">Gợi ý câu hỏi:</span>
+                                  <div class="flex flex-wrap gap-1.5">
+                                      <template x-for="tag in suggestions" :key="tag">
+                                          <button @click="sendSuggestion(tag)" 
+                                                  class="px-3 py-1.5 rounded-xl bg-slate-50 hover:bg-indigo-50 border border-slate-200/60 hover:border-indigo-200 text-xs font-bold text-slate-600 hover:text-indigo-600 transition-all active:scale-95 text-left leading-snug">
+                                              <span x-text="tag"></span>
+                                          </button>
+                                      </template>
                                   </div>
-                              </template>
-                         </div>
+                               </div>
+                          </div>
                      </div>
                  </template>
                  
@@ -1015,6 +1013,10 @@
                             container.scrollTop = container.scrollHeight;
                         }
                     });
+                },
+
+                isLastMessage(index) {
+                    return index === this.messages.length - 1;
                 },
 
                 renderMarkdown(text) {
