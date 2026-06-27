@@ -758,10 +758,10 @@
                          </template>
                          
                          <!-- Message bubble -->
-                         <div :class="msg.role === 'user' ? 'bg-primary text-white rounded-tr-none mr-1.5 shadow-sm shadow-primary/10' : 'bg-white text-slate-700 border border-slate-100 rounded-tl-none shadow-sm'" 
-                              class="rounded-2xl px-4 py-3 text-sm leading-relaxed whitespace-pre-line break-words max-w-[85%]">
+                         <div :class="msg.role === 'user' ? 'bg-primary text-white rounded-tr-none ml-auto shadow-sm shadow-primary/10' : 'bg-white text-slate-700 border border-slate-100 rounded-tl-none shadow-sm'" 
+                              class="rounded-2xl px-4 py-3 text-sm leading-relaxed break-words max-w-[85%]">
                               <!-- Message body content -->
-                              <div x-html="renderMarkdown(msg.content)"></div>
+                              <div x-html="renderMarkdown(msg.content)" class="whitespace-pre-line"></div>
                               
                               <!-- Dynamic Suggestions inside last bot response bubble -->
                               <template x-if="msg.role !== 'user' && index === messages.length - 1">
