@@ -731,16 +731,13 @@
                          </ul>
 
                          <!-- Suggestions inside welcome bubble when messages is empty -->
-                         <div x-show="messages.length === 0 && suggestions.length > 0 && !isTyping" class="mt-3 pt-3 border-t border-slate-100 flex flex-col gap-1.5">
+                         <div x-show="messages.length === 0 && suggestions.length > 0 && !isTyping" class="mt-3 pt-3 border-t border-slate-100 flex flex-col gap-2">
                              <span class="text-[10px] font-black text-slate-400 uppercase tracking-wider block">Gợi ý câu hỏi:</span>
-                             <div class="flex flex-col gap-1">
+                             <div class="flex flex-wrap gap-1.5">
                                  <template x-for="tag in suggestions" :key="tag">
                                      <button @click="sendSuggestion(tag)" 
-                                             class="text-left text-xs font-extrabold text-indigo-600 hover:text-indigo-800 transition-colors py-1 flex items-center gap-1.5 focus:outline-none select-none">
-                                         <svg class="w-3 h-3 text-indigo-500 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
-                                             <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" />
-                                         </svg>
-                                         <span class="hover:underline" x-text="tag"></span>
+                                             class="px-3 py-1.5 rounded-xl bg-slate-50 hover:bg-indigo-50 border border-slate-200/60 hover:border-indigo-200 text-xs font-bold text-slate-600 hover:text-indigo-600 transition-all active:scale-95 text-left leading-snug">
+                                         <span x-text="tag"></span>
                                      </button>
                                  </template>
                              </div>
@@ -761,23 +758,20 @@
                          </template>
                          
                          <!-- Message bubble -->
-                         <div :class="msg.role === 'user' ? 'bg-primary text-white rounded-tr-none ml-auto shadow-sm shadow-primary/10' : 'bg-white text-slate-700 border border-slate-100 rounded-tl-none shadow-sm'" 
+                         <div :class="msg.role === 'user' ? 'bg-primary text-white rounded-tr-none mr-1.5 shadow-sm shadow-primary/10' : 'bg-white text-slate-700 border border-slate-100 rounded-tl-none shadow-sm'" 
                               class="rounded-2xl px-4 py-3 text-sm leading-relaxed whitespace-pre-line break-words max-w-[85%]">
                               <!-- Message body content -->
                               <div x-html="renderMarkdown(msg.content)"></div>
                               
                               <!-- Dynamic Suggestions inside last bot response bubble -->
                               <template x-if="msg.role !== 'user' && index === messages.length - 1">
-                                  <div x-show="suggestions.length > 0 && !isTyping" class="mt-3 pt-3 border-t border-slate-100 flex flex-col gap-1.5">
+                                  <div x-show="suggestions.length > 0 && !isTyping" class="mt-3 pt-3 border-t border-slate-100 flex flex-col gap-2">
                                       <span class="text-[10px] font-black text-slate-400 uppercase tracking-wider block">Gợi ý câu hỏi:</span>
-                                      <div class="flex flex-col gap-1">
+                                      <div class="flex flex-wrap gap-1.5">
                                           <template x-for="tag in suggestions" :key="tag">
                                               <button @click="sendSuggestion(tag)" 
-                                                      class="text-left text-xs font-extrabold text-indigo-600 hover:text-indigo-800 transition-colors py-1 flex items-center gap-1.5 focus:outline-none select-none">
-                                                  <svg class="w-3 h-3 text-indigo-500 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
-                                                      <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" />
-                                                  </svg>
-                                                  <span class="hover:underline" x-text="tag"></span>
+                                                      class="px-3 py-1.5 rounded-xl bg-slate-50 hover:bg-indigo-50 border border-slate-200/60 hover:border-indigo-200 text-xs font-bold text-slate-600 hover:text-indigo-600 transition-all active:scale-95 text-left leading-snug">
+                                                  <span x-text="tag"></span>
                                               </button>
                                           </template>
                                       </div>
