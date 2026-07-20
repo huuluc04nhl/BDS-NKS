@@ -7,18 +7,29 @@
       "runtime": "vercel-php@0.8.0"
     }
   },
+  "headers": [
+    {
+      "source": "/build/(.*)",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=31536000, immutable"
+        }
+      ]
+    },
+    {
+      "source": "/(css|js|images|fonts|favicon\\.ico|robots\\.txt)",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=86400, stale-while-revalidate=86400"
+        }
+      ]
+    }
+  ],
   "routes": [
     {
-      "src": "/(css|js|images|build)/(.*)",
-      "dest": "/public/$1/$2"
-    },
-    {
-      "src": "/favicon.ico",
-      "dest": "/public/favicon.ico"
-    },
-    {
-      "src": "/robots.txt",
-      "dest": "/public/robots.txt"
+      "handle": "filesystem"
     },
     {
       "src": "/(.*)",
