@@ -29,7 +29,16 @@
   ],
   "routes": [
     {
-      "handle": "filesystem"
+      "src": "/(css|js|images|build|fonts)/(.*)",
+      "dest": "/public/$1/$2"
+    },
+    {
+      "src": "/favicon.ico",
+      "dest": "/public/favicon.ico"
+    },
+    {
+      "src": "/robots.txt",
+      "dest": "/public/robots.txt"
     },
     {
       "src": "/(.*)",
